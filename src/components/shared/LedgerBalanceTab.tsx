@@ -1,0 +1,1359 @@
+import { useState, useEffect } from "react";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Badge } from "@/components/ui/badge";
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Label } from "@/components/ui/label";
+import { 
+  Search, 
+  Filter, 
+  FileDown, 
+  Users, 
+  ChevronLeft, 
+  ChevronRight, 
+  List, 
+  Grid, 
+  Download,
+  ChevronDown,
+  ChevronUp,
+} from "lucide-react";
+import { LedgerEntry, PartyBalance, getBalanceColor, getBalanceBadgeVariant, formatCurrency } from "./Billing";
+import { siteService } from "@/services/SiteService";
+
+// ─── Type Definitions ──────────────────────────────────────────────────────
+
+type AggregatedValues = {
+  labourBill: number;
+  managementFees: number;
+  machineRentWater: number;
+  gst: number;
+  billValue: number;
+  paidSalaries: number;
+  payableHoldSalaries: number;
+  pfEsicPt: number;
+  paidToVendor: number;
+  vouchers: number;
+  other: number;
+  grossExpenses: number;
+  balance: number;
+  lessManagement: number;
+  netProfit: number;
+};
+
+// Helper to get a zero-filled aggregated values object
+const emptyAggregatedValues = (): AggregatedValues => ({
+  labourBill: 0,
+  managementFees: 0,
+  machineRentWater: 0,
+  gst: 0,
+  billValue: 0,
+  paidSalaries: 0,
+  payableHoldSalaries: 0,
+  pfEsicPt: 0,
+  paidToVendor: 0,
+  vouchers: 0,
+  other: 0,
+  grossExpenses: 0,
+  balance: 0,
+  lessManagement: 0,
+  netProfit: 0,
+});
+
+// ─── Mobile Components ────────────────────────────────────────────────────
+
+// Mobile responsive balance card – fully implemented
+const MobileBalanceCard = ({ 
+  party, 
+  onClick,
+  getBalanceColor,
+  getBalanceBadgeVariant,
+  formatCurrency 
+}: { 
+  party: PartyBalance; 
+  onClick: (party: string) => void;
+  getBalanceColor: (balance: number) => string;
+  getBalanceBadgeVariant: (status: string) => "default" | "destructive" | "secondary" | "outline";
+  formatCurrency: (amount: number) => string;
+}) => {
+  return (
+    <Card 
+      className="mb-2 cursor-pointer hover:shadow-md transition-shadow"
+      onClick={() => onClick(party.party)}
+    >
+      <CardContent className="p-3">
+        <div className="flex items-center justify-between mb-2">
+          <div className="flex-1 min-w-0">
+            <div className="flex items-center gap-2">
+              <h3 className="font-semibold text-sm truncate">{party.party}</h3>
+              <Badge variant={getBalanceBadgeVariant(party.status)} className="text-xs px-1.5">
+                {party.status}
+              </Badge>
+            </div>
+            {party.site && (
+              <p className="text-xs text-muted-foreground mt-1 truncate">{party.site}</p>
+            )}
+          </div>
+        </div>
+
+        <div className="flex items-center justify-between mb-2">
+          <span className="text-xs text-muted-foreground">Current Balance:</span>
+          <span className={`text-base font-bold ${getBalanceColor(party.currentBalance)}`}>
+            {formatCurrency(Math.abs(party.currentBalance))}
+          </span>
+        </div>
+
+        <div className="grid grid-cols-2 gap-2 text-xs">
+          <div>
+            <span className="text-muted-foreground">Debit:</span>
+            <div className="font-medium">{formatCurrency(party.totalDebit)}</div>
+          </div>
+          <div>
+            <span className="text-muted-foreground">Credit:</span>
+            <div className="font-medium">{formatCurrency(party.totalCredit)}</div>
+          </div>
+        </div>
+
+        <div className="text-xs text-muted-foreground mt-2">
+          Last: {party.lastTransaction}
+        </div>
+      </CardContent>
+    </Card>
+  );
+};
+
+// Mobile responsive ledger card – using AggregatedValues
+const MobileLedgerCard = ({ 
+  siteName, 
+  aggregatedValues,
+  isTotal = false,
+  formatCurrency,
+  getBalanceColor 
+}: { 
+  siteName: string; 
+  aggregatedValues: AggregatedValues;
+  isTotal?: boolean;
+  formatCurrency: (amount: number) => string;
+  getBalanceColor: (balance: number) => string;
+}) => {
+  const [expanded, setExpanded] = useState(false);
+
+  return (
+    <Card className={`mb-2 overflow-hidden ${isTotal ? 'border-primary bg-primary/5' : ''}`}>
+      <CardContent className="p-3">
+        <div className="flex items-center justify-between">
+          <div className="flex-1">
+            <h3 className={`font-semibold text-sm ${isTotal ? 'text-primary' : ''}`}>
+              {siteName}
+            </h3>
+            <p className="text-xs text-muted-foreground mt-1">
+              {isTotal ? 'Sum of all sites' : 'Site summary'}
+            </p>
+          </div>
+          <Button
+            variant="ghost"
+            size="icon"
+            className="h-7 w-7"
+            onClick={() => setExpanded(!expanded)}
+          >
+            {expanded ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
+          </Button>
+        </div>
+
+        <div className="flex items-center justify-between mt-2">
+          <span className="text-xs text-muted-foreground">Net Profit:</span>
+          <span className={`text-sm font-bold ${
+            aggregatedValues.netProfit >= 0 ? 'text-green-600' : 'text-red-600'
+          }`}>
+            {formatCurrency(aggregatedValues.netProfit)}
+          </span>
+        </div>
+
+        <div className="flex items-center justify-between">
+          <span className="text-xs text-muted-foreground">Balance:</span>
+          <span className={`text-sm font-bold ${getBalanceColor(aggregatedValues.balance)}`}>
+            {formatCurrency(aggregatedValues.balance)}
+          </span>
+        </div>
+
+        {expanded && (
+          <div className="mt-3 pt-3 border-t space-y-3">
+            <div className="grid grid-cols-2 gap-3">
+              <div>
+                <p className="text-xs text-muted-foreground">Bill Value</p>
+                <p className="text-sm font-medium">
+                  {aggregatedValues.billValue > 0 ? formatCurrency(aggregatedValues.billValue) : '-'}
+                </p>
+              </div>
+              <div>
+                <p className="text-xs text-muted-foreground">Gross Expenses</p>
+                <p className="text-sm font-medium">
+                  {formatCurrency(aggregatedValues.grossExpenses)}
+                </p>
+              </div>
+              <div>
+                <p className="text-xs text-muted-foreground">Labour Bill</p>
+                <p className="text-sm">
+                  {aggregatedValues.labourBill > 0 ? formatCurrency(aggregatedValues.labourBill) : '-'}
+                </p>
+              </div>
+              <div>
+                <p className="text-xs text-muted-foreground">Management Fees</p>
+                <p className="text-sm">
+                  {aggregatedValues.managementFees > 0 ? formatCurrency(aggregatedValues.managementFees) : '-'}
+                </p>
+              </div>
+              <div>
+                <p className="text-xs text-muted-foreground">Machine Rent/Water</p>
+                <p className="text-sm">
+                  {aggregatedValues.machineRentWater > 0 ? formatCurrency(aggregatedValues.machineRentWater) : '-'}
+                </p>
+              </div>
+              <div>
+                <p className="text-xs text-muted-foreground">GST</p>
+                <p className="text-sm">
+                  {aggregatedValues.gst > 0 ? formatCurrency(aggregatedValues.gst) : '-'}
+                </p>
+              </div>
+              <div>
+                <p className="text-xs text-muted-foreground">Paid Salaries</p>
+                <p className="text-sm">
+                  {aggregatedValues.paidSalaries > 0 ? formatCurrency(aggregatedValues.paidSalaries) : '-'}
+                </p>
+              </div>
+              <div>
+                <p className="text-xs text-muted-foreground">PF/ESIC/PT</p>
+                <p className="text-sm">
+                  {aggregatedValues.pfEsicPt > 0 ? formatCurrency(aggregatedValues.pfEsicPt) : '-'}
+                </p>
+              </div>
+            </div>
+          </div>
+        )}
+      </CardContent>
+    </Card>
+  );
+};
+
+// Mobile responsive party ledger card – using AggregatedValues
+const MobilePartyLedgerCard = ({ 
+  entry, 
+  values,
+  formatCurrency,
+  getBalanceColor 
+}: { 
+  entry: LedgerEntry; 
+  values: AggregatedValues;
+  formatCurrency: (amount: number) => string;
+  getBalanceColor: (balance: number) => string;
+}) => {
+  const [expanded, setExpanded] = useState(false);
+
+  return (
+    <Card className="mb-2 overflow-hidden">
+      <CardContent className="p-3">
+        <div className="flex items-start justify-between">
+          <div className="flex-1">
+            <div className="flex items-center gap-2">
+              <p className="text-xs font-mono text-muted-foreground">{entry.reference}</p>
+              <p className="text-xs">{entry.date}</p>
+            </div>
+            <p className="text-sm font-medium mt-1">{entry.description}</p>
+          </div>
+          <Button
+            variant="ghost"
+            size="icon"
+            className="h-7 w-7"
+            onClick={() => setExpanded(!expanded)}
+          >
+            {expanded ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
+          </Button>
+        </div>
+
+        <div className="flex items-center justify-between mt-2">
+          <span className="text-xs text-muted-foreground">Bill Value:</span>
+          <span className="text-sm font-medium">
+            {values.billValue > 0 ? formatCurrency(values.billValue) : '-'}
+          </span>
+        </div>
+
+        <div className="flex items-center justify-between">
+          <span className="text-xs text-muted-foreground">Balance:</span>
+          <span className={`text-sm font-bold ${getBalanceColor(values.balance)}`}>
+            {formatCurrency(values.balance)}
+          </span>
+        </div>
+
+        {expanded && (
+          <div className="mt-3 pt-3 border-t space-y-3">
+            <div className="grid grid-cols-2 gap-2">
+              <div>
+                <p className="text-xs text-muted-foreground">Labour Bill</p>
+                <p className="text-sm">{values.labourBill > 0 ? formatCurrency(values.labourBill) : '-'}</p>
+              </div>
+              <div>
+                <p className="text-xs text-muted-foreground">Management Fees</p>
+                <p className="text-sm">{values.managementFees > 0 ? formatCurrency(values.managementFees) : '-'}</p>
+              </div>
+              <div>
+                <p className="text-xs text-muted-foreground">Machine Rent/Water</p>
+                <p className="text-sm">{values.machineRentWater > 0 ? formatCurrency(values.machineRentWater) : '-'}</p>
+              </div>
+              <div>
+                <p className="text-xs text-muted-foreground">GST</p>
+                <p className="text-sm">{values.gst > 0 ? formatCurrency(values.gst) : '-'}</p>
+              </div>
+              <div>
+                <p className="text-xs text-muted-foreground">Paid Salaries</p>
+                <p className="text-sm">{values.paidSalaries > 0 ? formatCurrency(values.paidSalaries) : '-'}</p>
+              </div>
+              <div>
+                <p className="text-xs text-muted-foreground">PF/ESIC/PT</p>
+                <p className="text-sm">{values.pfEsicPt > 0 ? formatCurrency(values.pfEsicPt) : '-'}</p>
+              </div>
+              <div>
+                <p className="text-xs text-muted-foreground">Paid to Vendor</p>
+                <p className="text-sm">{values.paidToVendor > 0 ? formatCurrency(values.paidToVendor) : '-'}</p>
+              </div>
+              <div>
+                <p className="text-xs text-muted-foreground">Vouchers</p>
+                <p className="text-sm">{values.vouchers > 0 ? formatCurrency(values.vouchers) : '-'}</p>
+              </div>
+            </div>
+            
+            <div>
+              <p className="text-xs text-muted-foreground">Gross Expenses</p>
+              <p className="text-sm font-bold">{formatCurrency(values.grossExpenses)}</p>
+            </div>
+            <div>
+              <p className="text-xs text-muted-foreground">Net Profit</p>
+              <p className={`text-sm font-bold ${values.netProfit >= 0 ? 'text-green-600' : 'text-red-600'}`}>
+                {formatCurrency(values.netProfit)}
+              </p>
+            </div>
+          </div>
+        )}
+      </CardContent>
+    </Card>
+  );
+};
+
+// ─── Main Component ──────────────────────────────────────────────────────
+
+interface LedgerBalanceTabProps {
+  ledgerEntries: LedgerEntry[];
+  partyBalances: PartyBalance[];
+  onExportData: (type: string) => void;
+}
+
+const LedgerBalanceTab: React.FC<LedgerBalanceTabProps> = ({
+  ledgerEntries,
+  partyBalances,
+  onExportData
+}) => {
+  const [ledgerDialogOpen, setLedgerDialogOpen] = useState(false);
+  const [selectedParty, setSelectedParty] = useState<string | null>(null);
+  const [ledgerViewMode, setLedgerViewMode] = useState<"table" | "card">("table");
+  const [ledgerSearchTerm, setLedgerSearchTerm] = useState("");
+  const [dateFilter, setDateFilter] = useState({
+    startDate: "",
+    endDate: ""
+  });
+  const [ledgerCurrentPage, setLedgerCurrentPage] = useState(1);
+  const [ledgerItemsPerPage] = useState(10);
+  const [siteNames, setSiteNames] = useState<string[]>([]);
+  const [isLoadingSites, setIsLoadingSites] = useState(false);
+  
+  // Mobile responsive state
+  const [isMobileView, setIsMobileView] = useState(false);
+  const [showMobileFilters, setShowMobileFilters] = useState(false);
+
+  // Check for mobile view on mount and resize
+  useEffect(() => {
+    const checkMobile = () => {
+      setIsMobileView(window.innerWidth < 768);
+    };
+    
+    checkMobile();
+    window.addEventListener('resize', checkMobile);
+    
+    return () => window.removeEventListener('resize', checkMobile);
+  }, []);
+
+  // Fetch site names from SiteService
+  useEffect(() => {
+    const fetchSiteNames = async () => {
+      try {
+        setIsLoadingSites(true);
+        const sites = await siteService.getAllSites();
+        
+        if (sites && sites.length > 0) {
+          // Extract site names from sites and convert to uppercase
+          const names = sites
+            .map(site => site.name?.toUpperCase() || '')
+            .filter(name => name.trim() !== '');
+          
+          // Sort by creation date (newest first) - assuming sites have createdAt field
+          const sortedSites = sites.sort((a, b) => {
+            const dateA = a.createdAt ? new Date(a.createdAt).getTime() : 0;
+            const dateB = b.createdAt ? new Date(b.createdAt).getTime() : 0;
+            return dateB - dateA; // Newest first
+          });
+          
+          const sortedNames = sortedSites
+            .map(site => site.name?.toUpperCase() || '')
+            .filter(name => name.trim() !== '');
+          
+          // Add "TOTAL" at the end if not already in the list
+          const finalNames = sortedNames;
+          if (!finalNames.includes("TOTAL")) {
+            finalNames.push("TOTAL");
+          }
+          
+          setSiteNames(finalNames);
+        } else {
+          // Fallback to hardcoded site names with "TOTAL" at the end
+          const fallbackSiteNames = [
+            "WESTEND",
+            "HIGH STREET", 
+            "PHEONIX",
+            "TRUENO",
+            "SYNERGY HK",
+            "SYNERGY SG",
+            "GLOBAL SQUARE HK",
+            "GLOBAL SQUARE SG",
+            "T-ONE HK",
+            "BLUEGRASS",
+            "RAJASHREE ESTATE",
+            "KRC DRIVER",
+            "INSPIRIA",
+            "MATTAR MOTORS",
+            "SATURO TECHNOLOGIES",
+            "ESPAT",
+            "K P BUNGLOW",
+            "NEXTGEN HK",
+            "NEXTGEN SG",
+            "MANGALWAR PETH",
+            "PHULGAON",
+            "COPLAND",
+            "STEEPGRAPH",
+            "BRAMHA",
+            "TOTAL"
+          ];
+          setSiteNames(fallbackSiteNames);
+        }
+      } catch (error) {
+        console.error("Error fetching site names:", error);
+        // Fallback to hardcoded site names with "TOTAL" at the end
+        const fallbackSiteNames = [
+          "WESTEND",
+          "HIGH STREET", 
+          "PHEONIX",
+          "TRUENO",
+          "SYNERGY HK",
+          "SYNERGY SG",
+          "GLOBAL SQUARE HK",
+          "GLOBAL SQUARE SG",
+          "T-ONE HK",
+          "BLUEGRASS",
+          "RAJASHREE ESTATE",
+          "KRC DRIVER",
+          "INSPIRIA",
+          "MATTAR MOTORS",
+          "SATURO TECHNOLOGIES",
+          "ESPAT",
+          "K P BUNGLOW",
+          "NEXTGEN HK",
+          "NEXTGEN SG",
+          "MANGALWAR PETH",
+          "PHULGAON",
+          "COPLAND",
+          "STEEPGRAPH",
+          "BRAMHA",
+          "TOTAL"
+        ];
+        setSiteNames(fallbackSiteNames);
+      } finally {
+        setIsLoadingSites(false);
+      }
+    };
+
+    fetchSiteNames();
+  }, []);
+
+  const handleViewPartyLedger = (party: string) => {
+    setSelectedParty(party);
+    setLedgerDialogOpen(true);
+  };
+
+  // Helper function to calculate values based on entry type – now returns AggregatedValues
+  const getEntryColumnValues = (entry: LedgerEntry): AggregatedValues => {
+    const values = emptyAggregatedValues();
+
+    // Map ledger entry types to your specific columns
+    switch (entry.type.toLowerCase()) {
+      case "labour":
+      case "labour_bill":
+        values.labourBill = entry.debit;
+        break;
+      case "management":
+      case "management_fees":
+        values.managementFees = entry.debit;
+        values.lessManagement = entry.debit; // For less management column
+        break;
+      case "machine":
+      case "machine_rent":
+      case "water":
+      case "machine_rent_water":
+        values.machineRentWater = entry.debit;
+        break;
+      case "salary":
+      case "salaries":
+        values.paidSalaries = entry.debit;
+        break;
+      case "payable_salary":
+      case "hold_salary":
+        values.payableHoldSalaries = entry.debit;
+        break;
+      case "pf":
+      case "esic":
+      case "pt":
+      case "statutory":
+        values.pfEsicPt = entry.debit;
+        break;
+      case "vendor":
+      case "vendor_payment":
+        values.paidToVendor = entry.debit;
+        break;
+      case "voucher":
+      case "expense_voucher":
+        values.vouchers = entry.debit;
+        break;
+      case "gst":
+        values.gst = entry.debit;
+        break;
+      case "bill":
+      case "invoice":
+        values.billValue = entry.credit;
+        break;
+      case "other":
+      case "miscellaneous":
+        values.other = entry.debit;
+        break;
+    }
+
+    // Calculate derived values
+    values.grossExpenses = values.labourBill + values.machineRentWater + values.paidSalaries + 
+                           values.pfEsicPt + values.paidToVendor + values.vouchers + values.other + values.gst;
+    
+    values.netProfit = values.billValue - values.grossExpenses - values.managementFees;
+    values.balance = entry.balance; // Already set from the ledger entry
+
+    return values;
+  };
+
+  const getFilteredLedgerEntries = () => {
+    let filtered = ledgerEntries;
+
+    if (dateFilter.startDate) {
+      filtered = filtered.filter(entry => entry.date >= dateFilter.startDate);
+    }
+
+    if (dateFilter.endDate) {
+      filtered = filtered.filter(entry => entry.date <= dateFilter.endDate);
+    }
+
+    if (selectedParty) {
+      filtered = filtered.filter(entry => entry.party === selectedParty);
+    }
+
+    if (ledgerSearchTerm) {
+      filtered = filtered.filter(entry => 
+        entry.party.toLowerCase().includes(ledgerSearchTerm.toLowerCase()) ||
+        entry.reference.toLowerCase().includes(ledgerSearchTerm.toLowerCase()) ||
+        entry.type.toLowerCase().includes(ledgerSearchTerm.toLowerCase()) ||
+        entry.description.toLowerCase().includes(ledgerSearchTerm.toLowerCase()) ||
+        entry.status.toLowerCase().includes(ledgerSearchTerm.toLowerCase())
+      );
+    }
+
+    return filtered;
+  };
+
+  const getPartyLedgerEntries = (party: string) => {
+    return ledgerEntries
+      .filter(entry => entry.party === party)
+      .sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
+  };
+
+  const getPaginatedLedgerData = (data: LedgerEntry[]) => {
+    const startIndex = (ledgerCurrentPage - 1) * ledgerItemsPerPage;
+    const endIndex = startIndex + ledgerItemsPerPage;
+    return data.slice(startIndex, endIndex);
+  };
+
+  const totalLedgerPages = (data: LedgerEntry[]) => Math.ceil(data.length / ledgerItemsPerPage);
+
+  const filteredLedgerEntries = getFilteredLedgerEntries();
+  const paginatedLedgerEntries = getPaginatedLedgerData(filteredLedgerEntries);
+
+  // Separate the "TOTAL" row from other site names
+  const getSiteNamesWithoutTotal = () => {
+    return siteNames.filter(name => name !== "TOTAL");
+  };
+
+  const getTotalRowSiteNames = () => {
+    return siteNames.filter(name => name === "TOTAL");
+  };
+
+  // Calculate totals for all sites – returns AggregatedValues
+  const calculateTotalsForAllSites = (): AggregatedValues => {
+    const allSitesData = getSiteNamesWithoutTotal().map(siteName => {
+      const siteEntries = filteredLedgerEntries.filter(entry => 
+        entry.party.toUpperCase().includes(siteName) || 
+        siteName.includes(entry.party.toUpperCase())
+      );
+      
+      if (siteEntries.length > 0) {
+        return siteEntries.reduce((acc, entry) => {
+          const values = getEntryColumnValues(entry);
+          return {
+            labourBill: acc.labourBill + values.labourBill,
+            managementFees: acc.managementFees + values.managementFees,
+            machineRentWater: acc.machineRentWater + values.machineRentWater,
+            gst: acc.gst + values.gst,
+            billValue: acc.billValue + values.billValue,
+            paidSalaries: acc.paidSalaries + values.paidSalaries,
+            payableHoldSalaries: acc.payableHoldSalaries + values.payableHoldSalaries,
+            pfEsicPt: acc.pfEsicPt + values.pfEsicPt,
+            paidToVendor: acc.paidToVendor + values.paidToVendor,
+            vouchers: acc.vouchers + values.vouchers,
+            other: acc.other + values.other,
+            grossExpenses: acc.grossExpenses + values.grossExpenses,
+            balance: acc.balance + values.balance,
+            lessManagement: acc.lessManagement + values.lessManagement,
+            netProfit: acc.netProfit + values.netProfit
+          };
+        }, emptyAggregatedValues());
+      }
+      return null;
+    }).filter((data): data is AggregatedValues => data !== null);
+    
+    // Sum up all site data
+    return allSitesData.reduce((totals, siteData) => {
+      if (siteData) {
+        return {
+          labourBill: totals.labourBill + siteData.labourBill,
+          managementFees: totals.managementFees + siteData.managementFees,
+          machineRentWater: totals.machineRentWater + siteData.machineRentWater,
+          gst: totals.gst + siteData.gst,
+          billValue: totals.billValue + siteData.billValue,
+          paidSalaries: totals.paidSalaries + siteData.paidSalaries,
+          payableHoldSalaries: totals.payableHoldSalaries + siteData.payableHoldSalaries,
+          pfEsicPt: totals.pfEsicPt + siteData.pfEsicPt,
+          paidToVendor: totals.paidToVendor + siteData.paidToVendor,
+          vouchers: totals.vouchers + siteData.vouchers,
+          other: totals.other + siteData.other,
+          grossExpenses: totals.grossExpenses + siteData.grossExpenses,
+          balance: totals.balance + siteData.balance,
+          lessManagement: totals.lessManagement + siteData.lessManagement,
+          netProfit: totals.netProfit + siteData.netProfit
+        };
+      }
+      return totals;
+    }, emptyAggregatedValues());
+  };
+
+  // ─── Render ──────────────────────────────────────────────────────────
+
+  return (
+    <>
+      <Card>
+        <CardHeader className="flex flex-col sm:flex-row sm:items-center justify-between space-y-2 sm:space-y-0 pb-4 px-4 sm:px-6">
+          <div className="flex items-center gap-4">
+            <CardTitle className="text-lg sm:text-xl">Ledger & Site Balances</CardTitle>
+            {!isMobileView && (
+              <div className="flex border rounded-lg">
+                <Button
+                  variant={ledgerViewMode === "table" ? "default" : "ghost"}
+                  size="sm"
+                  onClick={() => setLedgerViewMode("table")}
+                  className="h-8 px-3"
+                >
+                  <List className="h-4 w-4" />
+                </Button>
+                <Button
+                  variant={ledgerViewMode === "card" ? "default" : "ghost"}
+                  size="sm"
+                  onClick={() => setLedgerViewMode("card")}
+                  className="h-8 px-3"
+                >
+                  <Grid className="h-4 w-4" />
+                </Button>
+              </div>
+            )}
+          </div>
+          <div className="flex flex-col sm:flex-row gap-2">
+            {isMobileView && (
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => setShowMobileFilters(!showMobileFilters)}
+                className="w-full"
+              >
+                <Filter className="h-4 w-4 mr-2" />
+                Filters
+                {showMobileFilters ? <ChevronUp className="h-4 w-4 ml-2" /> : <ChevronDown className="h-4 w-4 ml-2" />}
+              </Button>
+            )}
+            <div className="flex gap-2">
+              <Button variant="outline" onClick={() => onExportData("ledger")} size={isMobileView ? "sm" : "default"}>
+                <FileDown className="mr-2 h-4 w-4" />
+                {!isMobileView && "Export Ledger"}
+              </Button>
+              <Button variant="outline" onClick={() => onExportData("balances")} size={isMobileView ? "sm" : "default"}>
+                <Users className="mr-2 h-4 w-4" />
+                {!isMobileView && "Export Balances"}
+              </Button>
+            </div>
+          </div>
+        </CardHeader>
+        <CardContent className="space-y-4 sm:space-y-6 px-3 sm:px-6">
+          {/* Search and Date Filter - only show if not mobile or when toggled */}
+          {(isMobileView && showMobileFilters) || !isMobileView ? (
+            <>
+              <div className="flex flex-col sm:flex-row gap-4">
+                <div className="flex-1 relative">
+                  <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                  <Input
+                    placeholder="Search ledger entries..."
+                    className="pl-8 w-full h-9 sm:h-10"
+                    value={ledgerSearchTerm}
+                    onChange={(e) => setLedgerSearchTerm(e.target.value)}
+                  />
+                </div>
+                <Button 
+                  variant="outline" 
+                  onClick={() => setLedgerViewMode(ledgerViewMode === "table" ? "card" : "table")}
+                  className="sm:hidden w-full"
+                >
+                  {ledgerViewMode === "table" ? (
+                    <>
+                      <Grid className="h-4 w-4 mr-2" />
+                      Switch to Card View
+                    </>
+                  ) : (
+                    <>
+                      <List className="h-4 w-4 mr-2" />
+                      Switch to Table View
+                    </>
+                  )}
+                </Button>
+              </div>
+
+              {/* Date Filter */}
+              <div className="flex flex-col sm:flex-row gap-4 items-start sm:items-end">
+                <div className="space-y-2 flex-1">
+                  <Label htmlFor="startDate" className="text-xs sm:text-sm">From Date</Label>
+                  <Input 
+                    id="startDate" 
+                    type="date" 
+                    value={dateFilter.startDate}
+                    onChange={(e) => setDateFilter(prev => ({ ...prev, startDate: e.target.value }))}
+                    className="h-9 sm:h-10"
+                  />
+                </div>
+                <div className="space-y-2 flex-1">
+                  <Label htmlFor="endDate" className="text-xs sm:text-sm">To Date</Label>
+                  <Input 
+                    id="endDate" 
+                    type="date" 
+                    value={dateFilter.endDate}
+                    onChange={(e) => setDateFilter(prev => ({ ...prev, endDate: e.target.value }))}
+                    className="h-9 sm:h-10"
+                  />
+                </div>
+                <Button 
+                  variant="outline" 
+                  onClick={() => setDateFilter({ startDate: "", endDate: "" })}
+                  className="w-full sm:w-auto h-9 sm:h-10"
+                >
+                  <Filter className="mr-2 h-4 w-4" />
+                  Clear Filter
+                </Button>
+              </div>
+            </>
+          ) : null}
+
+          {/* Site Balances Summary - Mobile Responsive */}
+          <div>
+            <h3 className="font-semibold text-base sm:text-lg mb-4">Site Balances Summary</h3>
+            <div className="grid gap-3 sm:gap-4 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3">
+              {isMobileView ? (
+                partyBalances.map((party) => (
+                  <MobileBalanceCard
+                    key={party.party}
+                    party={party}
+                    onClick={handleViewPartyLedger}
+                    getBalanceColor={getBalanceColor}
+                    getBalanceBadgeVariant={getBalanceBadgeVariant}
+                    formatCurrency={formatCurrency}
+                  />
+                ))
+              ) : (
+                partyBalances.map((party) => (
+                  <Card key={party.party} className="cursor-pointer hover:shadow-md transition-shadow">
+                    <CardContent className="pt-6" onClick={() => handleViewPartyLedger(party.party)}>
+                      <div className="flex items-center justify-between mb-2">
+                        <div className="font-medium truncate">{party.party}</div>
+                        <Badge variant={getBalanceBadgeVariant(party.status)}>
+                          {party.status.toUpperCase()}
+                        </Badge>
+                      </div>
+                      <div className={`text-2xl font-bold ${getBalanceColor(party.currentBalance)}`}>
+                        {formatCurrency(Math.abs(party.currentBalance))}
+                      </div>
+                      <div className="flex justify-between text-sm text-muted-foreground mt-2">
+                        <span>Debit: {formatCurrency(party.totalDebit)}</span>
+                        <span>Credit: {formatCurrency(party.totalCredit)}</span>
+                      </div>
+                      {party.site && (
+                        <div className="text-xs text-muted-foreground mt-1">
+                          Site: {party.site}
+                        </div>
+                      )}
+                      <div className="text-xs text-muted-foreground mt-1">
+                        Last: {party.lastTransaction}
+                      </div>
+                    </CardContent>
+                  </Card>
+                ))
+              )}
+            </div>
+          </div>
+
+          {/* Ledger Entries */}
+          <div>
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between mb-4 gap-2">
+              <h3 className="font-semibold text-base sm:text-lg">Ledger Entries</h3>
+              <div className="text-xs sm:text-sm text-muted-foreground">
+                {isLoadingSites ? (
+                  <span>Loading site names...</span>
+                ) : (
+                  <span>Showing {filteredLedgerEntries.length} entries across {siteNames.length} sites</span>
+                )}
+              </div>
+            </div>
+
+            {(ledgerSearchTerm || dateFilter.startDate || dateFilter.endDate) && (
+              <div className="mb-4 p-3 bg-muted/50 rounded-lg">
+                <p className="text-xs sm:text-sm">
+                  Showing {filteredLedgerEntries.length} of {ledgerEntries.length} ledger entries
+                  {ledgerSearchTerm && ` matching "${ledgerSearchTerm}"`}
+                  {(dateFilter.startDate || dateFilter.endDate) && ` within selected date range`}
+                </p>
+              </div>
+            )}
+
+            {isLoadingSites ? (
+              <div className="text-center py-8">
+                <div className="animate-spin rounded-full h-6 w-6 sm:h-8 sm:w-8 border-b-2 border-primary mx-auto"></div>
+                <p className="mt-4 text-xs sm:text-sm text-muted-foreground">Loading site names...</p>
+              </div>
+            ) : ledgerViewMode === "table" && !isMobileView ? (
+              <>
+                <div className="border rounded-lg overflow-x-auto">
+                  <Table>
+                    <TableHeader>
+                      <TableRow>
+                        <TableHead className="whitespace-nowrap">SITE NAME</TableHead>
+                        <TableHead className="whitespace-nowrap">LABOUR BILL</TableHead>
+                        <TableHead className="whitespace-nowrap">MNG FEES</TableHead>
+                        <TableHead className="whitespace-nowrap">MACHINE RENT/WATER</TableHead>
+                        <TableHead className="whitespace-nowrap">GST</TableHead>
+                        <TableHead className="whitespace-nowrap">BILL VALUE</TableHead>
+                        <TableHead className="whitespace-nowrap">PAID SALARIES</TableHead>
+                        <TableHead className="whitespace-nowrap">PAYBLE/HOLD SALARIES</TableHead>
+                        <TableHead className="whitespace-nowrap">PF ESIC PT</TableHead>
+                        <TableHead className="whitespace-nowrap">PAID TO VENDOR</TableHead>
+                        <TableHead className="whitespace-nowrap">VOUCHERS</TableHead>
+                        <TableHead className="whitespace-nowrap">OTHER</TableHead>
+                        <TableHead className="whitespace-nowrap">GROSS EXPENSES</TableHead>
+                        <TableHead className="whitespace-nowrap">BALANCE</TableHead>
+                        <TableHead className="whitespace-nowrap">LESS MANAGEMENT</TableHead>
+                        <TableHead className="whitespace-nowrap">NET PROFIT</TableHead>
+                      </TableRow>
+                    </TableHeader>
+                    <TableBody>
+                      {/* Regular sites (newest first) */}
+                      {getSiteNamesWithoutTotal().map((siteName) => {
+                        const siteEntries = filteredLedgerEntries.filter(entry => 
+                          entry.party.toUpperCase().includes(siteName) || 
+                          siteName.includes(entry.party.toUpperCase())
+                        );
+                        
+                        if (siteEntries.length > 0) {
+                          // Aggregate values for all entries of this site
+                          const aggregatedValues = siteEntries.reduce((acc, entry) => {
+                            const values = getEntryColumnValues(entry);
+                            return {
+                              labourBill: acc.labourBill + values.labourBill,
+                              managementFees: acc.managementFees + values.managementFees,
+                              machineRentWater: acc.machineRentWater + values.machineRentWater,
+                              gst: acc.gst + values.gst,
+                              billValue: acc.billValue + values.billValue,
+                              paidSalaries: acc.paidSalaries + values.paidSalaries,
+                              payableHoldSalaries: acc.payableHoldSalaries + values.payableHoldSalaries,
+                              pfEsicPt: acc.pfEsicPt + values.pfEsicPt,
+                              paidToVendor: acc.paidToVendor + values.paidToVendor,
+                              vouchers: acc.vouchers + values.vouchers,
+                              other: acc.other + values.other,
+                              grossExpenses: acc.grossExpenses + values.grossExpenses,
+                              balance: acc.balance + values.balance,
+                              lessManagement: acc.lessManagement + values.lessManagement,
+                              netProfit: acc.netProfit + values.netProfit
+                            };
+                          }, emptyAggregatedValues());
+
+                          return (
+                            <TableRow key={siteName}>
+                              <TableCell>
+                                <div className="font-medium">{siteName}</div>
+                              </TableCell>
+                              <TableCell className="text-right">
+                                {aggregatedValues.labourBill > 0 ? formatCurrency(aggregatedValues.labourBill) : '-'}
+                              </TableCell>
+                              <TableCell className="text-right">
+                                {aggregatedValues.managementFees > 0 ? formatCurrency(aggregatedValues.managementFees) : '-'}
+                              </TableCell>
+                              <TableCell className="text-right">
+                                {aggregatedValues.machineRentWater > 0 ? formatCurrency(aggregatedValues.machineRentWater) : '-'}
+                              </TableCell>
+                              <TableCell className="text-right">
+                                {aggregatedValues.gst > 0 ? formatCurrency(aggregatedValues.gst) : '-'}
+                              </TableCell>
+                              <TableCell className="text-right font-medium">
+                                {aggregatedValues.billValue > 0 ? formatCurrency(aggregatedValues.billValue) : '-'}
+                              </TableCell>
+                              <TableCell className="text-right">
+                                {aggregatedValues.paidSalaries > 0 ? formatCurrency(aggregatedValues.paidSalaries) : '-'}
+                              </TableCell>
+                              <TableCell className="text-right">
+                                {aggregatedValues.payableHoldSalaries > 0 ? formatCurrency(aggregatedValues.payableHoldSalaries) : '-'}
+                              </TableCell>
+                              <TableCell className="text-right">
+                                {aggregatedValues.pfEsicPt > 0 ? formatCurrency(aggregatedValues.pfEsicPt) : '-'}
+                              </TableCell>
+                              <TableCell className="text-right">
+                                {aggregatedValues.paidToVendor > 0 ? formatCurrency(aggregatedValues.paidToVendor) : '-'}
+                              </TableCell>
+                              <TableCell className="text-right">
+                                {aggregatedValues.vouchers > 0 ? formatCurrency(aggregatedValues.vouchers) : '-'}
+                              </TableCell>
+                              <TableCell className="text-right">
+                                {aggregatedValues.other > 0 ? formatCurrency(aggregatedValues.other) : '-'}
+                              </TableCell>
+                              <TableCell className="text-right font-bold">
+                                {formatCurrency(aggregatedValues.grossExpenses)}
+                              </TableCell>
+                              <TableCell className={`text-right font-bold ${getBalanceColor(aggregatedValues.balance)}`}>
+                                {formatCurrency(aggregatedValues.balance)}
+                              </TableCell>
+                              <TableCell className="text-right">
+                                {aggregatedValues.lessManagement > 0 ? formatCurrency(aggregatedValues.lessManagement) : '-'}
+                              </TableCell>
+                              <TableCell className={`text-right font-bold ${
+                                aggregatedValues.netProfit >= 0 ? 'text-green-600' : 'text-red-600'
+                              }`}>
+                                {formatCurrency(aggregatedValues.netProfit)}
+                              </TableCell>
+                            </TableRow>
+                          );
+                        } else {
+                          // Display empty row for site without data
+                          return (
+                            <TableRow key={siteName}>
+                              <TableCell>
+                                <div className="font-medium">{siteName}</div>
+                              </TableCell>
+                              <TableCell className="text-right">-</TableCell>
+                              <TableCell className="text-right">-</TableCell>
+                              <TableCell className="text-right">-</TableCell>
+                              <TableCell className="text-right">-</TableCell>
+                              <TableCell className="text-right font-medium">-</TableCell>
+                              <TableCell className="text-right">-</TableCell>
+                              <TableCell className="text-right">-</TableCell>
+                              <TableCell className="text-right">-</TableCell>
+                              <TableCell className="text-right">-</TableCell>
+                              <TableCell className="text-right">-</TableCell>
+                              <TableCell className="text-right">-</TableCell>
+                              <TableCell className="text-right font-bold">-</TableCell>
+                              <TableCell className="text-right font-bold">-</TableCell>
+                              <TableCell className="text-right">-</TableCell>
+                              <TableCell className="text-right font-bold">-</TableCell>
+                            </TableRow>
+                          );
+                        }
+                      })}
+                      
+                      {/* TOTAL row at the end */}
+                      {getTotalRowSiteNames().map((siteName) => {
+                        const totalValues = calculateTotalsForAllSites();
+                        
+                        return (
+                          <TableRow key={siteName} className="bg-muted/50 font-bold">
+                            <TableCell>
+                              <div className="font-bold text-primary">{siteName}</div>
+                            </TableCell>
+                            <TableCell className="text-right">
+                              {totalValues.labourBill > 0 ? formatCurrency(totalValues.labourBill) : '-'}
+                            </TableCell>
+                            <TableCell className="text-right">
+                              {totalValues.managementFees > 0 ? formatCurrency(totalValues.managementFees) : '-'}
+                            </TableCell>
+                            <TableCell className="text-right">
+                              {totalValues.machineRentWater > 0 ? formatCurrency(totalValues.machineRentWater) : '-'}
+                            </TableCell>
+                            <TableCell className="text-right">
+                              {totalValues.gst > 0 ? formatCurrency(totalValues.gst) : '-'}
+                            </TableCell>
+                            <TableCell className="text-right font-bold text-primary">
+                              {totalValues.billValue > 0 ? formatCurrency(totalValues.billValue) : '-'}
+                            </TableCell>
+                            <TableCell className="text-right">
+                              {totalValues.paidSalaries > 0 ? formatCurrency(totalValues.paidSalaries) : '-'}
+                            </TableCell>
+                            <TableCell className="text-right">
+                              {totalValues.payableHoldSalaries > 0 ? formatCurrency(totalValues.payableHoldSalaries) : '-'}
+                            </TableCell>
+                            <TableCell className="text-right">
+                              {totalValues.pfEsicPt > 0 ? formatCurrency(totalValues.pfEsicPt) : '-'}
+                            </TableCell>
+                            <TableCell className="text-right">
+                              {totalValues.paidToVendor > 0 ? formatCurrency(totalValues.paidToVendor) : '-'}
+                            </TableCell>
+                            <TableCell className="text-right">
+                              {totalValues.vouchers > 0 ? formatCurrency(totalValues.vouchers) : '-'}
+                            </TableCell>
+                            <TableCell className="text-right">
+                              {totalValues.other > 0 ? formatCurrency(totalValues.other) : '-'}
+                            </TableCell>
+                            <TableCell className="text-right font-bold text-primary">
+                              {formatCurrency(totalValues.grossExpenses)}
+                            </TableCell>
+                            <TableCell className={`text-right font-bold ${getBalanceColor(totalValues.balance)}`}>
+                              {formatCurrency(totalValues.balance)}
+                            </TableCell>
+                            <TableCell className="text-right">
+                              {totalValues.lessManagement > 0 ? formatCurrency(totalValues.lessManagement) : '-'}
+                            </TableCell>
+                            <TableCell className={`text-right font-bold ${
+                              totalValues.netProfit >= 0 ? 'text-green-600' : 'text-red-600'
+                            }`}>
+                              {formatCurrency(totalValues.netProfit)}
+                            </TableCell>
+                          </TableRow>
+                        );
+                      })}
+                    </TableBody>
+                  </Table>
+                </div>
+
+                {filteredLedgerEntries.length > 0 && (
+                  <div className="flex flex-col sm:flex-row items-center justify-between mt-4 gap-2">
+                    <div className="text-xs sm:text-sm text-muted-foreground">
+                      Showing {((ledgerCurrentPage - 1) * ledgerItemsPerPage) + 1} to {Math.min(ledgerCurrentPage * ledgerItemsPerPage, siteNames.length)} of {siteNames.length} sites
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => setLedgerCurrentPage(prev => Math.max(prev - 1, 1))}
+                        disabled={ledgerCurrentPage === 1}
+                      >
+                        <ChevronLeft className="h-4 w-4" />
+                      </Button>
+                      <span className="text-xs sm:text-sm">
+                        Page {ledgerCurrentPage} of {Math.ceil(siteNames.length / ledgerItemsPerPage)}
+                      </span>
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => setLedgerCurrentPage(prev => Math.min(prev + 1, Math.ceil(siteNames.length / ledgerItemsPerPage)))}
+                        disabled={ledgerCurrentPage === Math.ceil(siteNames.length / ledgerItemsPerPage)}
+                      >
+                        <ChevronRight className="h-4 w-4" />
+                      </Button>
+                    </div>
+                  </div>
+                )}
+              </>
+            ) : (
+              // Card view (used for both mobile and when card view is selected)
+              <>
+                <div className="grid gap-3 sm:gap-4 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3">
+                  {siteNames.slice((ledgerCurrentPage - 1) * ledgerItemsPerPage, ledgerCurrentPage * ledgerItemsPerPage).map((siteName) => {
+                    const siteEntries = filteredLedgerEntries.filter(entry => 
+                      entry.party.toUpperCase().includes(siteName) || 
+                      siteName.includes(entry.party.toUpperCase())
+                    );
+                    
+                    if (siteEntries.length > 0 || siteName === "TOTAL") {
+                      let aggregatedValues: AggregatedValues;
+                      if (siteName === "TOTAL") {
+                        aggregatedValues = calculateTotalsForAllSites();
+                      } else {
+                        aggregatedValues = siteEntries.reduce((acc, entry) => {
+                          const values = getEntryColumnValues(entry);
+                          return {
+                            labourBill: acc.labourBill + values.labourBill,
+                            managementFees: acc.managementFees + values.managementFees,
+                            machineRentWater: acc.machineRentWater + values.machineRentWater,
+                            gst: acc.gst + values.gst,
+                            billValue: acc.billValue + values.billValue,
+                            paidSalaries: acc.paidSalaries + values.paidSalaries,
+                            payableHoldSalaries: acc.payableHoldSalaries + values.payableHoldSalaries,
+                            pfEsicPt: acc.pfEsicPt + values.pfEsicPt,
+                            paidToVendor: acc.paidToVendor + values.paidToVendor,
+                            vouchers: acc.vouchers + values.vouchers,
+                            other: acc.other + values.other,
+                            grossExpenses: acc.grossExpenses + values.grossExpenses,
+                            balance: acc.balance + values.balance,
+                            lessManagement: acc.lessManagement + values.lessManagement,
+                            netProfit: acc.netProfit + values.netProfit
+                          };
+                        }, emptyAggregatedValues());
+                      }
+
+                      return (
+                        <MobileLedgerCard
+                          key={siteName}
+                          siteName={siteName}
+                          aggregatedValues={aggregatedValues}
+                          isTotal={siteName === "TOTAL"}
+                          formatCurrency={formatCurrency}
+                          getBalanceColor={getBalanceColor}
+                        />
+                      );
+                    } else {
+                      // Empty card for site without data
+                      return (
+                        <Card key={siteName} className="opacity-50">
+                          <CardHeader className="pb-3 p-3">
+                            <div>
+                              <CardTitle className="text-sm">{siteName}</CardTitle>
+                              <p className="text-xs text-muted-foreground">No data available</p>
+                            </div>
+                          </CardHeader>
+                          <CardContent className="p-3 pt-0">
+                            <div className="space-y-2">
+                              <div className="flex justify-between text-xs">
+                                <span className="text-muted-foreground">Bill Value:</span>
+                                <span>-</span>
+                              </div>
+                              <div className="flex justify-between text-xs">
+                                <span className="text-muted-foreground">Gross Expenses:</span>
+                                <span>-</span>
+                              </div>
+                              <div className="flex justify-between text-xs">
+                                <span className="text-muted-foreground">Net Profit:</span>
+                                <span>-</span>
+                              </div>
+                            </div>
+                          </CardContent>
+                        </Card>
+                      );
+                    }
+                  })}
+                </div>
+
+                {siteNames.length > 0 && (
+                  <div className="flex flex-col sm:flex-row items-center justify-between mt-4 gap-2">
+                    <div className="text-xs sm:text-sm text-muted-foreground">
+                      Showing sites {((ledgerCurrentPage - 1) * ledgerItemsPerPage) + 1} to {Math.min(ledgerCurrentPage * ledgerItemsPerPage, siteNames.length)} of {siteNames.length} sites
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => setLedgerCurrentPage(prev => Math.max(prev - 1, 1))}
+                        disabled={ledgerCurrentPage === 1}
+                      >
+                        <ChevronLeft className="h-4 w-4" />
+                      </Button>
+                      <span className="text-xs sm:text-sm">
+                        Page {ledgerCurrentPage} of {Math.ceil(siteNames.length / ledgerItemsPerPage)}
+                      </span>
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => setLedgerCurrentPage(prev => Math.min(prev + 1, Math.ceil(siteNames.length / ledgerItemsPerPage)))}
+                        disabled={ledgerCurrentPage === Math.ceil(siteNames.length / ledgerItemsPerPage)}
+                      >
+                        <ChevronRight className="h-4 w-4" />
+                      </Button>
+                    </div>
+                  </div>
+                )}
+              </>
+            )}
+
+            {filteredLedgerEntries.length === 0 && (
+              <div className="text-center py-8">
+                <Search className="mx-auto h-8 w-8 sm:h-12 sm:w-12 text-muted-foreground" />
+                <h3 className="mt-4 text-base sm:text-lg font-semibold">No ledger entries found</h3>
+                <p className="text-xs sm:text-sm text-muted-foreground">
+                  {ledgerSearchTerm || dateFilter.startDate || dateFilter.endDate 
+                    ? "Try adjusting your search terms or date filters" 
+                    : "No ledger entries available"
+                  }
+                </p>
+              </div>
+            )}
+          </div>
+        </CardContent>
+      </Card>
+
+      {/* Party Ledger Dialog - Mobile Responsive */}
+      <Dialog open={ledgerDialogOpen} onOpenChange={setLedgerDialogOpen}>
+        <DialogContent className="w-[95vw] max-w-full sm:max-w-6xl mx-auto p-3 sm:p-6 max-h-[90vh] overflow-y-auto">
+          <DialogHeader className="mb-2 sm:mb-4">
+            <DialogTitle className="text-base sm:text-xl">Ledger Statement - {selectedParty}</DialogTitle>
+          </DialogHeader>
+          {selectedParty && (
+            <div className="space-y-4">
+              <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-2 p-3 sm:p-4 border rounded-lg bg-muted/50">
+                <div>
+                  <h3 className="font-semibold text-sm sm:text-base">{selectedParty}</h3>
+                  <p className="text-xs sm:text-sm text-muted-foreground">
+                    Current Balance: 
+                    <span className={`ml-2 font-bold ${getBalanceColor(
+                      partyBalances.find(p => p.party === selectedParty)?.currentBalance || 0
+                    )}`}>
+                      {formatCurrency(partyBalances.find(p => p.party === selectedParty)?.currentBalance || 0)}
+                    </span>
+                  </p>
+                </div>
+                <Button 
+                  variant="outline" 
+                  onClick={() => onExportData("statement")}
+                  size={isMobileView ? "sm" : "default"}
+                  className="w-full sm:w-auto"
+                >
+                  <Download className="mr-2 h-4 w-4" />
+                  Export Statement
+                </Button>
+              </div>
+
+              {isMobileView ? (
+                <div className="space-y-2">
+                  {getPartyLedgerEntries(selectedParty).map((entry) => {
+                    const values = getEntryColumnValues(entry);
+                    return (
+                      <MobilePartyLedgerCard
+                        key={entry.id}
+                        entry={entry}
+                        values={values}
+                        formatCurrency={formatCurrency}
+                        getBalanceColor={getBalanceColor}
+                      />
+                    );
+                  })}
+                </div>
+              ) : (
+                <div className="border rounded-lg overflow-x-auto">
+                  <Table>
+                    <TableHeader>
+                      <TableRow>
+                        <TableHead className="whitespace-nowrap">Date</TableHead>
+                        <TableHead className="whitespace-nowrap">Reference</TableHead>
+                        <TableHead className="whitespace-nowrap">Description</TableHead>
+                        <TableHead className="whitespace-nowrap">LABOUR BILL</TableHead>
+                        <TableHead className="whitespace-nowrap">MNG FEES</TableHead>
+                        <TableHead className="whitespace-nowrap">MACHINE RENT/WATER</TableHead>
+                        <TableHead className="whitespace-nowrap">GST</TableHead>
+                        <TableHead className="whitespace-nowrap">BILL VALUE</TableHead>
+                        <TableHead className="whitespace-nowrap">PAID SALARIES</TableHead>
+                        <TableHead className="whitespace-nowrap">PAYBLE/HOLD SALARIES</TableHead>
+                        <TableHead className="whitespace-nowrap">PF ESIC PT</TableHead>
+                        <TableHead className="whitespace-nowrap">PAID TO VENDOR</TableHead>
+                        <TableHead className="whitespace-nowrap">VOUCHERS</TableHead>
+                        <TableHead className="whitespace-nowrap">OTHER</TableHead>
+                        <TableHead className="whitespace-nowrap">GROSS EXPENSES</TableHead>
+                        <TableHead className="whitespace-nowrap">BALANCE</TableHead>
+                        <TableHead className="whitespace-nowrap">LESS MANAGEMENT</TableHead>
+                        <TableHead className="whitespace-nowrap">NET PROFIT</TableHead>
+                      </TableRow>
+                    </TableHeader>
+                    <TableBody>
+                      {getPartyLedgerEntries(selectedParty).map((entry) => {
+                        const values = getEntryColumnValues(entry);
+                        return (
+                          <TableRow key={entry.id}>
+                            <TableCell className="whitespace-nowrap">{entry.date}</TableCell>
+                            <TableCell className="font-mono text-sm whitespace-nowrap">{entry.reference}</TableCell>
+                            <TableCell className="max-w-xs truncate">{entry.description}</TableCell>
+                            <TableCell className="text-right">
+                              {values.labourBill > 0 ? formatCurrency(values.labourBill) : '-'}
+                            </TableCell>
+                            <TableCell className="text-right">
+                              {values.managementFees > 0 ? formatCurrency(values.managementFees) : '-'}
+                            </TableCell>
+                            <TableCell className="text-right">
+                              {values.machineRentWater > 0 ? formatCurrency(values.machineRentWater) : '-'}
+                            </TableCell>
+                            <TableCell className="text-right">
+                              {values.gst > 0 ? formatCurrency(values.gst) : '-'}
+                            </TableCell>
+                            <TableCell className="text-right font-medium">
+                              {values.billValue > 0 ? formatCurrency(values.billValue) : '-'}
+                            </TableCell>
+                            <TableCell className="text-right">
+                              {values.paidSalaries > 0 ? formatCurrency(values.paidSalaries) : '-'}
+                            </TableCell>
+                            <TableCell className="text-right">
+                              {values.payableHoldSalaries > 0 ? formatCurrency(values.payableHoldSalaries) : '-'}
+                            </TableCell>
+                            <TableCell className="text-right">
+                              {values.pfEsicPt > 0 ? formatCurrency(values.pfEsicPt) : '-'}
+                            </TableCell>
+                            <TableCell className="text-right">
+                              {values.paidToVendor > 0 ? formatCurrency(values.paidToVendor) : '-'}
+                            </TableCell>
+                            <TableCell className="text-right">
+                              {values.vouchers > 0 ? formatCurrency(values.vouchers) : '-'}
+                            </TableCell>
+                            <TableCell className="text-right">
+                              {values.other > 0 ? formatCurrency(values.other) : '-'}
+                            </TableCell>
+                            <TableCell className="text-right font-bold">
+                              {formatCurrency(values.grossExpenses)}
+                            </TableCell>
+                            <TableCell className={`text-right font-bold ${getBalanceColor(values.balance)}`}>
+                              {formatCurrency(values.balance)}
+                            </TableCell>
+                            <TableCell className="text-right">
+                              {values.lessManagement > 0 ? formatCurrency(values.lessManagement) : '-'}
+                            </TableCell>
+                            <TableCell className={`text-right font-bold ${
+                              values.netProfit >= 0 ? 'text-green-600' : 'text-red-600'
+                            }`}>
+                              {formatCurrency(values.netProfit)}
+                            </TableCell>
+                          </TableRow>
+                        );
+                      })}
+                    </TableBody>
+                  </Table>
+                </div>
+              )}
+            </div>
+          )}
+        </DialogContent>
+      </Dialog>
+    </>
+  );
+};
+
+export default LedgerBalanceTab;
