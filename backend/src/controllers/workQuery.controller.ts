@@ -9,12 +9,12 @@ export class WorkQueryController {
       console.log('📝 Creating work query...');
       
       let workQueryData: any;
-      let imageFiles: Express.Multer.File[] = [];
+      let imageFiles: Express.Express.Multer.File[] = [];
       
       // Check if request has files (multipart/form-data)
       if (req.files && Array.isArray(req.files) && req.files.length > 0) {
         console.log(`📸 Processing ${req.files.length} image files`);
-        imageFiles = req.files as Express.Multer.File[];
+        imageFiles = req.files as Express.Express.Multer.File[];
         
         // Parse the data field
         if (req.body.data) {

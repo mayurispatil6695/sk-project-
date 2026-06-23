@@ -41,7 +41,7 @@ export const uploadToCloudinary = (fileBuffer: Buffer, folder: string = 'work-qu
 
 // Upload multiple images to Cloudinary
 export const uploadMultipleToCloudinary = async (
-  files: Express.Multer.File[],
+  files: Express.Express.Multer.File[],
   folder: string = 'work-queries'
 ): Promise<Array<{ url: string; publicId: string }>> => {
   const uploadPromises = files.map(file => uploadToCloudinary(file.buffer, folder));

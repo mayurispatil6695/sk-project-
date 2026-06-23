@@ -99,8 +99,8 @@ const createCloudinaryStorage = () => {
   return {
     _handleFile: async (
       req: Request,
-      file: Express.Multer.File ,
-      cb: (error?: Error | null, info?: Partial<Express.Multer.File>) => void
+      file: Express.Express.Multer.File ,
+      cb: (error?: Error | null, info?: Partial<Express.Express.Multer.File>) => void
     ) => {
       try {
         // Upload to Cloudinary
@@ -120,7 +120,7 @@ const createCloudinaryStorage = () => {
         });
 
         // Return file info with Cloudinary URL
-        const fileInfo: Partial<Express.Multer.File> = {
+        const fileInfo: Partial<Express.Express.Multer.File> = {
           filename: result.public_id,
           path: result.secure_url,
           size: result.bytes,
@@ -135,7 +135,7 @@ const createCloudinaryStorage = () => {
     
     _removeFile: (
       req: Request,
-      file: Express.Multer.File ,
+      file: Express.Express.Multer.File ,
       cb: (error: Error | null) => void
     ) => {
       if (file.filename) {
@@ -153,7 +153,7 @@ const cloudinaryStorage = createCloudinaryStorage();
 const upload = multer({ 
   storage: cloudinaryStorage,
   limits: { fileSize: 5 * 1024 * 1024 },
-  fileFilter: (req: Request, file: Express.Multer.File , cb: multer.FileFilterCallback) => {
+  fileFilter: (req: Request, file: Express.Express.Multer.File , cb: Express.Multer.FileFilterCallback) => {
     const allowedTypes = /jpeg|jpg|png|pdf/;
     const extname = allowedTypes.test(path.extname(file.originalname).toLowerCase());
     const mimetype = allowedTypes.test(file.mimetype);
@@ -166,7 +166,7 @@ const memoryStorage = multer.memoryStorage();
 const simpleUpload = multer({ 
   storage: memoryStorage,
   limits: { fileSize: 5 * 1024 * 1024 },
-  fileFilter: (req: Request, file: Express.Multer.File , cb: multer.FileFilterCallback) => {
+  fileFilter: (req: Request, file: Express.Express.Multer.File , cb: Express.Multer.FileFilterCallback) => {
     const allowedTypes = /jpeg|jpg|png|pdf/;
     const extname = allowedTypes.test(path.extname(file.originalname).toLowerCase());
     const mimetype = allowedTypes.test(file.mimetype);

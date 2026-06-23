@@ -175,7 +175,7 @@ export const createTraining = async (req: Request, res: Response) => {
         }
         
         const attachments: IAttachment[] = [];
-        const files = req.files as Express.Multer.File[];
+        const files = req.files as Express.Express.Multer.File[];
         if (files && files.length > 0) {
           console.log(`Uploading ${files.length} files to Cloudinary`);
           const uploadPromises = files.map(async (file) => {
@@ -316,7 +316,7 @@ export const updateTraining = async (req: Request, res: Response) => {
         
         // Handle new file uploads
         let newAttachments: IAttachment[] = [];
-        const files = req.files as Express.Multer.File[];
+        const files = req.files as Express.Express.Multer.File[];
         if (files && files.length > 0) {
           console.log(`Uploading ${files.length} new files to Cloudinary`);
           const uploadPromises = files.map(async (file) => {

@@ -77,7 +77,7 @@ router.post('/multiple', auth, upload.array('photos', 10), async (req: Request, 
   try {
     const user = req.user;
     const { site, remark } = req.body;
-    const files = req.files as Express.Multer.File[];
+    const files = req.files as Express.Express.Multer.File[];
     if (!files || files.length === 0) {
       return res.status(400).json({ success: false, message: 'No files uploaded' });
     }

@@ -9,8 +9,8 @@ const storage = multer.memoryStorage();
 // Custom file filter
 const workQueryFileFilter = (
   req: Request,
-  file: Express.Multer.File,
-  cb: multer.FileFilterCallback
+  file: Express.Express.Multer.File,
+  cb: Express.Multer.FileFilterCallback
 ) => {
   if (validateWorkQueryFile(file.mimetype, file.originalname)) {
     cb(null, true);
