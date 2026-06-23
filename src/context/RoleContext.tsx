@@ -15,7 +15,6 @@ export interface User {
   department: string;
   contactNumber?: string;
   lastLogin?: string;
-  // Use `unknown` instead of `any` for dynamic fields
   [key: string]: unknown;
 }
 
@@ -29,8 +28,28 @@ interface RoleContextType {
   loading: boolean;
 }
 
-// Use your actual backend URL
-const API_URL = `${import.meta.env.VITE_API_URL}/auth`;
+// ============ UPDATED API URL CONFIGURATION ============
+// Get the API URL with proper fallbacks
+const getApiUrl = () => {
+  // If VITE_API_URL is set in environment variables
+  if (import.meta.env.VITE_API_URL) {
+    return `${import.meta.env.VITE_API_URL}/auth`;
+  }
+  
+  // For production (Vercel) - use your Render backend URL
+  if (import.meta.env.PROD) {
+    return 'https://sk-backend-btbj.onrender.com/api/auth';
+  }
+  
+  // For development (localhost)
+  return 'http://localhost:5001/api/auth';
+};
+
+const API_URL = getApiUrl();
+
+// Log the API URL for debugging
+console.log('🔧 API URL:', API_URL);
+console.log('🔧 Environment:', import.meta.env.MODE);
 
 const RoleContext = createContext<RoleContextType | undefined>(undefined);
 
@@ -41,7 +60,6 @@ export const RoleProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const [isAuthenticated, setIsAuthenticated] = useState(false);
 
   useEffect(() => {
-    // Check for stored user session on initial load
     checkAuth();
   }, []);
 
@@ -51,7 +69,6 @@ export const RoleProvider: React.FC<{ children: React.ReactNode }> = ({ children
       const storedToken = localStorage.getItem("sk_token");
 
       if (storedUser && storedToken) {
-        // Verify token with backend
         const response = await fetch(`${API_URL}/verify`, {
           method: 'POST',
           headers: {
@@ -67,7 +84,6 @@ export const RoleProvider: React.FC<{ children: React.ReactNode }> = ({ children
           setRole(parsedUser.role);
           setIsAuthenticated(true);
         } else {
-          // Token invalid, clear storage
           localStorage.removeItem("sk_user");
           localStorage.removeItem("sk_token");
         }
@@ -103,7 +119,6 @@ export const RoleProvider: React.FC<{ children: React.ReactNode }> = ({ children
         throw new Error(data.message || 'Signup failed');
       }
 
-      // Save user and token
       localStorage.setItem("sk_user", JSON.stringify(data.user));
       localStorage.setItem("sk_token", data.token);
       localStorage.setItem("token", data.token);
@@ -115,7 +130,6 @@ export const RoleProvider: React.FC<{ children: React.ReactNode }> = ({ children
       
     } catch (error) {
       console.error('🔴 Signup error:', error);
-      // Re-throw the error; consumer can handle it
       throw error;
     }
   };
@@ -161,7 +175,6 @@ export const RoleProvider: React.FC<{ children: React.ReactNode }> = ({ children
         throw new Error(errorMessage);
       }
 
-      // Save user and token
       localStorage.setItem("sk_user", JSON.stringify(data.user));
       localStorage.setItem("sk_token", data.token);
       localStorage.setItem("token", data.token);
@@ -178,7 +191,6 @@ export const RoleProvider: React.FC<{ children: React.ReactNode }> = ({ children
   };
 
   const logout = () => {
-    // ✅ Stop location tracking before clearing session
     stopLocationTracking();
 
     setUser(null);
