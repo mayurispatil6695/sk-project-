@@ -1020,7 +1020,7 @@ const [loadingPayroll, setLoadingPayroll] = useState(false);
   useEffect(() => {
   const interval = setInterval(() => {
     loadAttendanceData(); // refresh without showing toast
-  }, 30000); // every 30 seconds
+  }, 300000); // every 30 seconds
 
   return () => clearInterval(interval);
 }, []);

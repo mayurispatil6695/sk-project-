@@ -686,7 +686,7 @@ const SupervisorNotification = () => {
     // Set up interval to refresh notifications every 30 seconds
     const interval = setInterval(() => {
       fetchAllData();
-    }, 30000);
+    }, 300000);
     
     return () => clearInterval(interval);
   }, [currentUser]);

@@ -125,7 +125,7 @@ export const NotificationProvider: React.FC<{ children: React.ReactNode }> = ({ 
     if (pollInterval.current) clearInterval(pollInterval.current);
     pollInterval.current = setInterval(() => {
       refreshNotifications();
-    }, 10000); // 10 seconds
+    }, 300000); // 10 seconds
 
     return () => {
       isMounted.current = false;

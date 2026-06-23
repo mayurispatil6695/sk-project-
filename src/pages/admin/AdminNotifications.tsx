@@ -2441,7 +2441,7 @@ const Notifications = () => {
       if (autoRefresh) {
         autoRefreshRef.current = setInterval(() => {
           fetchNotifications();
-        }, 60000); // Refresh every minute
+        }, 300000); // Refresh every minute
       }
     };
 
@@ -2469,7 +2469,7 @@ const Notifications = () => {
     if (autoRefresh) {
       autoRefreshRef.current = setInterval(() => {
         fetchNotifications();
-      }, 60000);
+      }, 300000);
     }
     
     return () => {

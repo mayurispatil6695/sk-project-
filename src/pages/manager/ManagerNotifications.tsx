@@ -604,7 +604,7 @@ const ManagerNotifications = () => {
     // Set up periodic refresh (every 60 seconds)
     const refreshInterval = setInterval(() => {
       fetchAllData();
-    }, 60000);
+    }, 300000);
 
     return () => {
       unsubscribe();
