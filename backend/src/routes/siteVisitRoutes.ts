@@ -137,7 +137,7 @@ router.post('/reports', upload.array('photos', 10), async (req, res) => {
   try {
     const { data } = req.body;
     const reportData = JSON.parse(data);
-    const files = req.files as Express.Express.Multer.File[];
+    const files = req.files as Express.Multer.File[];
     
     console.log('📝 Creating site visit report:', reportData);
     console.log('📸 Files received:', files?.length || 0);

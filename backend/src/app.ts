@@ -25,9 +25,9 @@ import clientRoutes from './routes/clientRoutes';
 import tasksRoutes from './routes/tasksRoutes';
 import employeeRoutes from './routes/employeeRoutes';
 import leadRoutes from './routes/leadRoutes';
-import communicationRoutes from './routes/communicationRoutes';
+
 import expenseRoutes from './routes/expenseRoutes';
-import workQueryRoutes from './routes/workQuery.routes';
+
 import serviceRoutes from './routes/serviceRoutes';
 import alertRoutes from './routes/alertRoutes'
 import machineRoutes from './routes/machineRoutes';
@@ -99,8 +99,8 @@ const createCloudinaryStorage = () => {
   return {
     _handleFile: async (
       req: Request,
-      file: Express.Express.Multer.File ,
-      cb: (error?: Error | null, info?: Partial<Express.Express.Multer.File>) => void
+      file: Express.Multer.File ,
+      cb: (error?: Error | null, info?: Partial<Express.Multer.File>) => void
     ) => {
       try {
         // Upload to Cloudinary
@@ -120,7 +120,7 @@ const createCloudinaryStorage = () => {
         });
 
         // Return file info with Cloudinary URL
-        const fileInfo: Partial<Express.Express.Multer.File> = {
+        const fileInfo: Partial<Express.Multer.File> = {
           filename: result.public_id,
           path: result.secure_url,
           size: result.bytes,
@@ -135,7 +135,7 @@ const createCloudinaryStorage = () => {
     
     _removeFile: (
       req: Request,
-      file: Express.Express.Multer.File ,
+      file: Express.Multer.File ,
       cb: (error: Error | null) => void
     ) => {
       if (file.filename) {
@@ -153,7 +153,7 @@ const cloudinaryStorage = createCloudinaryStorage();
 const upload = multer({ 
   storage: cloudinaryStorage,
   limits: { fileSize: 5 * 1024 * 1024 },
-  fileFilter: (req: Request, file: Express.Express.Multer.File , cb: Express.Multer.FileFilterCallback) => {
+fileFilter: (req: Request, file: Express.Multer.File, cb: any) => {
     const allowedTypes = /jpeg|jpg|png|pdf/;
     const extname = allowedTypes.test(path.extname(file.originalname).toLowerCase());
     const mimetype = allowedTypes.test(file.mimetype);
@@ -166,7 +166,7 @@ const memoryStorage = multer.memoryStorage();
 const simpleUpload = multer({ 
   storage: memoryStorage,
   limits: { fileSize: 5 * 1024 * 1024 },
-  fileFilter: (req: Request, file: Express.Express.Multer.File , cb: Express.Multer.FileFilterCallback) => {
+ fileFilter: (req: Request, file: Express.Multer.File, cb: any) => {
     const allowedTypes = /jpeg|jpg|png|pdf/;
     const extname = allowedTypes.test(path.extname(file.originalname).toLowerCase());
     const mimetype = allowedTypes.test(file.mimetype);
@@ -232,7 +232,7 @@ app.use('/api/settings', settingsRoutes);
 console.log('✅ Settings routes registered at /api/settings');
 app.use('/api', uploadRoutes);
 app.use('/uploads', express.static('uploads'));
-app.use('/api/work-queries', workQueryRoutes);
+
 app.use('/api/alerts',alertRoutes);
 app.use('/api/machines', machineRoutes);
 app.use('/api/services', serviceRoutes);
@@ -578,7 +578,7 @@ app.use('/api/sites', siteRoutes);
 app.use('/api/tasks', tasksRoutes);
 app.use('/api/crm/clients', clientRoutes);
 app.use('/api/crm/leads', leadRoutes);
-app.use('/api/crm/communications', communicationRoutes);
+
 app.use('/api/admin-leaves', adminLeaveRoutes);
 app.use('/api/inventory', inventoryRoutes);
 app.use('/api/upload', uploadRoutes);

@@ -619,7 +619,7 @@ export const addMultipleAttachments = async (req: Request, res: Response) => {
     }
     
     // Create attachment objects from uploaded files
-    const newAttachments = (req.files as Express.Express.Multer.File[]).map(file => ({
+    const newAttachments = (req.files as Express.Multer.File[]).map(file => ({
       filename: file.originalname,
       url: `/uploads/${file.filename}`,
       uploadedAt: new Date(),

@@ -21,15 +21,15 @@ const upload = multer({
   }
 }).any(); // Use .any() to accept any field names
 
-// controllers/trainingController.ts – replace getAllTrainings
+// controllers/trainingController.ts â€“ replace getAllTrainings
 export const getAllTrainings = async (req: Request, res: Response) => {
   try {
     const { role, assignedSites, siteName } = req.user; // from middleware
     let filter: any = {};
 
-    // Apply role‑based site filtering
+    // Apply roleâ€‘based site filtering
     if (role === 'superadmin') {
-      // no site filter – see all
+      // no site filter â€“ see all
     } else if (role === 'manager') {
       if (!assignedSites || assignedSites.length === 0) {
         return res.status(403).json({ success: false, message: 'No sites assigned to you' });
@@ -175,7 +175,7 @@ export const createTraining = async (req: Request, res: Response) => {
         }
         
         const attachments: IAttachment[] = [];
-        const files = req.files as Express.Express.Multer.File[];
+        const files = req.files as Express.Multer.File[];
         if (files && files.length > 0) {
           console.log(`Uploading ${files.length} files to Cloudinary`);
           const uploadPromises = files.map(async (file) => {
@@ -316,7 +316,7 @@ export const updateTraining = async (req: Request, res: Response) => {
         
         // Handle new file uploads
         let newAttachments: IAttachment[] = [];
-        const files = req.files as Express.Express.Multer.File[];
+        const files = req.files as Express.Multer.File[];
         if (files && files.length > 0) {
           console.log(`Uploading ${files.length} new files to Cloudinary`);
           const uploadPromises = files.map(async (file) => {

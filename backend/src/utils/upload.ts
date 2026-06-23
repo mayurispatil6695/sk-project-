@@ -16,7 +16,7 @@ const storage = multer.memoryStorage();
 // File filter
 const fileFilter = (
   req: Request,
-  file: Express.Express.Multer.File,
+  file: Express.Multer.File,
   cb: Express.Multer.FileFilterCallback
 ) => {
   // Accept images and PDFs

@@ -179,7 +179,7 @@ export const createBriefing = async (req: Request, res: Response) => {
         }
         
         const attachments: IAttachment[] = [];
-        const files = req.files as Express.Express.Multer.File[];
+        const files = req.files as Express.Multer.File[];
         if (files && files.length > 0) {
           console.log(`Uploading ${files.length} files to Cloudinary`);
           const uploadPromises = files.map(async (file) => {
@@ -324,7 +324,7 @@ export const updateBriefing = async (req: Request, res: Response) => {
         }
         
         let newAttachments: IAttachment[] = [];
-        const files = req.files as Express.Express.Multer.File[];
+        const files = req.files as Express.Multer.File[];
         if (files && files.length > 0) {
           console.log(`Uploading ${files.length} new files to Cloudinary`);
           const uploadPromises = files.map(async (file) => {

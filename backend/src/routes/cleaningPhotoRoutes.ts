@@ -20,7 +20,7 @@ const upload = multer({
   }
 });
 
-// POST /api/cleaning-photos – upload a cleaning photo
+// POST /api/cleaning-photos â€“ upload a cleaning photo
 router.post('/', auth, upload.single('photo'), async (req: Request, res: Response) => {
   try {
     if (!req.file) {
@@ -57,7 +57,7 @@ router.post('/', auth, upload.single('photo'), async (req: Request, res: Respons
   }
 });
 
-// GET /api/cleaning-photos?site=xxx – fetch photos by site (admin/superadmin)
+// GET /api/cleaning-photos?site=xxx â€“ fetch photos by site (admin/superadmin)
 router.get('/', auth, async (req: Request, res: Response) => {
   try {
     const { site } = req.query;
@@ -72,12 +72,12 @@ router.get('/', auth, async (req: Request, res: Response) => {
     res.status(500).json({ success: false, message: error.message });
   }
 });
-// POST /api/cleaning-photos/multiple – upload multiple cleaning photos
+// POST /api/cleaning-photos/multiple â€“ upload multiple cleaning photos
 router.post('/multiple', auth, upload.array('photos', 10), async (req: Request, res: Response) => {
   try {
     const user = req.user;
     const { site, remark } = req.body;
-    const files = req.files as Express.Express.Multer.File[];
+    const files = req.files as Express.Multer.File[];
     if (!files || files.length === 0) {
       return res.status(400).json({ success: false, message: 'No files uploaded' });
     }
@@ -114,7 +114,7 @@ router.post('/multiple', auth, upload.array('photos', 10), async (req: Request, 
     res.status(500).json({ success: false, message: 'Upload failed' });
   }
 });
-// GET /api/cleaning-photos/supervisor – fetch photos for logged‑in supervisor
+// GET /api/cleaning-photos/supervisor â€“ fetch photos for loggedâ€‘in supervisor
 router.get('/supervisor', auth, async (req: Request, res: Response) => {
   try {
     let userId = req.user._id;
