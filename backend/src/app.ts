@@ -632,6 +632,23 @@ app.get('/api/crm/stats', async (req: Request, res: Response) => {
   }
 });
 
+
+// ==================== NOTIFICATIONS STUB ====================
+app.get('/api/notifications', (req: Request, res: Response) => {
+  res.json({ success: true, data: [] });
+});
+app.patch('/api/notifications/:id/read', (req: Request, res: Response) => {
+  res.json({ success: true });
+});
+app.patch('/api/notifications/read-all', (req: Request, res: Response) => {
+  res.json({ success: true });
+});
+app.delete('/api/notifications/:id', (req: Request, res: Response) => {
+  res.json({ success: true });
+});
+
+// ==================== 404 HANDLER ====================
+app.use('*', (req: Request, res: Response) => {
 // ==================== 404 HANDLER ====================
 app.use('*', (req: Request, res: Response) => {
   console.log(`❌ 404: ${req.method} ${req.url}`);
