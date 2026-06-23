@@ -226,7 +226,7 @@ process.on('unhandledRejection', (reason, promise) => {
 });
 
 // Serve static files
-app.use('/api/auth', authRoutes);
+
 app.use('/api/import', excelImportRoutes);
 app.use('/api/settings', settingsRoutes);
 console.log('✅ Settings routes registered at /api/settings');
