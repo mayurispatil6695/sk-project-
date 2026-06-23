@@ -15,6 +15,7 @@ interface AuthenticatedRequest extends Request {
     [key: string]: any;
   };
   userId?: string;
+   body: any;  // ← ADD THIS LINE
 }
 
 export const getProfile = async (req: AuthenticatedRequest, res: Response) => {

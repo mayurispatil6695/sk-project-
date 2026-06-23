@@ -2,7 +2,7 @@ import express, { Application, Request, Response, NextFunction } from 'express';
 import cors from 'cors';
 import connectDB from './config/database';
 import mongoose from 'mongoose';
-import multer from 'multer';
+import multer from 'multer';  // ← ADD THIS: import Multer type
 import path from 'path';
 import fs from 'fs';
 import { v2 as cloudinary, UploadApiResponse } from "cloudinary";
@@ -99,7 +99,7 @@ const createCloudinaryStorage = () => {
   return {
     _handleFile: async (
       req: Request,
-      file: Express.Multer.File,
+      file: Express.Multer.File ,
       cb: (error?: Error | null, info?: Partial<Express.Multer.File>) => void
     ) => {
       try {
@@ -135,7 +135,7 @@ const createCloudinaryStorage = () => {
     
     _removeFile: (
       req: Request,
-      file: Express.Multer.File,
+      file: Express.Multer.File ,
       cb: (error: Error | null) => void
     ) => {
       if (file.filename) {
@@ -153,7 +153,7 @@ const cloudinaryStorage = createCloudinaryStorage();
 const upload = multer({ 
   storage: cloudinaryStorage,
   limits: { fileSize: 5 * 1024 * 1024 },
-  fileFilter: (req: Request, file: Express.Multer.File, cb: multer.FileFilterCallback) => {
+  fileFilter: (req: Request, file: Express.Multer.File , cb: multer.FileFilterCallback) => {
     const allowedTypes = /jpeg|jpg|png|pdf/;
     const extname = allowedTypes.test(path.extname(file.originalname).toLowerCase());
     const mimetype = allowedTypes.test(file.mimetype);
@@ -166,7 +166,7 @@ const memoryStorage = multer.memoryStorage();
 const simpleUpload = multer({ 
   storage: memoryStorage,
   limits: { fileSize: 5 * 1024 * 1024 },
-  fileFilter: (req: Request, file: Express.Multer.File, cb: multer.FileFilterCallback) => {
+  fileFilter: (req: Request, file: Express.Multer.File , cb: multer.FileFilterCallback) => {
     const allowedTypes = /jpeg|jpg|png|pdf/;
     const extname = allowedTypes.test(path.extname(file.originalname).toLowerCase());
     const mimetype = allowedTypes.test(file.mimetype);
