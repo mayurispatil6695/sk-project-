@@ -53,11 +53,44 @@ import jwt from 'jsonwebtoken';
 const app: Application = express();
 
 // ==================== CORS CONFIGURATION ====================
+// ==================== CORS CONFIGURATION ====================
 app.use(cors({
-  origin: ['http://localhost:8080','http://localhost:5001', 'https://sk-project-khaki.vercel.app'],
+  origin: function (origin, callback) {
+    // Allow requests with no origin (like mobile apps or curl requests)
+    if (!origin) return callback(null, true);
+    
+    // List of allowed origins
+    const allowedOrigins = [
+      'http://localhost:8080',
+      'http://localhost:8081',  // ← Your React app port
+      'http://localhost:5001',
+      'http://localhost:5173',
+      'http://localhost:3000',
+      'https://sk-project-khaki.vercel.app',
+      'https://sk-backend-btbj.onrender.com',
+      // Allow any Vercel or Render preview deployments
+      /\.vercel\.app$/,
+      /\.onrender\.com$/
+    ];
+    
+    // Check if origin is allowed
+    const isAllowed = allowedOrigins.some(allowed => {
+      if (allowed instanceof RegExp) {
+        return allowed.test(origin);
+      }
+      return allowed === origin;
+    });
+    
+    if (isAllowed) {
+      callback(null, true);
+    } else {
+      console.log('🚫 CORS blocked origin:', origin);
+      callback(new Error('Not allowed by CORS'));
+    }
+  },
   credentials: true,
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
-  allowedHeaders: ['Content-Type', 'Authorization', 'Content-Length', 'X-Requested-With','cache-control','Cache-control'],
+  allowedHeaders: ['Content-Type', 'Authorization', 'Content-Length', 'X-Requested-With', 'cache-control', 'Cache-control'],
   exposedHeaders: ['Content-Range', 'X-Content-Range']
 }));
 
