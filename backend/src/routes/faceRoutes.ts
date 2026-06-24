@@ -4,6 +4,10 @@ import axios from 'axios';
 import FormData from 'form-data';
 import Employee from '../models/Employee';
 
+const FACE_SERVICE_URL = process.env.FACE_SERVICE_URL || 
+  (process.env.NODE_ENV === 'production' 
+    ? 'https://sk-face-service.onrender.com' 
+    : 'http://localhost:8000');
 const router = Router();
 const upload = multer({ storage: multer.memoryStorage() });
 
@@ -23,7 +27,7 @@ router.post('/register-face/:employeeId', upload.single('photo'), async (req, re
     const formData = new FormData();
     formData.append('file', file.buffer, { filename: 'photo.jpg' });
 
-    const pyRes = await axios.post('http://localhost:8000/embedding', formData, {
+    const pyRes = await axios.post(`${FACE_SERVICE_URL}/embedding`, formData, {
       headers: formData.getHeaders(),
       timeout: 10000,
     });

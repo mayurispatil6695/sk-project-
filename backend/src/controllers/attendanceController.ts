@@ -9,7 +9,10 @@ import FormData from 'form-data';
 import * as faceapi from 'face-api.js';
 import canvas from 'canvas';
 import path from 'path';
-
+const FACE_SERVICE_URL = process.env.FACE_SERVICE_URL || 
+  (process.env.NODE_ENV === 'production' 
+    ? 'https://sk-face-service.onrender.com' 
+    : 'http://localhost:8000');
 // ------------------ Types and helpers ------------------
 let modelsLoaded = false;
 
@@ -74,10 +77,10 @@ console.log('🔍 [autoAttendance] req.body:', req.body);
     // 1. Call face recognition service (your Python endpoint)
     const formData = new FormData();
     formData.append('file', photoFile.buffer, { filename: 'photo.jpg' });
-    const pyRes = await axios.post<{ success: boolean; message?: string; data?: any }>('http://localhost:8000/match', formData, {
-  headers: { ...formData.getHeaders() },
-  timeout: 60000,
-});
+      const pyRes = await axios.post(`${FACE_SERVICE_URL}/match`, formData, {
+      headers: { ...formData.getHeaders() },
+      timeout: 60000,
+    });
     const matchData = pyRes.data as { success: boolean; message?: string; data?: any };
 console.log('🐍 Python /match full response:', JSON.stringify(matchData));
     if (!matchData.success) {
@@ -199,7 +202,7 @@ export const faceRecognize = async (req: Request, res: Response) => {
 
     const formData = new FormData();
     formData.append('file', photoFile.buffer, { filename: 'photo.jpg' });
-    const pyRes = await axios.post<{ success: boolean; message?: string; data?: any }>('http://localhost:8000/embedding', formData, {
+    const pyRes = await axios.post(`${FACE_SERVICE_URL}/embedding`, formData, {
       headers: { ...formData.getHeaders() },
       timeout: 60000,
     });
@@ -253,7 +256,7 @@ export const registerFace = async (req: Request, res: Response) => {
 
     const formData = new FormData();
     formData.append('file', photoFile.buffer, { filename: 'photo.jpg' });
-    const pyRes = await axios.post('http://localhost:8000/embedding', formData, {
+      const pyRes = await axios.post(`${FACE_SERVICE_URL}/embedding`, formData, {
       headers: { ...formData.getHeaders() },
       timeout: 60000,
     });
@@ -278,7 +281,7 @@ export const registerFace = async (req: Request, res: Response) => {
 
     // ✅ Tell Python to reload so new face is immediately matchable
     try {
-      await axios.post('http://localhost:8000/reload');
+    await axios.post(`${FACE_SERVICE_URL}/reload`);
       console.log('✅ Python FAISS index reloaded');
     } catch (e) {
       console.warn('⚠️ Could not reload Python index (non-fatal)');
