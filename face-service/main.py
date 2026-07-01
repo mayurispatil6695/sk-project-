@@ -293,7 +293,21 @@ async def match_face(
             status_code=500,
             content={"success": False, "message": str(e)}
         )
-
+# ---------- GET handler for debugging ----------
+@app.get("/match")
+async def match_face_get():
+    logger.error("🚨🚨🚨 GET request received at /match! This should be POST.")
+    logger.error("🚨🚨🚨 This means something is redirecting or sending GET requests.")
+    return JSONResponse(
+        status_code=405,
+        content={
+            "success": False,
+            "message": "Method not allowed. Use POST for face matching.",
+            "received_method": "GET",
+            "required_method": "POST",
+            "fix": "Check your Express backend for redirects or URL rewriting"
+        }
+    )
 # ---------- Root endpoint ----------
 @app.get("/")
 async def root():
