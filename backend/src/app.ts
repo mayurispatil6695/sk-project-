@@ -311,7 +311,25 @@ app.get('/health', (req, res) => {
     uptime: process.uptime()
   });
 });
-
+// Add this after your other routes
+app.get('/api', (req: Request, res: Response) => {
+  res.json({
+    success: true,
+    message: 'SK Enterprises Backend API',
+    status: 'running',
+    version: '1.0.0',
+    database: mongoose.connection.readyState === 1 ? 'Connected' : 'Disconnected',
+    timestamp: new Date().toISOString(),
+    endpoints: {
+      health: '/api/health',
+      test: '/api/test',
+      users: '/api/users',
+      auth: '/api/auth',
+      attendance: '/api/attendance',
+      // Add more endpoints as needed
+    }
+  });
+});
 
 // Add this BEFORE the 404 handler (around line where you have other routes)
 app.get('/api/health', (req: Request, res: Response) => {
