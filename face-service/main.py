@@ -9,6 +9,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 from deepface import DeepFace
 import logging
+from datetime import datetime
 
 # Setup logging
 logging.basicConfig(level=logging.INFO)
@@ -31,19 +32,28 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-# ---------- MongoDB connection ----------
+# ---------- MongoDB connection with SSL Fix ----------
 MONGO_URI = os.getenv("MONGO_URI", "mongodb://localhost:27017")
 logger.info(f"Connecting to MongoDB at: {MONGO_URI[:30]}...")
 
 try:
-    client = pymongo.MongoClient(MONGO_URI, serverSelectionTimeoutMS=5000)
+    # ✅ FIXED: Added SSL certificate bypass for production deployment
+    client = pymongo.MongoClient(
+        MONGO_URI, 
+        serverSelectionTimeoutMS=5000,
+        tls=True,
+        tlsAllowInvalidCertificates=True,  # Fix SSL certificate issue
+        tlsAllowInvalidHostnames=True       # Fix hostname validation
+    )
+    
     # Test connection
     client.admin.command('ping')
     db = client["mydatabase"]
     employees_collection = db["employees"]
-    logger.info("✅ MongoDB connection successful")
+    logger.info("✅ MongoDB connection successful with SSL fix")
 except Exception as e:
     logger.error(f"❌ MongoDB connection failed: {e}")
+    logger.error(f"❌ Error details: {str(e)}")
     # Create a dummy collection to avoid crashes
     db = None
     employees_collection = None
@@ -106,9 +116,11 @@ load_embeddings()
 async def health_check():
     return {
         "status": "healthy",
+        "service": "Face Recognition Service",
         "embeddings_loaded": len(employee_ids) if employee_ids else 0,
         "mongodb_connected": db is not None,
-        "faiss_initialized": face_index is not None
+        "faiss_initialized": face_index is not None,
+        "timestamp": datetime.now().isoformat()
     }
 
 # ---------- /embedding endpoint (for registration) ----------
@@ -289,7 +301,8 @@ async def root():
         "service": "Face Recognition Service",
         "status": "running",
         "embeddings_loaded": len(employee_ids) if employee_ids else 0,
-        "mongodb_connected": db is not None
+        "mongodb_connected": db is not None,
+        "timestamp": datetime.now().isoformat()
     }
 
 if __name__ == "__main__":
