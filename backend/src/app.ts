@@ -1,3 +1,4 @@
+//app.ts
 import express, { Application, Request, Response, NextFunction } from 'express';
 import cors from 'cors';
 import connectDB from './config/database';
@@ -52,7 +53,7 @@ import rateLimit from 'express-rate-limit';
 import jwt from 'jsonwebtoken';
 const app: Application = express();
 
-// ==================== CORS CONFIGURATION ====================
+
 // ==================== CORS CONFIGURATION ====================
 app.use(cors({
   origin: function (origin, callback) {
@@ -68,7 +69,6 @@ app.use(cors({
       'http://localhost:3000',
       'https://sk-project-ecru.vercel.app',
       'https://sk-backend-btbj.onrender.com',
-      // Allow any Vercel or Render preview deployments
       /\.vercel\.app$/,
       /\.onrender\.com$/
     ];
@@ -312,24 +312,6 @@ app.get('/health', (req, res) => {
   });
 });
 // Add this after your other routes
-app.get('/api', (req: Request, res: Response) => {
-  res.json({
-    success: true,
-    message: 'SK Enterprises Backend API',
-    status: 'running',
-    version: '1.0.0',
-    database: mongoose.connection.readyState === 1 ? 'Connected' : 'Disconnected',
-    timestamp: new Date().toISOString(),
-    endpoints: {
-      health: '/api/health',
-      test: '/api/test',
-      users: '/api/users',
-      auth: '/api/auth',
-      attendance: '/api/attendance',
-      // Add more endpoints as needed
-    }
-  });
-});
 
 // Add this BEFORE the 404 handler (around line where you have other routes)
 app.get('/api/health', (req: Request, res: Response) => {
