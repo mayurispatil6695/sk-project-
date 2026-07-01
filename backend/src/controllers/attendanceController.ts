@@ -100,16 +100,14 @@ export const autoAttendance = async (req: Request, res: Response) => {
     console.log('📤 FormData created, sending request...');
     console.log('📤 Headers being sent:', formData.getHeaders());
     
-    // ✅ FIX: Add proper headers and handle redirects
+    // ✅ FIX: Remove maxRedirects - it doesn't exist in axios types
     const pyRes = await axios.post(pythonUrl, formData, {
       headers: { 
         ...formData.getHeaders(),
         'Accept': 'application/json',
         'User-Agent': 'sk-backend/1.0'
       },
-      timeout: 60000,  // Increased timeout
-      maxRedirects: 0,  // Don't follow redirects
-      validateStatus: (status) => status < 500  // Accept 400-499 as valid responses
+      timeout: 60000  // Increased timeout
     });
     
     console.log('🐍 Python response status:', pyRes.status);
@@ -267,6 +265,7 @@ export const autoAttendance = async (req: Request, res: Response) => {
     });
   }
 };
+
 export const faceRecognize = async (req: Request, res: Response) => {
   console.log('🔵 faceRecognize controller reached');
   try {
