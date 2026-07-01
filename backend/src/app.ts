@@ -300,11 +300,25 @@ app.get('/', (req: Request, res: Response) => {
   });
 });
 
+
 app.get('/health', (req, res) => {
   res.json({
     status: 'OK',
     timestamp: new Date().toISOString(),
     service: 'Document Management API',
+    version: '1.0.0',
+    database: mongoose.connection.readyState === 1 ? 'Connected' : 'Disconnected',
+    uptime: process.uptime()
+  });
+});
+
+
+// Add this BEFORE the 404 handler (around line where you have other routes)
+app.get('/api/health', (req: Request, res: Response) => {
+  res.json({
+    status: 'OK',
+    timestamp: new Date().toISOString(),
+    service: 'SK Enterprises Backend API',
     version: '1.0.0',
     database: mongoose.connection.readyState === 1 ? 'Connected' : 'Disconnected',
     uptime: process.uptime()
