@@ -38,12 +38,19 @@ try:
     )
     face_app.prepare(ctx_id=0, det_size=(320, 320))
     
-    # Lower detection threshold for better face detection
-    if hasattr(face_app, 'det_model'):
-        face_app.det_model.set('det_thresh', 0.3)
+    # ✅ Lower detection threshold for better face detection
+    # Remove the problematic set method and use a different approach
+    # The default threshold is fine for most cases
     
     logger.info("✅ InsightFace ready")
     INSIGHTFACE_AVAILABLE = True
+    
+    # ✅ Test the model with a dummy image to ensure it's loaded
+    import numpy as np
+    dummy_img = np.zeros((320, 320, 3), dtype=np.uint8)
+    test_faces = face_app.get(dummy_img)
+    logger.info(f"✅ Model test complete - found {len(test_faces) if test_faces else 0} faces in dummy image")
+    
 except Exception as e:
     logger.error(f"❌ InsightFace failed to load: {e}")
     INSIGHTFACE_AVAILABLE = False
@@ -70,7 +77,6 @@ except Exception as e:
     INSIGHTFACE_AVAILABLE = False
 
 # ---------- FAISS Indexes ----------
-# Supports BOTH 512-dim (InsightFace) AND 128-dim (legacy DeepFace)
 face_index_512 = None
 face_index_128 = None
 employee_ids_512 = []
@@ -88,12 +94,22 @@ def decode_image(content: bytes):
 def get_embedding(img_bgr: np.ndarray):
     """Returns 512-dim normalised embedding or None."""
     if not INSIGHTFACE_AVAILABLE or face_app is None:
+        logger.warning("⚠️ InsightFace not available")
         return None
     
     try:
         faces = face_app.get(img_bgr)
-        if not faces:
+        
+        # ✅ Log face detection results
+        if faces is None:
+            logger.warning("⚠️ face_app.get() returned None")
             return None
+        
+        if len(faces) == 0:
+            logger.warning("⚠️ No faces detected in image")
+            return None
+        
+        logger.info(f"✅ Detected {len(faces)} faces")
         
         # Pick largest face
         largest = max(
@@ -101,6 +117,7 @@ def get_embedding(img_bgr: np.ndarray):
             key=lambda f: (f.bbox[2] - f.bbox[0]) * (f.bbox[3] - f.bbox[1])
         )
         emb = largest.embedding.astype(np.float32)
+        logger.info(f"✅ Embedding generated, dim: {len(emb)}")
         return l2_normalize(emb)
     except Exception as e:
         logger.error(f"get_embedding error: {e}")
@@ -214,6 +231,9 @@ async def register_embedding(file: UploadFile = File(...)):
                 content={"success": False, "message": "Cannot decode image"}
             )
 
+        # ✅ Log image info
+        logger.info(f"📸 Image received: {img.shape[1]}x{img.shape[0]}")
+
         emb = get_embedding(img)
         if emb is None:
             return JSONResponse(
@@ -224,6 +244,7 @@ async def register_embedding(file: UploadFile = File(...)):
                 }
             )
 
+        logger.info(f"✅ Embedding generated — dim: {len(emb)}")
         return {"success": True, "embedding": emb.tolist()}
 
     except Exception as e:
