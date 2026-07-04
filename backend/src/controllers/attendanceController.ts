@@ -68,8 +68,6 @@ export const autoAttendance = async (req: Request, res: Response) => {
   console.log('🔵 autoAttendance STARTED');
   console.log('🔵 FACE_SERVICE_URL:', FACE_SERVICE_URL);
   console.log('🔵 req.file:', req.file ? 'FILE PRESENT' : 'NO FILE');
-  console.log('🔵 req.body:', JSON.stringify(req.body));
-  console.log('🔵 req.headers.content-type:', req.headers['content-type']);
 
   try {
     const { supervisorId, siteName } = req.body;
@@ -80,152 +78,185 @@ export const autoAttendance = async (req: Request, res: Response) => {
       return res.status(400).json({ success: false, message: 'Photo is required' });
     }
 
-    console.log('📸 Photo received:', {
-      originalname: photoFile.originalname,
-      size: photoFile.size,
-      mimetype: photoFile.mimetype
-    });
-
-    // ✅ FIX: Use the correct URL with HTTPS
+    // 1. Call face recognition service
     const pythonUrl = FACE_SERVICE_URL.endsWith('/') 
       ? `${FACE_SERVICE_URL}match` 
       : `${FACE_SERVICE_URL}/match`;
     
     console.log('📤 Calling Python service at:', pythonUrl);
 
-    // 1. Call face recognition service
     const formData = new FormData();
     formData.append('file', photoFile.buffer, { filename: 'photo.jpg' });
     
-    console.log('📤 FormData created, sending request...');
-    console.log('📤 Headers being sent:', formData.getHeaders());
-    
-    // ✅ FIX: Remove maxRedirects - it doesn't exist in axios types
     const pyRes = await axios.post(pythonUrl, formData, {
-      headers: { 
-        ...formData.getHeaders(),
-        'Accept': 'application/json',
-        'User-Agent': 'sk-backend/1.0'
-      },
-      timeout: 60000  // Increased timeout
+      headers: { ...formData.getHeaders() },
+      timeout: 60000
     });
     
-    console.log('🐍 Python response status:', pyRes.status);
-    console.log('🐍 Python response data:', JSON.stringify(pyRes.data));
+    console.log('🐍 Python response:', pyRes.status);
     
     const matchData = pyRes.data as { success: boolean; message?: string; data?: any };
     
     if (!matchData.success) {
       console.log('❌ Face not matched:', matchData.message);
-      return res.status(400).json({ success: false, message: matchData.message || 'Face not recognised' });
+      return res.status(400).json({ 
+        success: false, 
+        message: matchData.message || 'Face not recognised' 
+      });
     }
     
     const payload = matchData.data || matchData;
     const { employeeId, employeeName } = payload;
     
     console.log('✅ Matched employee:', { employeeId, employeeName });
-    
-    // Rest of your code...
+
+    // 2. Check today's attendance
     const today = formatDate(new Date());
     const attendance = await Attendance.findOne({ employeeId, date: today });
 
     let action = 'checkin';
     let updateData: any = {};
 
-    if (attendance) {
-      if (attendance.checkOutTime) {
-        return res.status(400).json({ success: false, message: `${employeeName} already checked out today` });
+    // ✅ FIX 1: If already checked out today → return error
+    if (attendance && attendance.checkOutTime) {
+      return res.status(400).json({ 
+        success: false, 
+        message: `${employeeName} already checked out today` 
+      });
+    }
+
+    // ✅ FIX 2: If checked in and no checkout → process checkout with MINIMUM GAP
+    if (attendance && attendance.checkInTime && !attendance.checkOutTime) {
+      // ✅ FIX 3: MINIMUM GAP CHECK - prevent instant checkout
+      const secondsSinceCheckIn = (Date.now() - new Date(attendance.checkInTime).getTime()) / 1000;
+      const MIN_GAP_SECONDS = 60; // 1 minute minimum gap
+
+      if (secondsSinceCheckIn < MIN_GAP_SECONDS) {
+        return res.status(200).json({
+          success: true,
+          message: `${employeeName} already checked in`,
+          data: {
+            employeeId,
+            employeeName,
+            action: 'checkin',
+            alreadyCheckedIn: true,
+            message: `${employeeName} already checked in (${Math.round(secondsSinceCheckIn)}s ago)`
+          }
+        });
       }
-      if (attendance.checkInTime && !attendance.checkOutTime) {
-        action = 'checkout';
-        const checkOutTime = new Date().toISOString();
-        const totalHours = calculateHours(attendance.checkInTime, checkOutTime);
-        updateData = {
-          checkOutTime,
-          isCheckedIn: false,
-          isOnBreak: false,
-          totalHours,
-          hasCheckedOutToday: true,
-          updatedAt: new Date(),
-        };
-      } else {
-        action = 'checkin';
-        const checkInTime = new Date().toISOString();
-        let photoUrl = '', photoPublicId = '';
-        try {
-          const uploadResult = await uploadAttendancePhoto(photoFile.buffer, employeeId, employeeName, 'checkin');
-          photoUrl = uploadResult.secure_url;
-          photoPublicId = uploadResult.public_id;
-        } catch (uploadError: any) {
-          console.warn('Photo upload failed:', uploadError.message);
+
+      // ✅ FIX 4: Checkout with photo upload
+      action = 'checkout';
+      const checkOutTime = new Date().toISOString();
+      const totalHours = calculateHours(attendance.checkInTime, checkOutTime);
+
+      // ✅ FIX 5: Upload checkout photo
+      let checkOutPhotoUrl = '';
+      try {
+        const uploadResult = await uploadAttendancePhoto(
+          photoFile.buffer, 
+          employeeId, 
+          employeeName, 
+          'checkout'
+        );
+        checkOutPhotoUrl = uploadResult.secure_url || uploadResult.url;
+        console.log('✅ Checkout photo uploaded:', checkOutPhotoUrl);
+      } catch (uploadError: any) {
+        console.warn('⚠️ Checkout photo upload failed:', uploadError.message);
+      }
+
+      updateData = {
+        checkOutTime,
+        checkOutPhoto: checkOutPhotoUrl || null,
+        isCheckedIn: false,
+        isOnBreak: false,
+        totalHours: totalHours,
+        hasCheckedOutToday: true,
+        updatedAt: new Date(),
+      };
+
+      const updated = await Attendance.findByIdAndUpdate(attendance._id, updateData, { new: true });
+      
+      return res.json({
+        success: true,
+        message: `${employeeName} checked out successfully`,
+        data: {
+          employeeId,
+          employeeName,
+          action: 'checkout',
+          attendance: updated
         }
-        updateData = {
-          checkInTime,
-          isCheckedIn: true,
-          isOnBreak: false,
-          checkInPhoto: photoUrl || null,
-          hasCheckedInToday: true,
-          hasCheckedOutToday: false,
-          updatedAt: new Date(),
-        };
-      }
-    } else {
+      });
+    }
+
+    // ✅ If no record or no check-in yet → CHECK-IN
+    if (!attendance || !attendance.checkInTime) {
       action = 'checkin';
       const checkInTime = new Date().toISOString();
-      let photoUrl = '', photoPublicId = '';
+
+      // ✅ Upload check-in photo
+      let checkInPhotoUrl = '';
       try {
-        const uploadResult = await uploadAttendancePhoto(photoFile.buffer, employeeId, employeeName, 'checkin');
-        photoUrl = uploadResult.secure_url;
-        photoPublicId = uploadResult.public_id;
+        const uploadResult = await uploadAttendancePhoto(
+          photoFile.buffer, 
+          employeeId, 
+          employeeName, 
+          'checkin'
+        );
+        checkInPhotoUrl = uploadResult.secure_url || uploadResult.url;
+        console.log('✅ Check-in photo uploaded:', checkInPhotoUrl);
       } catch (uploadError: any) {
-        console.warn('Photo upload failed:', uploadError.message);
+        console.warn('⚠️ Check-in photo upload failed:', uploadError.message);
       }
 
       const employee = await Employee.findById(employeeId);
-      updateData = {
+      
+      const newAttendance = new Attendance({
         employeeId,
         employeeName,
         date: today,
         checkInTime,
+        checkInPhoto: checkInPhotoUrl || null,
         isCheckedIn: true,
-        isOnBreak: false,
-        checkInPhoto: photoUrl || null,
         hasCheckedInToday: true,
         hasCheckedOutToday: false,
+        status: 'present',
         supervisorId: supervisorId || null,
         department: employee?.department || 'General',
         siteName: employee?.siteName || null,
-        status: 'present',
-        totalHours: 0,
+        lastCheckInDate: today,
+        isOnBreak: false,
+        breakStartTime: null,
+        breakEndTime: null,
         breakTime: 0,
+        totalHours: 0,
+        createdAt: new Date(),
         updatedAt: new Date(),
-      };
+      });
+
+      const saved = await newAttendance.save();
+
+      return res.json({
+        success: true,
+        message: `${employeeName} checked in successfully`,
+        data: {
+          employeeId,
+          employeeName,
+          action: 'checkin',
+          attendance: saved
+        }
+      });
     }
 
-    let result;
-    if (attendance) {
-      result = await Attendance.findByIdAndUpdate(attendance._id, updateData, { new: true });
-    } else {
-      result = await Attendance.create(updateData);
-    }
-
-    console.log('✅ Attendance saved successfully');
-
-    res.json({
-      success: true,
-      data: {
-        employeeId,
-        employeeName,
-        action,
-        message: `${employeeName} ${action}ed successfully`,
-      },
+    return res.status(400).json({
+      success: false,
+      message: 'Unable to process attendance'
     });
-    
+
   } catch (error: any) {
     console.error('❌ autoAttendance error:', error);
     console.error('❌ Error stack:', error.stack);
     
-    // ✅ Better error handling
     if (error.code === 'ECONNABORTED') {
       return res.status(504).json({ 
         success: false, 
@@ -237,7 +268,6 @@ export const autoAttendance = async (req: Request, res: Response) => {
       console.error('❌ Response status:', error.response.status);
       console.error('❌ Response data:', error.response.data);
       
-      // ✅ Handle 502 specifically
       if (error.response.status === 502) {
         return res.status(502).json({
           success: false,
