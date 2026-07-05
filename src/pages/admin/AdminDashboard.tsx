@@ -6,7 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Input } from "@/components/ui/input";
 import { motion, AnimatePresence } from "framer-motion";
-import { useState, useMemo, useEffect } from "react";
+import { useState, useMemo, useEffect ,useRef} from "react";
 import { toast } from "sonner";
 import { useNavigate } from "react-router-dom";
 import { UnifiedCreateModal } from "@/components/shared/UnifiedCreateModal";
@@ -1039,9 +1039,9 @@ const [loadingPayroll, setLoadingPayroll] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
   const [currentPage, setCurrentPage] = useState(1);
   const [showSiteBreakdown, setShowSiteBreakdown] = useState(false);
-  const [quickCreateOpen, setQuickCreateOpen] = useState(false);
-
-
+const [quickCreateOpen, setQuickCreateOpen] = useState(false);
+const recentMatchesRef = useRef<Map<string, number>>(new Map());
+const MATCH_COOLDOWN_MS = 12000; // 12 seconds
   // Load attendance status for the logged‑in admin
 const loadMyAttendanceStatus = async () => {
   try {
@@ -1113,49 +1113,49 @@ const handlePhotoCapture = async (photoFile: File) => {
   if (!cameraAction) return;
   setUploadingPhoto(true);
   try {
-    // Face recognition path
+    // Face recognition path using auto-attendance
     if (cameraAction === 'recognize') {
       const photoClone = new File([photoFile], photoFile.name, { type: photoFile.type });
       const formData = new FormData();
       formData.append('photo', photoClone);
-      const recognizeRes = await axios.post(`${API_URL}/attendance/face-recognize`, formData);
-      if (!recognizeRes.data.success) {
-        toast.error(recognizeRes.data.message || 'Face not recognized');
-        setCameraOpen(false);
-        return;
-      }
-      const { employeeId, employeeName } = recognizeRes.data.data;
-      const statusRes = await axios.get(`${API_URL}/attendance/status/${employeeId}`);
-      const hasCheckedInToday = statusRes.data.data.hasCheckedInToday;
-      const hasCheckedOutToday = statusRes.data.data.hasCheckedOutToday;
-      if (hasCheckedOutToday) {
-        toast.info(`${employeeName} has already completed today's attendance.`);
-        setCameraOpen(false);
-        return;
-      }
-      const action = !hasCheckedInToday ? 'checkin' : 'checkout';
-      const attendFormData = new FormData();
-      attendFormData.append('photo', photoClone);
-      attendFormData.append('employeeId', employeeId);
-      attendFormData.append('employeeName', employeeName);
+      formData.append('supervisorId', getCurrentAdminId());
+      formData.append('siteName', '');
+
       try {
-        const location = await getLocation();
-        attendFormData.append('latitude', location.lat.toString());
-        attendFormData.append('longitude', location.lng.toString());
-      } catch (locErr) {
-        toast.warning("Location not available – check‑in/out continues without location");
+        const response = await axios.post(`${API_URL}/attendance/auto-attendance`, formData, {
+          headers: { 'Content-Type': 'multipart/form-data' },
+          timeout: 15000
+        });
+
+        if (response.data.success) {
+          const { employeeId, employeeName, action, alreadyCheckedIn } = response.data.data;
+
+          // PER-EMPLOYEE COOLDOWN - prevent duplicate toasts
+          const now = Date.now();
+          const lastSeen = recentMatchesRef.current.get(employeeId);
+          if (lastSeen && now - lastSeen < MATCH_COOLDOWN_MS) {
+            // Same person still in frame — skip toast/UI update
+            setCameraOpen(false);
+            return;
+          }
+          recentMatchesRef.current.set(employeeId, now);
+
+          if (alreadyCheckedIn) {
+            toast.info(`${employeeName} already checked in`);
+          } else {
+            const actionDisplay = action === 'checkin' ? 'checked in' : 'checked out';
+            toast.success(`${employeeName} ${actionDisplay}!`);
+            loadAttendanceData(true);
+            loadMyAttendanceStatus();
+          }
+        } else {
+          toast.error(response.data.message || 'Attendance failed');
+        }
+      } catch (error: any) {
+        console.error('Auto-attendance error:', error);
+        toast.error(error.response?.data?.message || 'Failed to process attendance');
       }
-      const endpoint = action === 'checkin'
-        ? `${API_URL}/attendance/checkin-with-photo`
-        : `${API_URL}/attendance/checkout-with-photo`;
-      const attendRes = await axios.post(endpoint, attendFormData);
-      if (attendRes.data.success) {
-        toast.success(`${employeeName} ${action === 'checkin' ? 'checked in' : 'checked out'} with face recognition!`);
-        loadMyAttendanceStatus();
-        loadAttendanceData(true);
-      } else {
-        toast.error(attendRes.data.message || 'Attendance recording failed');
-      }
+
       setCameraOpen(false);
       return;
     }
@@ -1180,7 +1180,6 @@ const handlePhotoCapture = async (photoFile: File) => {
     setCameraAction(null);
   }
 };
-    
 
 // Weekly off marking (for any employee – admin has full access)
 const handleMarkWeeklyOff = async () => {

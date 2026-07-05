@@ -785,14 +785,31 @@ if (cameraAction === 'recognize') {
     console.log('📥 Auto-attendance response:', response.data);
 
     if (response.data.success) {
-      const { employeeName, action } = response.data.data;
-      const actionDisplay = action === 'checkin' ? 'checked in' : 'checked out';
-      setAttendanceResult(`✅ ${employeeName} ${actionDisplay}!`);
-      toast.success(`${employeeName} ${actionDisplay}!`);
-      
-      setTimeout(() => setAttendanceResult(null), 2500);
-      loadAttendanceRecords(selectedDate);
-    } else {
+  const { employeeId, employeeName, action, alreadyCheckedIn } = response.data.data;
+
+  // ✅ PER-EMPLOYEE COOLDOWN - prevent duplicate toasts
+  const now2 = Date.now();
+  const lastSeen = recentMatchesRef.current.get(employeeId);
+  if (lastSeen && now2 - lastSeen < MATCH_COOLDOWN_MS) {
+    // Same person still in frame — skip toast/UI update
+    setIsProcessing(false);
+    return;
+  }
+  recentMatchesRef.current.set(employeeId, now2);
+
+  if (alreadyCheckedIn) {
+    // Backend gap-guard triggered — show info message
+    setAttendanceResult(`ℹ️ ${employeeName} already checked in`);
+    setTimeout(() => setAttendanceResult(null), 2000);
+  } else {
+    const actionDisplay = action === 'checkin' ? 'checked in' : 'checked out';
+    setAttendanceResult(`✅ ${employeeName} ${actionDisplay}!`);
+    toast.success(`${employeeName} ${actionDisplay}!`);
+    setTimeout(() => setAttendanceResult(null), 2500);
+    loadAttendanceRecords(selectedDate);
+    loadAttendanceStatus();
+  }
+} else {
       setAttendanceResult(`❌ ${response.data.message}`);
       setTimeout(() => setAttendanceResult(null), 2000);
     }
