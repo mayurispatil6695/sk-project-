@@ -13,42 +13,46 @@ export default defineConfig(({ mode }) => ({
   plugins: [
     react(), 
     mode === "development" && componentTagger(),
-    VitePWA({
-      registerType: 'autoUpdate',
-      includeAssets: ['favicon.ico', 'apple-touch-icon.png'],
-      manifest: {
-        name: 'SK Project',
-        short_name: 'SK',
-        description: 'Facility Management System',
-        theme_color: '#1e293b',
-        background_color: '#0f172a',
-        display: 'standalone',
-        start_url: '/',
-        icons: [
-          // Add your icons here
-        ]
+   VitePWA({
+  registerType: "autoUpdate",
+
+  includeAssets: ["favicon.ico", "apple-touch-icon.png"],
+
+  manifest: {
+    name: "SK Project",
+    short_name: "SK",
+    description: "Facility Management System",
+    theme_color: "#1e293b",
+    background_color: "#0f172a",
+    display: "standalone",
+    start_url: "/",
+    icons: [],
+  },
+
+  workbox: {
+    // Increase the precache limit from 2 MB to 10 MB
+    maximumFileSizeToCacheInBytes: 10 * 1024 * 1024,
+
+    navigateFallback: "index.html",
+    navigateFallbackDenylist: [/^\/api\//],
+
+    globPatterns: ["**/*.{js,css,html,ico,png,svg,woff2}"],
+
+    runtimeCaching: [
+      {
+        urlPattern: /^https:\/\/sk-backend-btbj\.onrender\.com\/api\/.*/i,
+        handler: "NetworkFirst",
+        options: {
+          cacheName: "api-cache",
+          expiration: {
+            maxEntries: 50,
+            maxAgeSeconds: 60 * 60,
+          },
+        },
       },
-      workbox: {
-        navigateFallback: 'index.html',
-        // ✅ Don't cache API routes
-        navigateFallbackDenylist: [/^\/api\//],
-        // ✅ Don't cache auth pages
-        globPatterns: ['**/*.{js,css,html,ico,png,svg,woff2}'],
-        runtimeCaching: [
-          {
-            urlPattern: /^https:\/\/sk-backend-btbj\.onrender\.com\/api\/.*/i,
-            handler: 'NetworkFirst',
-            options: {
-              cacheName: 'api-cache',
-              expiration: {
-                maxEntries: 50,
-                maxAgeSeconds: 60 * 60
-              }
-            }
-          }
-        ]
-      }
-    })
+    ],
+  },
+})
   ].filter(Boolean),
   resolve: {
     alias: {
