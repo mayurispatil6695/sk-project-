@@ -85,7 +85,7 @@ import SalarySlip from "./pages/supervisor/SalarySlip";
 // Employee Pages
 import EmployeeTasks from "./pages/employee/EmployeeTasks";
 import EmployeeDocuments from "./pages/employee/EmployeeDocuments";
-
+import SupervisorHRMS from "./pages/supervisor/SupervisorHRMS";
 import ApplyLeave from "./pages/employee/ApplyLeave";
 import EmployeeAttendance from "./pages/employee/EmployeeAttendance";
 
@@ -93,7 +93,7 @@ import NotFound from "./pages/NotFound";
 import ManagerAttendance from "./pages/manager/ManagerAttendance";
 import SuperAdminWorkIssues from "./pages/superadmin/SuperAdminWorkIssues";
 
-import AdminHRMS from "./pages/admin/AdminHRMS";
+
 import SupervisorAssignTask from "./pages/supervisor/SupervisorAssignTask";
 import ManagerAssignTask from "./pages/manager/ManagerAssignTask";
 import SuperAdminReports from "./pages/superadmin/SuperAdminReports";
@@ -216,11 +216,11 @@ const App = () => (
                   </ProtectedRoute>
                 }
               >
-              <Route path="dashboard" element={<SuperAdminDashboard />} />
-  <Route path="attendance" element={<AttendanceTab />} />
+                <Route path="dashboard" element={<SuperAdminDashboard />} />
+                <Route path="attendance" element={<AttendanceTab />} />
                 <Route path="profile" element={<AdminProfile />} />
                 <Route path="team" element={<AdminTeam />} />
-             
+
                 <Route path="tasks" element={<AdminTasks />} />
                 <Route path="reports" element={<AdminReports />} />
                 <Route path="leave" element={<AdminLeave />} />
@@ -231,11 +231,7 @@ const App = () => (
                 <Route path="billing" element={<Billing />} />
                 <Route path="operations" element={<AdminOperations />} />
                 <Route path="documents" element={<AdminDocuments />} />
-                <Route path="hrms" element={<AdminHRMS />} />
-
-                <Route path="notifications" element={<AdminNotifications />} />
-
-
+                <Route path="hrms" element={<HRMS />} />
               </Route>
 
 
@@ -294,7 +290,7 @@ const App = () => (
                 <Route path="settings" element={<SupervisorSettings />} />
                 <Route path="assigntask" element={<SupervisorAssignTask />} />
                 <Route path="supervisortraining" element={<SupervisorTrainingBriefing />} />
-
+                <Route path="hrms" element={<SupervisorHRMS />} />
                 <Route path="machine-status" element={<MachineStatus />} />
                 <Route path="grooming" element={<GroomingStatus />} />
                 <Route path="incidents" element={<IncidentReports />} />

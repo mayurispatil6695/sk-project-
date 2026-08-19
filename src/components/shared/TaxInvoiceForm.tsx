@@ -170,65 +170,76 @@ export const TaxInvoiceForm: React.FC<TaxInvoiceFormProps> = ({
       const roundedTotalAmount = Math.round(totalAmountBeforeRound + roundUp);
       const finalRoundUp = roundedTotalAmount - totalAmountBeforeRound;
 
-      const invoiceItems: InvoiceItem[] = items
-        .filter(item => item.amount > 0)
-        .map(item => ({
-          description: item.description,
-          designation: item.designation,
-          quantity: item.quantity,
-          days: item.days,
-          hours: item.hours,
-          rate: item.rate,
-          amount: item.amount,
-          monthlyRate: item.rate // if needed
-        }));
+      // Check if any item has 0 amount
+      const zeroAmountItems = items.filter(item => item.amount <= 0);
+      if (zeroAmountItems.length > 0) {
+        alert(`Cannot submit: ${zeroAmountItems.length} item(s) have ₹0 amount. Please add a rate for all items.`);
+        setIsSubmitting(false);
+        return;
+      }
 
-      const invoiceNumber = formData.invoiceNumber || `SK-2425-G${String(taxInvoicesCount + 1).padStart(3, '0')}`;
+      const invoiceItems: InvoiceItem[] = items.map(item => ({
+        description: item.description,
+        designation: item.designation,
+        quantity: item.quantity,
+        days: item.days,
+        hours: item.hours,
+        rate: item.rate,
+        amount: item.amount,
+        monthlyRate: item.rate
+      }));
 
-   const newInvoice: Invoice = {
-  id: invoiceNumber,
-  invoiceNumber: invoiceNumber,
-  client: formData.clientName,
-  clientEmail: formData.clientEmail,
-  clientAddress: formData.clientAddress,
-  amount: roundedTotalAmount,
-  status: "pending",
-  date: formData.invoiceDate,
-  dueDate: formData.dueDate || formData.invoiceDate,
-  items: invoiceItems,
-  tax: Number((sgst + cgst).toFixed(2)),
-  discount: 0,
-  subtotal: taxableValue,
-  serviceType: formData.serviceCategory,
-  site: formData.selectedSiteId,
-  invoiceType: "tax",
-  sacCode: formData.sacCode,
-  panNumber: formData.panNumber,
-  gstNumber: formData.gstNumber,
-  serviceLocation: formData.serviceLocation,
-  esicNumber: formData.esicNumber,
-  lwfNumber: formData.lwfNumber,
-  pfNumber: formData.pfNumber,
-  servicePeriodFrom: formData.servicePeriodFrom,
-  servicePeriodTo: formData.servicePeriodTo,
-  managementFeesPercent: managementFeesPercent,
-  managementFeesAmount: Number(managementFees.toFixed(2)),
-  roundUp: Number(finalRoundUp.toFixed(2)),
-  bankName: formData.bankName,
-  accountNumber: formData.accountNumber,
-  ifscCode: formData.ifscCode,
-  consignee: formData.consigneeName,
-  consigneeAddress: formData.consigneeAddress,
-  consigneeGSTIN: formData.consigneeGSTIN,
-  buyer: formData.buyerName,
-  buyerAddress: formData.buyerAddress,
-  buyerGSTIN: formData.buyerGSTIN,
-  buyerState: formData.buyerState,
-  buyerStateCode: formData.buyerStateCode,
-  termsConditions: formData.termsConditions,
-  createdBy: userRole,
-  userId: userId
-};
+      // Generate unique invoice number with timestamp to avoid duplicates
+      let invoiceNumber = formData.invoiceNumber;
+      if (!invoiceNumber) {
+        const timestamp = new Date().getTime().toString().slice(-6);
+        invoiceNumber = `SK-2425-G${String(taxInvoicesCount + 1).padStart(3, '0')}-${timestamp}`;
+      }
+
+      const newInvoice: Invoice = {
+        id: invoiceNumber,
+        invoiceNumber: invoiceNumber,
+        client: formData.clientName,
+        clientEmail: formData.clientEmail,
+        clientAddress: formData.clientAddress,
+        amount: roundedTotalAmount,
+        status: "pending",
+        date: formData.invoiceDate,
+        dueDate: formData.dueDate || formData.invoiceDate,
+        items: invoiceItems,
+        tax: Number((sgst + cgst).toFixed(2)),
+        discount: 0,
+        subtotal: taxableValue,
+        serviceType: formData.serviceCategory,
+        site: formData.selectedSiteId,
+        invoiceType: "tax",
+        sacCode: formData.sacCode,
+        panNumber: formData.panNumber,
+        gstNumber: formData.gstNumber,
+        serviceLocation: formData.serviceLocation,
+        esicNumber: formData.esicNumber,
+        lwfNumber: formData.lwfNumber,
+        pfNumber: formData.pfNumber,
+        servicePeriodFrom: formData.servicePeriodFrom,
+        servicePeriodTo: formData.servicePeriodTo,
+        managementFeesPercent: managementFeesPercent,
+        managementFeesAmount: Number(managementFees.toFixed(2)),
+        roundUp: Number(finalRoundUp.toFixed(2)),
+        bankName: formData.bankName,
+        accountNumber: formData.accountNumber,
+        ifscCode: formData.ifscCode,
+        consignee: formData.consigneeName,
+        consigneeAddress: formData.consigneeAddress,
+        consigneeGSTIN: formData.consigneeGSTIN,
+        buyer: formData.buyerName,
+        buyerAddress: formData.buyerAddress,
+        buyerGSTIN: formData.buyerGSTIN,
+        buyerState: formData.buyerState,
+        buyerStateCode: formData.buyerStateCode,
+        termsConditions: formData.termsConditions,
+        createdBy: userRole,
+        userId: userId
+      };
 
       console.log("Submitting invoice:", newInvoice);
       onInvoiceCreate(newInvoice);

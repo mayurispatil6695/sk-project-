@@ -31,6 +31,7 @@ interface Employee {
   joinDate?: string;
   dateOfJoining?: string;
   status: "active" | "inactive" | "left";
+  profileStatus?: "complete" | "incomplete";   // ✅ NEW
   salary: number | string;
   uanNumber?: string;
   uan?: string;
@@ -73,6 +74,7 @@ interface Employee {
   updatedAt?: string;
   isManager?: boolean;
   isSupervisor?: boolean;
+  isProfileComplete?: boolean;   // ✅ NEW
 }
 
 interface SalaryStructure {
@@ -123,6 +125,7 @@ interface Site {
 
 interface NewEmployeeForm {
   // Basic Information
+  employeeId: string;  // ADD THIS
   name: string;
   email: string;
   phone: string;
@@ -266,7 +269,29 @@ const departments = [
   "Maintenance",
   "Other"
 ];
+// Fields that must be filled for a "complete" profile (exclude panNumber, email, numberOfChildren)
+const FIELDS_REQUIRED_FOR_COMPLETE: (keyof NewEmployeeForm)[] = [
+  'employeeId', 'name', 'phone', 'aadharNumber', 'esicNumber', 'uanNumber',
+  'siteName', 'dateOfBirth', 'dateOfJoining', 'bloodGroup', 'gender', 'maritalStatus',
+  'permanentAddress', 'permanentPincode', 'localAddress', 'localPincode',
+  'bankName', 'accountNumber', 'ifscCode', 'branchName',
+  'fatherName', 'motherName',
+  'emergencyContactName', 'emergencyContactPhone', 'emergencyContactRelation',
+  'nomineeName', 'nomineeRelation',
+  'pantSize', 'shirtSize', 'capSize',
+  'department', 'position', 'salary',
+];
 
+const checkEmployeeCompleteness = (emp: NewEmployeeForm): { isComplete: boolean; missingFields: string[] } => {
+  const missing: string[] = [];
+  FIELDS_REQUIRED_FOR_COMPLETE.forEach((field) => {
+    const value = emp[field];
+    if (value === undefined || value === null || (typeof value === 'string' && value.trim() === '')) {
+      missing.push(field);
+    }
+  });
+  return { isComplete: missing.length === 0, missingFields: missing };
+};
 // FormField Component
 const FormField = ({
   label,
@@ -290,6 +315,7 @@ const FormField = ({
 
 // Reset form function
 const resetNewEmployeeForm = () => ({
+  employeeId: "",  // ADD THIS
   name: "",
   email: "",
   phone: "",
@@ -1158,7 +1184,6 @@ const OnboardingTab = ({
     }
   };
 
-  // Bulk import function
   const handleBulkImport = async () => {
     if (excelData.length === 0) {
       toast.error('No data to import');
@@ -1166,15 +1191,12 @@ const OnboardingTab = ({
     }
 
     // Validate site capacities first
-    const siteCounts: { [key: string]: number } = {};
     const siteDetails: { [key: string]: Site } = {};
-
     sites.forEach(site => {
       siteDetails[site.name] = site;
     });
 
     const employeesBySite: { [key: string]: NewEmployeeForm[] } = {};
-
     excelData.forEach(emp => {
       if (emp.siteName) {
         if (!employeesBySite[emp.siteName]) {
@@ -1184,25 +1206,19 @@ const OnboardingTab = ({
       }
     });
 
-    // Check each site's capacity
     const sitesExceedingCapacity: string[] = [];
-
     for (const siteName in employeesBySite) {
       const site = siteDetails[siteName];
       if (!site) {
         sitesExceedingCapacity.push(`${siteName} (Site not found)`);
         continue;
       }
-
       const regularStaffCount = calculateRegularStaffCount(site);
       const currentStaff = employees.filter(emp =>
-        emp.siteName === siteName &&
-        emp.status === "active"
+        emp.siteName === siteName && emp.status === "active"
       ).length;
-
       const importCount = employeesBySite[siteName].length;
       const totalAfterImport = currentStaff + importCount;
-
       if (totalAfterImport > regularStaffCount) {
         sitesExceedingCapacity.push(
           `${siteName}: Would exceed capacity (Current: ${currentStaff}, Importing: ${importCount}, Capacity: ${regularStaffCount})`
@@ -1245,6 +1261,10 @@ const OnboardingTab = ({
             continue;
           }
 
+          // ✅ Compute completeness for this employee (moved inside the loop)
+          const { isComplete, missingFields } = checkEmployeeCompleteness(employeeData);
+          const profileStatus = isComplete ? 'complete' : 'incomplete';
+
           // Generate email if not provided
           let finalEmail = employeeData.email || '';
           if (!finalEmail && employeeData.name) {
@@ -1261,8 +1281,8 @@ const OnboardingTab = ({
           // Create FormData for each employee
           const formData = new FormData();
 
-          // Add employee data
           const employeeDataToSend = {
+            employeeId: newEmployee.employeeId.trim(),
             name: employeeData.name,
             email: finalEmail,
             phone: employeeData.phone || '',
@@ -1302,17 +1322,18 @@ const OnboardingTab = ({
             apronIssued: employeeData.apronIssued || false,
             department: employeeData.department || '',
             position: employeeData.position || '',
-            salary: employeeData.salary || '0'
+            salary: employeeData.salary || '0',
+            status: 'active',
+            profileStatus: profileStatus,
+            missingFields: isComplete ? [] : missingFields,
           };
 
-          // Append all data
           Object.entries(employeeDataToSend).forEach(([key, value]) => {
             if (value !== undefined && value !== null && value !== '') {
               formData.append(key, value.toString());
             }
           });
 
-          // Send to backend
           const response = await fetch(`${API_URL}/employees`, {
             method: "POST",
             body: formData
@@ -1336,23 +1357,19 @@ const OnboardingTab = ({
           });
         }
 
-        // Update progress
         setImportProgress(Math.round(((i + 1) / excelData.length) * 100));
       }
 
-      // Update employees list
       if (successfulImports.length > 0) {
         setEmployees(prev => [...prev, ...successfulImports]);
         toast.success(`Successfully imported ${successfulImports.length} employees`);
       }
 
-      // Show errors if any
       if (failedImports.length > 0) {
         toast.error(`${failedImports.length} employees failed to import`);
         console.log('Failed imports:', failedImports);
       }
 
-      // Reset
       setExcelData([]);
       setShowExcelPreview(false);
 
@@ -1668,6 +1685,7 @@ const OnboardingTab = ({
   const handleAddEmployee = async () => {
     // Validate required fields (email is optional but we'll generate if empty for backend)
     const requiredFields = [
+      { field: newEmployee.employeeId, name: 'Employee ID' },  // ADD THIS
       { field: newEmployee.name, name: 'Name' },
       { field: newEmployee.aadharNumber, name: 'Aadhar Number' },
       { field: newEmployee.dateOfBirth, name: 'Date of Birth' },  // ✅ Added
@@ -1675,7 +1693,19 @@ const OnboardingTab = ({
       { field: newEmployee.siteName, name: 'Site Name' },
 
     ];
-
+    // Validate Employee ID – user must provide a non‑empty, unique ID
+    if (!newEmployee.employeeId.trim()) {
+      toast.error('Employee ID is required. Please enter a unique ID.');
+      return;
+    }
+    // Check for duplicate employeeId in the existing employees list
+    const existingEmployee = employees.find(
+      emp => emp.employeeId === newEmployee.employeeId.trim()
+    );
+    if (existingEmployee) {
+      toast.error(`Employee ID "${newEmployee.employeeId}" is already taken. Please use a unique ID.`);
+      return;
+    }
     const missingFields = requiredFields
       .filter(item => !item.field || item.field.trim() === '')
       .map(item => item.name);
@@ -1749,19 +1779,32 @@ const OnboardingTab = ({
     }
 
     // Validate site capacity
+    // Validate site capacity – only enforce if the site has a real staff requirement set
     if (selectedSiteDetails) {
       const regularStaffCount = calculateRegularStaffCount(selectedSiteDetails);
-      const siteEmployees = employees.filter(emp =>
-        emp.siteName === selectedSiteDetails.name &&
-        emp.status === "active"
-      );
+      if (regularStaffCount > 0) {
+        const siteEmployees = employees.filter(emp =>
+          emp.siteName === selectedSiteDetails.name &&
+          emp.status === "active"
+        );
 
-      if (siteEmployees.length >= regularStaffCount) {
-        toast.error(`Cannot onboard employee: Site "${selectedSiteDetails.name}" has reached its regular staff capacity (${regularStaffCount} staff).`);
-        return;
+        if (siteEmployees.length >= regularStaffCount) {
+          toast.error(`Cannot onboard employee: Site "${selectedSiteDetails.name}" has reached its regular staff capacity (${regularStaffCount} staff).`);
+          return;
+        }
       }
     }
+    // ----- Compute profile completeness -----
+    const { isComplete, missingFields: missingCompleteFields } = checkEmployeeCompleteness(newEmployee);
+    const profileStatus = isComplete ? 'complete' : 'incomplete';
 
+    if (!isComplete) {
+      toast.warning(
+        `Employee created, but profile is incomplete. Missing: ${missingCompleteFields.join(', ')}`,
+        { duration: 6000 }
+      );
+    }
+    // ----------------------------------------
     setLoading(true);
 
     try {
@@ -1785,6 +1828,7 @@ const OnboardingTab = ({
 
       // Clean and prepare data for sending
       const employeeDataToSend = {
+        employeeId: newEmployee.employeeId.trim(),
         name: newEmployee.name.trim(),
         email: finalEmail, // Use generated email if not provided
         phone: newEmployee.phone?.trim() || '',
@@ -1824,7 +1868,10 @@ const OnboardingTab = ({
         apronIssued: newEmployee.apronIssued,
         department: newEmployee.department.trim(),
         position: newEmployee.position.trim(),
-        salary: salaryValue.toString()
+        salary: salaryValue.toString(),
+        status: 'active',                                    // ✅ ADD THIS
+        profileStatus: profileStatus,                        // ✅ ADD THIS
+        missingFields: isComplete ? [] : missingCompleteFields,
       };
 
       // Append all other data
@@ -1877,6 +1924,7 @@ const OnboardingTab = ({
         joinDate: createdEmployee.joinDate || createdEmployee.dateOfJoining,
         dateOfJoining: createdEmployee.dateOfJoining,
         status: createdEmployee.status || 'active',
+        profileStatus: createdEmployee.profileStatus || profileStatus,  // ✅ ADD THIS
         salary: createdEmployee.salary || 0,
         uanNumber: createdEmployee.uanNumber,
         uan: createdEmployee.uan,
@@ -3068,6 +3116,15 @@ const OnboardingTab = ({
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                       <FormField label="Site Name" required>
                         <SiteDropdown />
+                      </FormField>
+                      <FormField label="Employee ID (as provided by Client)" required>
+                        <Input
+                          value={newEmployee.employeeId}
+                          onChange={(e) => setNewEmployee({ ...newEmployee, employeeId: e.target.value })}
+                          placeholder="Enter client-provided ID"
+                          className="border-2 border-blue-200 focus:border-blue-500"
+                        />
+
                       </FormField>
                       <FormField label="Name" required>
                         <Input value={newEmployee.name} onChange={(e) => setNewEmployee({ ...newEmployee, name: e.target.value })} />

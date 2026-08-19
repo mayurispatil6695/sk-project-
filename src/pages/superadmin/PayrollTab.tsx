@@ -43,7 +43,7 @@ import {
   AlertCircle,
   RefreshCw,
   Building,
-  Upload,
+  Upload,XCircle,
 } from "lucide-react";
 import * as XLSX from "xlsx";
 // Dialog Components
@@ -656,7 +656,6 @@ const PayrollTab = ({ selectedMonth, setSelectedMonth, selectedSite, sites }: Pa
     const netSalary = netBasicSalary + totalAllowances - totalDeductions;
     return Math.max(0, netSalary);
   };
-
   const getPayrollCalculationDetails = (employeeId: string) => {
     const structure = filteredSalaryStructures.find((s) => s.employeeId === employeeId);
     if (!structure) return null;
@@ -678,6 +677,14 @@ const PayrollTab = ({ selectedMonth, setSelectedMonth, selectedSite, sites }: Pa
     const salaryDeductions = attendance.absentDays * dailyRate + totalLeaves * dailyRate;
     const netBasicSalary = basicSalaryEarned - salaryDeductions;
 
+    // ─── ADD DEDUCTION BREAKDOWN (PLACEHOLDER) ──────────────────────────────
+    // TODO: Fetch real deductions from API /state and include them here.
+    // For now, this is a placeholder – it will not show any items.
+    const deductionBreakdown = {
+      additionalDeductions: 0,
+      items: [] as Array<{ type: string; amount: number; description: string }>
+    };
+
     return {
       structure,
       attendance,
@@ -689,6 +696,7 @@ const PayrollTab = ({ selectedMonth, setSelectedMonth, selectedSite, sites }: Pa
       basicSalaryEarned,
       salaryDeductions,
       netBasicSalary,
+      deductionBreakdown, // ✅ Added this property
     };
   };
 
@@ -1690,6 +1698,24 @@ const PayrollTab = ({ selectedMonth, setSelectedMonth, selectedSite, sites }: Pa
                         <div className="flex justify-between border-t pt-1"><span className="font-medium">Net Basic Salary:</span><span className="font-medium">₹{calculation.netBasicSalary.toFixed(2)}</span></div>
                         <div className="flex justify-between"><span>Allowances:</span><span className="text-green-600">+₹{calculation.totalAllowances.toLocaleString()}</span></div>
                         <div className="flex justify-between"><span>Deductions:</span><span className="text-red-600">-₹{calculation.totalDeductions.toLocaleString()}</span></div>
+                        {/* ─── DEDUCTION BREAKDOWN ───────────────────────────────────────────── */}
+                        {calculation.deductionBreakdown && calculation.deductionBreakdown.items?.length > 0 && (
+                          <div className="border rounded-lg p-3 bg-orange-50">
+                            <h4 className="font-medium mb-2 text-orange-800">Additional Deductions</h4>
+                            <div className="space-y-1 text-sm">
+                              {calculation.deductionBreakdown.items.map((item: any, idx: number) => (
+                                <div key={idx} className="flex justify-between">
+                                  <span>{item.type === 'advance' ? 'Salary Advance' : item.type === 'fine' ? 'Fine/Penalty' : 'Other Deduction'}</span>
+                                  <span className="text-red-600">-₹{item.amount}</span>
+                                </div>
+                              ))}
+                              <div className="flex justify-between font-bold border-t pt-1">
+                                <span>Total Additional Deductions</span>
+                                <span className="text-red-600">-₹{calculation.deductionBreakdown.additionalDeductions}</span>
+                              </div>
+                            </div>
+                          </div>
+                        )}
                         <div className="flex justify-between border-t pt-2 font-bold"><span>Final Net Salary:</span><span className="text-lg">₹{calculation.calculatedSalary.toFixed(2)}</span></div>
                       </div>
                     </div>
