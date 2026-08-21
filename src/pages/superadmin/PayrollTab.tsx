@@ -43,7 +43,7 @@ import {
   AlertCircle,
   RefreshCw,
   Building,
-  Upload,XCircle,
+  Upload, XCircle,
 } from "lucide-react";
 import * as XLSX from "xlsx";
 // Dialog Components
@@ -110,6 +110,7 @@ interface Employee {
   site?: string;
   siteName?: string;
   siteId?: string;
+  profileStatus?: "complete" | "incomplete";   // ✅ ADD THIS
 }
 
 interface SalaryStructure {
@@ -1103,27 +1104,37 @@ const PayrollTab = ({ selectedMonth, setSelectedMonth, selectedSite, sites }: Pa
         <head>
           <title>Salary Slip - ${employee.name}</title>
           <style>
-            body { font-family: Arial, sans-serif; margin: 20px; }
-            .header { text-align: center; border-bottom: 2px solid #333; padding-bottom: 20px; margin-bottom: 20px; }
-            .company-name { font-size: 24px; font-weight: bold; margin-bottom: 10px; }
-            .slip-title { font-size: 20px; margin-bottom: 10px; }
-            .employee-info { display: flex; justify-content: space-between; margin-bottom: 20px; }
-            .section { margin-bottom: 20px; }
-            .section-title { font-weight: bold; border-bottom: 1px solid #ccc; padding-bottom: 5px; margin-bottom: 10px; }
-            .breakdown { width: 100%; border-collapse: collapse; }
-            .breakdown td { padding: 8px; border-bottom: 1px solid #eee; }
-            .breakdown .amount { text-align: right; }
-            .total { font-weight: bold; border-top: 2px solid #333; }
-            .attendance-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; text-align: center; margin-top: 20px; }
-            .attendance-item { padding: 10px; border-radius: 5px; }
-            .present { background: #d1fae5; color: #065f46; }
-            .absent { background: #fee2e2; color: #991b1b; }
-            .half-day { background: #fef3c7; color: #92400e; }
-            .leaves { background: #dbeafe; color: #1e40af; }
-            @media print {
-              body { margin: 0; }
-              .no-print { display: none; }
-            }
+           @page {
+  size: A4 portrait;
+  margin: 10mm;
+}
+* {
+  box-sizing: border-box;
+}
+body {
+  font-family: Arial, sans-serif;
+  margin: 0;
+  padding: 0;
+  background: #fff;
+}
+/* Remove any fixed-width containers; they will inherit full page width */
+.header { text-align: center; border-bottom: 2px solid #333; padding-bottom: 20px; margin-bottom: 20px; }
+.company-name { font-size: 24px; font-weight: bold; }
+.slip-title { font-size: 20px; }
+.employee-info { display: flex; justify-content: space-between; margin-bottom: 20px; }
+.section { margin-bottom: 20px; }
+.section-title { font-weight: bold; border-bottom: 1px solid #ccc; padding-bottom: 5px; margin-bottom: 10px; }
+.breakdown { width: 100%; border-collapse: collapse; }
+.breakdown td { padding: 8px; border-bottom: 1px solid #eee; }
+.breakdown .amount { text-align: right; }
+.total { font-weight: bold; border-top: 2px solid #333; }
+.attendance-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; text-align: center; margin-top: 20px; }
+.attendance-item { padding: 10px; border-radius: 5px; }
+.present { background: #d1fae5; color: #065f46; }
+.absent { background: #fee2e2; color: #991b1b; }
+.half-day { background: #fef3c7; color: #92400e; }
+.leaves { background: #dbeafe; color: #1e40af; }
+@media print { body { margin: 0; } }
           </style>
         </head>
         <body>
@@ -1218,7 +1229,12 @@ const PayrollTab = ({ selectedMonth, setSelectedMonth, selectedSite, sites }: Pa
 
       printWindow.document.write(printContent);
       printWindow.document.close();
-      printWindow.print();
+      printWindow.onload = function () {
+        printWindow.print();
+        setTimeout(function () {
+          printWindow.close();
+        }, 1000);
+      };
     }
   };
 

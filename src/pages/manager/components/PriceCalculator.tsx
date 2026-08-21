@@ -87,8 +87,7 @@ import assignTaskService, { AssignTask } from '@/services/assignTaskService';
 import axios from "axios";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 
-const API_URL = import.meta.env.VITE_API_URL || 
-  (import.meta.env.DEV ? 'http://localhost:5001/api' : 'https://sk-backend-btbj.onrender.com/api');
+const API_URL = import.meta.env.VITE_API_URL;
 // Types
 interface TrainingSession {
   _id: string;
@@ -201,7 +200,6 @@ interface Employee {
   status: "active" | "inactive" | "left";
   siteName?: string;
   assignedSites?: string[];
-  profileStatus?: "complete" | "incomplete";   // ✅ ADD THIS
 }
 
 interface ExistingAttachment {
@@ -2095,7 +2093,8 @@ const TrainingBriefingSectionManager: React.FC = () => {
   const [filteredEmployees, setFilteredEmployees] = useState<Employee[]>([]);
   
   // Multi-select states
- 
+  const [selectedSupervisors, setSelectedSupervisors] = useState<string[]>([]);
+  const [selectedManagers, setSelectedManagers] = useState<string[]>([]);
   const [selectedEmployees, setSelectedEmployees] = useState<string[]>([]);
   const [employeeSearchQuery, setEmployeeSearchQuery] = useState("");
   const [supervisorSearchQuery, setSupervisorSearchQuery] = useState("");
@@ -2103,7 +2102,9 @@ const TrainingBriefingSectionManager: React.FC = () => {
   
   // Edit mode multi-select states
   const [editSelectedSupervisors, setEditSelectedSupervisors] = useState<string[]>([]);
-  
+  const [editSelectedManagers, setEditSelectedManagers] = useState<string[]>([]);
+  const [editEmployeeSearchQuery, setEditEmployeeSearchQuery] = useState("");
+  const [editSupervisorSearchQuery, setEditSupervisorSearchQuery] = useState("");
   const [editManagerSearchQuery, setEditManagerSearchQuery] = useState("");
   
   // Form states for training
@@ -2181,68 +2182,46 @@ const TrainingBriefingSectionManager: React.FC = () => {
   }, []);
   
   // Get manager's assigned sites from tasks
-
-  // Get ALL sites - no filtering (single manager sees everything)
-const fetchManagerAssignedSites = useCallback(async () => {
-  try {
-    console.log('🔍 Fetching all sites for manager...');
-    const allSites = await siteService.getAllSites();
-    const siteIds = allSites.map(s => s._id);
-    const siteNames = allSites.map(s => s.name);
+  const fetchManagerAssignedSites = useCallback(async () => {
+    if (!managerId) return;
     
-    setManagerAssignedSites(siteIds);
-    setManagerAssignedSiteNames(siteNames);
-    
-    console.log(`✅ Loaded ${siteIds.length} sites`);
-    
-    // ✅ If no sites found, still stop loading
-    if (siteIds.length === 0) {
-      setLoadingData({
-        sites: false,
-        supervisors: false,
-        managers: false,
-        employees: false,
-        trainings: false,
-        briefings: false
+    try {
+      const allTasks = await assignTaskService.getAllAssignTasks();
+      const assignedSitesSet = new Set<string>();
+      const assignedSiteNamesSet = new Set<string>();
+      
+      allTasks.forEach((task: AssignTask) => {
+        const isManagerAssigned = task.assignedManagers?.some(mgr => mgr.userId === managerId);
+        if (isManagerAssigned && task.siteId) {
+          assignedSitesSet.add(task.siteId);
+          if (task.siteName) {
+            assignedSiteNamesSet.add(task.siteName);
+          }
+        }
       });
+      
+      setManagerAssignedSites(Array.from(assignedSitesSet));
+      setManagerAssignedSiteNames(Array.from(assignedSiteNamesSet));
+      console.log("Manager assigned sites:", Array.from(assignedSitesSet));
+    } catch (error) {
+      console.error("Error fetching manager assigned sites:", error);
+      toast.error("Failed to load your assigned sites");
     }
-  } catch (error) {
-    console.error("Error fetching sites:", error);
-    toast.error("Failed to load sites");
-    setLoadingData({
-      sites: false,
-      supervisors: false,
-      managers: false,
-      employees: false,
-      trainings: false,
-      briefings: false
-    });
-  }
-}, []);
- // ✅ Load sites on mount (no dependency on managerId)
-useEffect(() => {
-  fetchManagerAssignedSites();
-}, []);
+  }, [managerId]);
+  
+  // Fetch all data
+  useEffect(() => {
+    if (managerId && isAuthenticated) {
+      fetchManagerAssignedSites();
+    }
+  }, [managerId, isAuthenticated, fetchManagerAssignedSites]);
   
   // Fetch data after manager assigned sites are loaded
-  // Fetch data after manager assigned sites are loaded
-useEffect(() => {
-  if (managerAssignedSites.length > 0) {
-    fetchAllData();
-  } else {
-    // ✅ If no sites assigned, we already set loadingData to false in fetchManagerAssignedSites
-    // But if we get here with empty sites, make sure loading stops
-    setLoadingData(prev => ({
-      ...prev,
-      sites: false,
-      supervisors: false,
-      managers: false,
-      employees: false,
-      trainings: false,
-      briefings: false
-    }));
-  }
-}, [managerAssignedSites]);
+  useEffect(() => {
+    if (managerAssignedSites.length > 0) {
+      fetchAllData();
+    }
+  }, [managerAssignedSites]);
   
   // Fetch data when filters change
   useEffect(() => {
@@ -2324,16 +2303,17 @@ useEffect(() => {
     }
   };
   
- const fetchSites = async () => {
-  try {
-    const data = await siteService.getAllSites();
-    setSites(data); // ✅ No filtering - show ALL sites
-    console.log("📋 All sites loaded:", data.length);
-  } catch (error) {
-    console.error("Error fetching sites:", error);
-    toast.error("Failed to load sites");
-  }
-};
+  const fetchSites = async () => {
+    try {
+      const data = await siteService.getAllSites();
+      const filteredSites = data.filter(site => managerAssignedSites.includes(site._id));
+      setSites(filteredSites);
+      console.log("Filtered sites for manager:", filteredSites.length);
+    } catch (error) {
+      console.error("Error fetching sites:", error);
+      toast.error("Failed to load sites");
+    }
+  };
   
   const fetchSupervisorsAndManagers = async () => {
     try {
@@ -2396,23 +2376,26 @@ useEffect(() => {
     }
   };
   
- const fetchEmployees = async () => {
-  try {
-    const response = await axios.get(`${API_URL}/employees`);
-    if (response.data.success) {
-      const employeesData = response.data.data || [];
-      // ✅ No site filtering - show ALL active employees
-      const uniqueEmployees = Array.from(
-        new Map(employeesData.map((emp: Employee) => [emp._id, emp])).values()
-      ).filter(emp => emp.status === "active");
-      setEmployees(uniqueEmployees);
-      console.log("📋 All employees loaded:", uniqueEmployees.length);
+  const fetchEmployees = async () => {
+    try {
+      const response = await axios.get(`${API_URL}/employees`);
+      if (response.data.success) {
+        const employeesData = response.data.data || [];
+        const filteredEmployeesData = employeesData.filter((emp: Employee) => {
+          return (emp.siteName && managerAssignedSiteNames.includes(emp.siteName)) ||
+                 (emp.assignedSites && emp.assignedSites.some(site => managerAssignedSites.includes(site)));
+        });
+        const uniqueEmployees = Array.from(
+          new Map(filteredEmployeesData.map((emp: Employee) => [emp._id, emp])).values()
+        ).filter(emp => emp.status === "active");
+        setEmployees(uniqueEmployees);
+        console.log("Filtered employees for manager:", uniqueEmployees.length);
+      }
+    } catch (error) {
+      console.error("Error fetching employees:", error);
+      toast.error("Failed to load employees");
     }
-  } catch (error) {
-    console.error("Error fetching employees:", error);
-    toast.error("Failed to load employees");
-  }
-};
+  };
   
   const fetchTrainings = async () => {
     try {
@@ -2610,235 +2593,273 @@ useEffect(() => {
   
   // Add training session
   const handleAddTraining = async () => {
-  if (!trainingForm.title || !trainingForm.date || !trainingForm.trainer) {
-    toast.error('Please fill in all required fields');
-    return;
-  }
-  
-  // ✅ REMOVED: Supervisor and Manager validation
-  // No longer require supervisors or managers
-  
-  try {
-    setLoading(true);
-    
-    // ✅ supervisors and managers can be empty arrays
-    const supervisorsList = [];
-    const managersList = [];
-    
-    const trainingData = {
-      title: trainingForm.title,
-      description: trainingForm.description,
-      type: trainingForm.type,
-      date: trainingForm.date,
-      time: trainingForm.time,
-      duration: trainingForm.duration,
-      trainer: trainingForm.trainer,
-      site: trainingForm.site,
-      department: trainingForm.department,
-      maxAttendees: trainingForm.maxAttendees,
-      location: trainingForm.location,
-      objectives: trainingForm.objectives.filter(obj => obj.trim() !== ''),
-      supervisors: supervisorsList,
-      managers: managersList,
-      attendees: selectedEmployees
-    };
-    
-    const response = await trainingApi.createTraining(trainingData, attachments);
-    
-    if (response.success) {
-      toast.success('Training session added successfully');
-      await fetchTrainings();
-      resetTrainingForm();
-      setAttachments([]);
-      setShowAddTraining(false);
-    } else {
-      throw new Error(response.message || 'Failed to create training');
+    if (!trainingForm.title || !trainingForm.date || !trainingForm.trainer) {
+      toast.error('Please fill in all required fields');
+      return;
     }
-  } catch (error: any) {
-    console.error('Error creating training:', error);
-    toast.error(error.response?.data?.message || error.message || 'Error adding training session');
-  } finally {
-    setLoading(false);
-  }
-};
+    
+    if (selectedSupervisors.length === 0) {
+      toast.error('Please select at least one supervisor');
+      return;
+    }
+    
+    if (selectedManagers.length === 0) {
+      toast.error('Please select at least one manager');
+      return;
+    }
+    
+    try {
+      setLoading(true);
+      
+      const supervisorsList = selectedSupervisors.map(supId => {
+        const sup = filteredSupervisors.find(s => s._id === supId);
+        return sup ? { id: sup._id, name: sup.name } : null;
+      }).filter(Boolean);
+      
+      const managersList = selectedManagers.map(mgrId => {
+        const mgr = filteredManagers.find(m => m._id === mgrId);
+        return mgr ? { id: mgr._id, name: mgr.name } : null;
+      }).filter(Boolean);
+      
+      const trainingData = {
+        title: trainingForm.title,
+        description: trainingForm.description,
+        type: trainingForm.type,
+        date: trainingForm.date,
+        time: trainingForm.time,
+        duration: trainingForm.duration,
+        trainer: trainingForm.trainer,
+        site: trainingForm.site,
+        department: trainingForm.department,
+        maxAttendees: trainingForm.maxAttendees,
+        location: trainingForm.location,
+        objectives: trainingForm.objectives.filter(obj => obj.trim() !== ''),
+        supervisors: supervisorsList,
+        managers: managersList,
+        attendees: selectedEmployees
+      };
+      
+      const response = await trainingApi.createTraining(trainingData, attachments);
+      
+      if (response.success) {
+        toast.success('Training session added successfully');
+        await fetchTrainings();
+        resetTrainingForm();
+        setAttachments([]);
+        setShowAddTraining(false);
+      } else {
+        throw new Error(response.message || 'Failed to create training');
+      }
+    } catch (error: any) {
+      console.error('Error creating training:', error);
+      toast.error(error.response?.data?.message || error.message || 'Error adding training session');
+    } finally {
+      setLoading(false);
+    }
+  };
   
   // Add staff briefing
-const handleAddBriefing = async () => {
-  if (!briefingForm.date || !briefingForm.conductedBy || !briefingForm.site) {
-    toast.error('Please fill in all required fields');
-    return;
-  }
-  
-  // ✅ REMOVED: Supervisor and Manager validation
-  // No longer require supervisors or managers
-  
-  try {
-    setLoading(true);
-    
-    // ✅ supervisors and managers can be empty arrays
-    const supervisorsList = [];
-    const managersList = [];
-    
-    const actionItems = briefingForm.actionItems.map(item => ({ 
-      description: item.description, 
-      assignedTo: item.assignedTo, 
-      dueDate: item.dueDate, 
-      status: item.status || 'pending', 
-      priority: item.priority || 'medium' 
-    }));
-    
-    const briefingData = {
-      date: briefingForm.date,
-      time: briefingForm.time,
-      conductedBy: briefingForm.conductedBy,
-      site: briefingForm.site,
-      department: briefingForm.department,
-      attendeesCount: briefingForm.attendeesCount,
-      topics: briefingForm.topics.filter(topic => topic.trim() !== ''),
-      keyPoints: briefingForm.keyPoints.filter(point => point.trim() !== ''),
-      actionItems: actionItems,
-      notes: briefingForm.notes,
-      shift: briefingForm.shift,
-      supervisors: supervisorsList,
-      managers: managersList
-    };
-    
-    const response = await briefingApi.createBriefing(briefingData, attachments);
-    
-    if (response.success) {
-      toast.success('Staff briefing added successfully');
-      await fetchBriefings();
-      resetBriefingForm();
-      setAttachments([]);
-      setShowAddBriefing(false);
-    } else {
-      throw new Error(response.message || 'Failed to create briefing');
+  const handleAddBriefing = async () => {
+    if (!briefingForm.date || !briefingForm.conductedBy || !briefingForm.site) {
+      toast.error('Please fill in all required fields');
+      return;
     }
-  } catch (error: any) {
-    console.error('Error creating briefing:', error);
-    toast.error(error.response?.data?.message || error.message || 'Error adding staff briefing');
-  } finally {
-    setLoading(false);
-  }
-};
+    
+    if (selectedSupervisors.length === 0) {
+      toast.error('Please select at least one supervisor');
+      return;
+    }
+    
+    if (selectedManagers.length === 0) {
+      toast.error('Please select at least one manager');
+      return;
+    }
+    
+    try {
+      setLoading(true);
+      
+      const supervisorsList = selectedSupervisors.map(supId => {
+        const sup = filteredSupervisors.find(s => s._id === supId);
+        return sup ? { id: sup._id, name: sup.name } : null;
+      }).filter(Boolean);
+      
+      const managersList = selectedManagers.map(mgrId => {
+        const mgr = filteredManagers.find(m => m._id === mgrId);
+        return mgr ? { id: mgr._id, name: mgr.name } : null;
+      }).filter(Boolean);
+      
+      const actionItems = briefingForm.actionItems.map(item => ({ 
+        description: item.description, 
+        assignedTo: item.assignedTo, 
+        dueDate: item.dueDate, 
+        status: item.status || 'pending', 
+        priority: item.priority || 'medium' 
+      }));
+      
+      const briefingData = {
+        date: briefingForm.date,
+        time: briefingForm.time,
+        conductedBy: briefingForm.conductedBy,
+        site: briefingForm.site,
+        department: briefingForm.department,
+        attendeesCount: briefingForm.attendeesCount,
+        topics: briefingForm.topics.filter(topic => topic.trim() !== ''),
+        keyPoints: briefingForm.keyPoints.filter(point => point.trim() !== ''),
+        actionItems: actionItems,
+        notes: briefingForm.notes,
+        shift: briefingForm.shift,
+        supervisors: supervisorsList,
+        managers: managersList
+      };
+      
+      const response = await briefingApi.createBriefing(briefingData, attachments);
+      
+      if (response.success) {
+        toast.success('Staff briefing added successfully');
+        await fetchBriefings();
+        resetBriefingForm();
+        setAttachments([]);
+        setShowAddBriefing(false);
+      } else {
+        throw new Error(response.message || 'Failed to create briefing');
+      }
+    } catch (error: any) {
+      console.error('Error creating briefing:', error);
+      toast.error(error.response?.data?.message || error.message || 'Error adding staff briefing');
+    } finally {
+      setLoading(false);
+    }
+  };
   
   // Update training
- const handleUpdateTraining = async () => {
-  if (!editingTraining) return;
-  
-  try {
-    setLoading(true);
+  const handleUpdateTraining = async () => {
+    if (!editingTraining) return;
     
-    // ✅ supervisors and managers can be empty arrays
-    const supervisorsList = [];
-    const managersList = [];
-    
-    const existingAttachments = editTrainingAttachments
-      .filter(att => !att.isNew)
-      .map(({ isNew, file, ...rest }) => rest);
-    
-    const newFiles = editTrainingNewFiles;
-    
-    const updateData = {
-      title: editTrainingForm.title,
-      description: editTrainingForm.description,
-      type: editTrainingForm.type,
-      date: editTrainingForm.date,
-      time: editTrainingForm.time,
-      duration: editTrainingForm.duration,
-      trainer: editTrainingForm.trainer,
-      site: editTrainingForm.site,
-      department: editTrainingForm.department,
-      maxAttendees: editTrainingForm.maxAttendees,
-      location: editTrainingForm.location,
-      objectives: editTrainingForm.objectives.filter(obj => obj.trim() !== ''),
-      supervisors: supervisorsList,
-      managers: managersList,
-      attachments: existingAttachments
-    };
-    
-    const response = await trainingApi.updateTraining(editingTraining._id, updateData, newFiles);
-    
-    if (response.success) {
-      toast.success('Training session updated successfully');
-      await fetchTrainings();
-      setShowEditTrainingDialog(false);
-      setEditingTraining(null);
-      resetEditTrainingForm();
-      setEditTrainingAttachments([]);
-      setEditTrainingNewFiles([]);
-    } else {
-      throw new Error(response.message || 'Failed to update training');
+    try {
+      setLoading(true);
+      
+      const supervisorsList = editSelectedSupervisors.map(supId => {
+        const sup = filteredSupervisors.find(s => s._id === supId);
+        return sup ? { id: sup._id, name: sup.name } : null;
+      }).filter(Boolean);
+      
+      const managersList = editSelectedManagers.map(mgrId => {
+        const mgr = filteredManagers.find(m => m._id === mgrId);
+        return mgr ? { id: mgr._id, name: mgr.name } : null;
+      }).filter(Boolean);
+      
+      const existingAttachments = editTrainingAttachments
+        .filter(att => !att.isNew)
+        .map(({ isNew, file, ...rest }) => rest);
+      
+      const newFiles = editTrainingNewFiles;
+      
+      const updateData = {
+        title: editTrainingForm.title,
+        description: editTrainingForm.description,
+        type: editTrainingForm.type,
+        date: editTrainingForm.date,
+        time: editTrainingForm.time,
+        duration: editTrainingForm.duration,
+        trainer: editTrainingForm.trainer,
+        site: editTrainingForm.site,
+        department: editTrainingForm.department,
+        maxAttendees: editTrainingForm.maxAttendees,
+        location: editTrainingForm.location,
+        objectives: editTrainingForm.objectives.filter(obj => obj.trim() !== ''),
+        supervisors: supervisorsList,
+        managers: managersList,
+        attachments: existingAttachments
+      };
+      
+      const response = await trainingApi.updateTraining(editingTraining._id, updateData, newFiles);
+      
+      if (response.success) {
+        toast.success('Training session updated successfully');
+        await fetchTrainings();
+        setShowEditTrainingDialog(false);
+        setEditingTraining(null);
+        resetEditTrainingForm();
+        setEditTrainingAttachments([]);
+        setEditTrainingNewFiles([]);
+      } else {
+        throw new Error(response.message || 'Failed to update training');
+      }
+    } catch (error: any) {
+      console.error('Error updating training:', error);
+      toast.error(error.response?.data?.message || error.message || 'Error updating training session');
+    } finally {
+      setLoading(false);
     }
-  } catch (error: any) {
-    console.error('Error updating training:', error);
-    toast.error(error.response?.data?.message || error.message || 'Error updating training session');
-  } finally {
-    setLoading(false);
-  }
-};
+  };
   
- const handleUpdateBriefing = async () => {
-  if (!editingBriefing) return;
-  
-  try {
-    setLoading(true);
+  const handleUpdateBriefing = async () => {
+    if (!editingBriefing) return;
     
-    // ✅ supervisors and managers can be empty arrays
-    const supervisorsList = [];
-    const managersList = [];
-    
-    const actionItems = editBriefingForm.actionItems.map(item => ({ 
-      description: item.description, 
-      assignedTo: item.assignedTo, 
-      dueDate: item.dueDate, 
-      status: item.status || 'pending', 
-      priority: item.priority || 'medium' 
-    }));
-    
-    const existingAttachments = editBriefingAttachments
-      .filter(att => !att.isNew)
-      .map(({ isNew, file, ...rest }) => rest);
-    
-    const newFiles = editBriefingNewFiles;
-    
-    const updateData = {
-      date: editBriefingForm.date,
-      time: editBriefingForm.time,
-      conductedBy: editBriefingForm.conductedBy,
-      site: editBriefingForm.site,
-      department: editBriefingForm.department,
-      attendeesCount: editBriefingForm.attendeesCount,
-      topics: editBriefingForm.topics.filter(topic => topic.trim() !== ''),
-      keyPoints: editBriefingForm.keyPoints.filter(point => point.trim() !== ''),
-      actionItems: actionItems,
-      notes: editBriefingForm.notes,
-      shift: editBriefingForm.shift,
-      supervisors: supervisorsList,
-      managers: managersList,
-      attachments: existingAttachments
-    };
-    
-    const response = await briefingApi.updateBriefing(editingBriefing._id, updateData, newFiles);
-    
-    if (response.success) {
-      toast.success('Staff briefing updated successfully');
-      await fetchBriefings();
-      setShowEditBriefingDialog(false);
-      setEditingBriefing(null);
-      resetEditBriefingForm();
-      setEditBriefingAttachments([]);
-      setEditBriefingNewFiles([]);
-    } else {
-      throw new Error(response.message || 'Failed to update briefing');
+    try {
+      setLoading(true);
+      
+      const supervisorsList = editSelectedSupervisors.map(supId => {
+        const sup = filteredSupervisors.find(s => s._id === supId);
+        return sup ? { id: sup._id, name: sup.name } : null;
+      }).filter(Boolean);
+      
+      const managersList = editSelectedManagers.map(mgrId => {
+        const mgr = filteredManagers.find(m => m._id === mgrId);
+        return mgr ? { id: mgr._id, name: mgr.name } : null;
+      }).filter(Boolean);
+      
+      const actionItems = editBriefingForm.actionItems.map(item => ({ 
+        description: item.description, 
+        assignedTo: item.assignedTo, 
+        dueDate: item.dueDate, 
+        status: item.status || 'pending', 
+        priority: item.priority || 'medium' 
+      }));
+      
+      const existingAttachments = editBriefingAttachments
+        .filter(att => !att.isNew)
+        .map(({ isNew, file, ...rest }) => rest);
+      
+      const newFiles = editBriefingNewFiles;
+      
+      const updateData = {
+        date: editBriefingForm.date,
+        time: editBriefingForm.time,
+        conductedBy: editBriefingForm.conductedBy,
+        site: editBriefingForm.site,
+        department: editBriefingForm.department,
+        attendeesCount: editBriefingForm.attendeesCount,
+        topics: editBriefingForm.topics.filter(topic => topic.trim() !== ''),
+        keyPoints: editBriefingForm.keyPoints.filter(point => point.trim() !== ''),
+        actionItems: actionItems,
+        notes: editBriefingForm.notes,
+        shift: editBriefingForm.shift,
+        supervisors: supervisorsList,
+        managers: managersList,
+        attachments: existingAttachments
+      };
+      
+      const response = await briefingApi.updateBriefing(editingBriefing._id, updateData, newFiles);
+      
+      if (response.success) {
+        toast.success('Staff briefing updated successfully');
+        await fetchBriefings();
+        setShowEditBriefingDialog(false);
+        setEditingBriefing(null);
+        resetEditBriefingForm();
+        setEditBriefingAttachments([]);
+        setEditBriefingNewFiles([]);
+      } else {
+        throw new Error(response.message || 'Failed to update briefing');
+      }
+    } catch (error: any) {
+      console.error('Error updating briefing:', error);
+      toast.error(error.response?.data?.message || error.message || 'Error updating staff briefing');
+    } finally {
+      setLoading(false);
     }
-  } catch (error: any) {
-    console.error('Error updating briefing:', error);
-    toast.error(error.response?.data?.message || error.message || 'Error updating staff briefing');
-  } finally {
-    setLoading(false);
-  }
-};
+  };
   
   // Delete training session
   const deleteTraining = async (id: string) => {
@@ -3383,20 +3404,10 @@ const handleAddBriefing = async () => {
               Manage training sessions and daily staff briefings for your assigned sites
             </p>
             <div className="flex flex-wrap gap-2 mt-2">
-             {!loadingData.sites && (
-  <Badge variant="outline" className="bg-blue-50">
-    <Building className="h-3 w-3 mr-1" />
-    Your Sites: {managerAssignedSiteNames.length > 0 
-      ? managerAssignedSiteNames.join(', ') 
-      : 'No sites assigned'}
-  </Badge>
-)}
-{loadingData.sites && (
-  <Badge variant="outline" className="bg-blue-50 animate-pulse">
-    <Building className="h-3 w-3 mr-1" />
-    Loading sites...
-  </Badge>
-)}
+              <Badge variant="outline" className="bg-blue-50">
+                <Building className="h-3 w-3 mr-1" />
+                Your Sites: {managerAssignedSiteNames.length > 0 ? managerAssignedSiteNames.join(', ') : 'Loading...'}
+              </Badge>
             </div>
           </div>
           <div className="flex flex-wrap gap-2 w-full sm:w-auto">
@@ -3445,8 +3456,22 @@ const handleAddBriefing = async () => {
                   updateObjective={updateObjective}
                   sites={sites}
                 />
-                
-               
+                <SupervisorsMultiSelect 
+                  selected={selectedSupervisors}
+                  onToggle={handleSupervisorToggle}
+                  searchQuery={supervisorSearchQuery}
+                  setSearchQuery={setSupervisorSearchQuery}
+                  disabled={!trainingForm.site}
+                  filteredSupervisorsList={filteredSupervisorsList}
+                />
+                <ManagersMultiSelect 
+                  selected={selectedManagers}
+                  onToggle={handleManagerToggle}
+                  searchQuery={managerSearchQuery}
+                  setSearchQuery={setManagerSearchQuery}
+                  disabled={!trainingForm.site}
+                  filteredManagersList={filteredManagersList}
+                />
                 <EmployeesMultiSelect 
                   selected={selectedEmployees}
                   onToggle={handleEmployeeToggle}
@@ -3501,7 +3526,22 @@ const handleAddBriefing = async () => {
                   updateKeyPoint={updateKeyPoint}
                   sites={sites}
                 />
-               
+                <SupervisorsMultiSelect 
+                  selected={selectedSupervisors}
+                  onToggle={handleSupervisorToggle}
+                  searchQuery={supervisorSearchQuery}
+                  setSearchQuery={setSupervisorSearchQuery}
+                  disabled={!briefingForm.site}
+                  filteredSupervisorsList={filteredSupervisorsList}
+                />
+                <ManagersMultiSelect 
+                  selected={selectedManagers}
+                  onToggle={handleManagerToggle}
+                  searchQuery={managerSearchQuery}
+                  setSearchQuery={setManagerSearchQuery}
+                  disabled={!briefingForm.site}
+                  filteredManagersList={filteredManagersList}
+                />
                 <ActionItemsSection 
                   actionItems={briefingForm.actionItems}
                   onAdd={addActionItem}
@@ -4037,8 +4077,22 @@ const handleAddBriefing = async () => {
             updateEditObjective={updateEditObjective}
             sites={sites}
           />
-          
-            
+          <SupervisorsMultiSelect 
+            selected={editSelectedSupervisors}
+            onToggle={handleEditSupervisorToggle}
+            searchQuery={editSupervisorSearchQuery}
+            setSearchQuery={setEditSupervisorSearchQuery}
+            disabled={!editTrainingForm.site}
+            filteredSupervisorsList={filteredEditSupervisorsList}
+          />
+          <ManagersMultiSelect 
+            selected={editSelectedManagers}
+            onToggle={handleEditManagerToggle}
+            searchQuery={editManagerSearchQuery}
+            setSearchQuery={setEditManagerSearchQuery}
+            disabled={!editTrainingForm.site}
+            filteredManagersList={filteredEditManagersList}
+          />
           <AttachmentsSection 
             attachments={editTrainingAttachments}
             onUpload={handleEditTrainingFileUpload}
@@ -4074,8 +4128,22 @@ const handleAddBriefing = async () => {
             updateEditKeyPoint={updateEditKeyPoint}
             sites={sites}
           />
-         
-        
+          <SupervisorsMultiSelect 
+            selected={editSelectedSupervisors}
+            onToggle={handleEditSupervisorToggle}
+            searchQuery={editSupervisorSearchQuery}
+            setSearchQuery={setEditSupervisorSearchQuery}
+            disabled={!editBriefingForm.site}
+            filteredSupervisorsList={filteredEditSupervisorsList}
+          />
+          <ManagersMultiSelect 
+            selected={editSelectedManagers}
+            onToggle={handleEditManagerToggle}
+            searchQuery={editManagerSearchQuery}
+            setSearchQuery={setEditManagerSearchQuery}
+            disabled={!editBriefingForm.site}
+            filteredManagersList={filteredEditManagersList}
+          />
           <ActionItemsSection 
             actionItems={editBriefingForm.actionItems}
             onAdd={addEditActionItem}

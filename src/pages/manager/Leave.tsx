@@ -170,6 +170,7 @@ interface Employee {
   site?: string;
   isSupervisor?: boolean;
   role?: string;
+  profileStatus?: "complete" | "incomplete";   // ✅ ADD THIS
 }
 
 // Interface for Manager Info

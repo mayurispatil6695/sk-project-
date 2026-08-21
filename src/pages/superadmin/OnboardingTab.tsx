@@ -2162,57 +2162,71 @@ const OnboardingTab = ({
   <!DOCTYPE html>
   <html>
   <head>
-    <title>Joining Form - ${employee.name}</title>
-    <style>
-      * { box-sizing: border-box; }
-      body { font-family: 'Times New Roman', Georgia, serif; margin: 0; padding: 20px; background: #fff; color:#000; }
-      .page { max-width: 800px; margin: 0 auto 30px auto; padding: 20px 30px; background:#fff; page-break-after: always; }
-      .page:last-child { page-break-after: auto; }
-
-      /* ---------- PAGE 1: JOINING FORM ---------- */
-      .header { position: relative; border-bottom: 2px solid #000; padding-bottom: 8px; margin-bottom: 10px; }
-      .header h1 { margin:0; font-size: 30px; letter-spacing: 3px; font-weight: bold; }
-      .header .subtitle { font-size: 12px; margin-top: 2px; }
-      .header .form-title { font-size: 17px; font-weight: bold; text-align:center; margin-top: 6px; text-decoration: underline; }
-      .photo-box { position: absolute; top: 0; right: 0; width: 95px; height: 110px; border: 1px solid #000; overflow:hidden; display:flex; align-items:center; justify-content:center; font-size:10px; color:#999; }
-      .photo-box img { width:100%; height:100%; object-fit:cover; }
-
-      .field-row { display:flex; align-items:baseline; border-bottom:1px solid #000; padding: 5px 0; min-height: 24px; }
-      .field-row .label { font-size: 13px; width: 150px; flex-shrink:0; }
-      .field-row .colon { width: 14px; flex-shrink:0; }
-      .field-row .value { font-size: 13px; flex:1; }
-      .field-row .pin { display:flex; align-items:baseline; margin-left: 20px; flex-shrink:0; }
-      .field-row .pin .plabel { font-size:13px; margin-right:4px; }
-      .field-row .pin .pvalue { font-size:13px; min-width: 90px; border-bottom:1px solid #000; }
-      .cont-row { border-bottom: 1px solid #000; min-height: 22px; }
-
-      .uniform-row { border-bottom: 1px solid #000; padding: 6px 0; font-size: 13px; }
-      .uniform-row .label { display:inline-block; width:150px; }
-      .uniform-row .issued { font-weight: bold; text-decoration: underline; }
-
-      .signature-section { display:flex; justify-content:space-between; margin-top: 45px; }
-      .signature-box { text-align:center; width:45%; font-size: 13px; font-weight:bold; }
-      .signature-box .line { border-top: 1px solid #000; margin-top: 4px; padding-top: 4px; }
-
-      .footer { text-align:center; font-size: 9px; color:#666; margin-top: 15px; }
-
-      /* ---------- PAGE 2: DECLARATION (BACKSIDE) ---------- */
-      .declaration-title { text-align:center; font-size:20px; font-weight:bold; margin-bottom: 22px; }
-      .declaration-intro { font-size: 13.5px; line-height: 1.9; margin-bottom: 10px; }
-      .declaration-name-line { border-bottom: 1px solid #000; display:inline-block; min-width: 320px; }
-      .declaration-list { font-size: 13.5px; line-height: 1.9; margin: 0; padding-left: 0; list-style: none; }
-      .declaration-list li { margin-bottom: 14px; display:flex; }
-      .declaration-list .num { flex-shrink:0; width: 26px; }
-      .declaration-list .txt { flex:1; text-align: justify; }
-      .declaration-closing { font-size: 13.5px; line-height: 1.9; margin-top: 20px; text-align: justify; }
-      .declaration-sign { margin-top: 50px; display:flex; justify-content:space-between; font-size:13.5px; }
-
-      @media print {
-        body { padding: 0; }
-        .page { margin: 0 auto; padding: 15mm; }
-      }
-    </style>
-  </head>
+  <title>Joining Form - ${employee.name}</title>
+  <style>
+    @page {
+      size: A4 portrait;
+      margin: 12mm 15mm;
+    }
+    * {
+      box-sizing: border-box;
+    }
+    body {
+      font-family: 'Times New Roman', Georgia, serif;
+      margin: 0;
+      padding: 0;
+      background: #fff;
+      color: #000;
+    }
+    .page {
+      width: 100%;
+      max-width: 100%;
+      margin: 0;
+      padding: 0;
+      background: #fff;
+      page-break-after: always;
+    }
+    .page:last-child {
+      page-break-after: auto;
+    }
+    /* ---------- PAGE 1: JOINING FORM ---------- */
+    .header { position: relative; border-bottom: 2px solid #000; padding-bottom: 8px; margin-bottom: 10px; }
+    .header h1 { margin:0; font-size: 30px; letter-spacing: 3px; font-weight: bold; }
+    .header .subtitle { font-size: 12px; margin-top: 2px; }
+    .header .form-title { font-size: 17px; font-weight: bold; text-align:center; margin-top: 6px; text-decoration: underline; }
+    .photo-box { position: absolute; top: 0; right: 0; width: 95px; height: 110px; border: 1px solid #000; overflow:hidden; display:flex; align-items:center; justify-content:center; font-size:10px; color:#999; }
+    .photo-box img { width:100%; height:100%; object-fit:cover; }
+    .field-row { display:flex; align-items:baseline; border-bottom:1px solid #000; padding: 5px 0; min-height: 24px; }
+    .field-row .label { font-size: 13px; width: 150px; flex-shrink:0; }
+    .field-row .colon { width: 14px; flex-shrink:0; }
+    .field-row .value { font-size: 13px; flex:1; }
+    .field-row .pin { display:flex; align-items:baseline; margin-left: 20px; flex-shrink:0; }
+    .field-row .pin .plabel { font-size:13px; margin-right:4px; }
+    .field-row .pin .pvalue { font-size:13px; min-width: 90px; border-bottom:1px solid #000; }
+    .cont-row { border-bottom: 1px solid #000; min-height: 22px; }
+    .uniform-row { border-bottom: 1px solid #000; padding: 6px 0; font-size: 13px; }
+    .uniform-row .label { display:inline-block; width:150px; }
+    .uniform-row .issued { font-weight: bold; text-decoration: underline; }
+    .signature-section { display:flex; justify-content:space-between; margin-top: 45px; }
+    .signature-box { text-align:center; width:45%; font-size: 13px; font-weight:bold; }
+    .signature-box .line { border-top: 1px solid #000; margin-top: 4px; padding-top: 4px; }
+    .footer { text-align:center; font-size: 9px; color:#666; margin-top: 15px; }
+    /* ---------- PAGE 2: DECLARATION (BACKSIDE) ---------- */
+    .declaration-title { text-align:center; font-size:20px; font-weight:bold; margin-bottom: 22px; }
+    .declaration-intro { font-size: 13.5px; line-height: 1.9; margin-bottom: 10px; }
+    .declaration-name-line { border-bottom: 1px solid #000; display:inline-block; min-width: 320px; }
+    .declaration-list { font-size: 13.5px; line-height: 1.9; margin: 0; padding-left: 0; list-style: none; }
+    .declaration-list li { margin-bottom: 14px; display:flex; }
+    .declaration-list .num { flex-shrink:0; width: 26px; }
+    .declaration-list .txt { flex:1; text-align: justify; }
+    .declaration-closing { font-size: 13.5px; line-height: 1.9; margin-top: 20px; text-align: justify; }
+    .declaration-sign { margin-top: 50px; display:flex; justify-content:space-between; font-size:13.5px; }
+    @media print {
+      body { padding: 0; }
+      .page { margin: 0 auto; padding: 15mm; }
+    }
+  </style>
+</head>
   <body>
 
     <!-- PAGE 1: JOINING FORM -->
@@ -2335,124 +2349,142 @@ const OnboardingTab = ({
       <html>
         <head>
           <title>EPF Form 11 - ${epfFormData.memberName}</title>
-          <style>
-            body { 
-              font-family: Arial, sans-serif; 
-              margin: 0; 
-              padding: 20px;
-              font-size: 12px;
-              line-height: 1.4;
-            }
-            .form-container { 
-              max-width: 800px; 
-              margin: 0 auto; 
-              border: 1px solid #000;
-              padding: 20px;
-              position: relative;
-            }
-            .header { 
-              text-align: center; 
-              margin-bottom: 20px;
-              border-bottom: 2px solid #000;
-              padding-bottom: 10px;
-            }
-            .header h2 {
-              margin: 0;
-              font-size: 16px;
-              font-weight: bold;
-            }
-            .header h3 {
-              margin: 5px 0;
-              font-size: 14px;
-              font-weight: normal;
-            }
-            .subtitle {
-              font-size: 10px;
-              margin-top: 5px;
-              font-style: italic;
-            }
-            .section { 
-              margin-bottom: 20px; 
-            }
-            .section-title { 
-              background: #f0f0f0; 
-              padding: 8px; 
-              font-weight: bold;
-              border: 1px solid #000;
-              margin-bottom: 10px;
-              font-size: 11px;
-            }
-            .field-row {
-              display: flex;
-              margin-bottom: 8px;
-              align-items: flex-start;
-            }
-            .field-group {
-              display: flex;
-              flex-direction: column;
-              margin-right: 20px;
-              flex: 1;
-            }
-            .label { 
-              font-weight: bold; 
-              margin-bottom: 2px;
-              font-size: 10px;
-            }
-            .value { 
-              min-height: 18px;
-              border-bottom: 1px solid #000;
-              padding: 2px 5px;
-              flex: 1;
-            }
-            .checkbox-group {
-              display: flex;
-              align-items: center;
-              margin-right: 15px;
-            }
-            .checkbox {
-              margin-right: 5px;
-            }
-            .full-width {
-              width: 100%;
-            }
-            .half-width {
-              width: 48%;
-            }
-            .quarter-width {
-              width: 24%;
-            }
-            .signature-area { 
-              margin-top: 30px; 
-              border-top: 1px solid #000; 
-              padding-top: 15px;
-            }
-            .signature-line {
-              display: inline-block;
-              width: 200px;
-              border-bottom: 1px solid #000;
-              margin: 0 10px;
-            }
-            .declaration {
-              margin: 20px 0;
-              padding: 15px;
-              border: 1px solid #000;
-              background: #f9f9f9;
-            }
-            .declaration p {
-              margin: 5px 0;
-              font-size: 11px;
-            }
-            .note {
-              font-size: 10px;
-              font-style: italic;
-              color: #666;
-              margin-top: 3px;
-            }
-            @media print {
-              body { margin: 0; padding: 10px; }
-              .form-container { border: none; padding: 10px; }
-            }
-          </style>
+      <style>
+  @page {
+    size: A4 portrait;
+    margin: 10mm;
+  }
+  * {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+  }
+  body { 
+    font-family: Arial, sans-serif; 
+    margin: 0;
+    padding: 20px;
+    font-size: 12px;
+    line-height: 1.4;
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+  }
+  .form-container { 
+    width: 100%;
+    max-width: 100%;
+    margin: 0 auto; 
+    border: 1px solid #000;
+    padding: 20px;
+    position: relative;
+  }
+  .header { 
+    text-align: center; 
+    margin-bottom: 20px;
+    border-bottom: 2px solid #000;
+    padding-bottom: 10px;
+  }
+  .header h2 {
+    margin: 0;
+    font-size: 16px;
+    font-weight: bold;
+  }
+  .header h3 {
+    margin: 5px 0;
+    font-size: 14px;
+    font-weight: normal;
+  }
+  .subtitle {
+    font-size: 10px;
+    margin-top: 5px;
+    font-style: italic;
+  }
+  .section { 
+    margin-bottom: 20px; 
+  }
+  .section-title { 
+    background: #f0f0f0; 
+    padding: 8px; 
+    font-weight: bold;
+    border: 1px solid #000;
+    margin-bottom: 10px;
+    font-size: 11px;
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+  }
+  .field-row {
+    display: flex;
+    margin-bottom: 8px;
+    align-items: flex-start;
+  }
+  .field-group {
+    display: flex;
+    flex-direction: column;
+    margin-right: 20px;
+    flex: 1;
+  }
+  .label { 
+    font-weight: bold; 
+    margin-bottom: 2px;
+    font-size: 10px;
+  }
+  .value { 
+    min-height: 18px;
+    border-bottom: 1px solid #000;
+    padding: 2px 5px;
+    flex: 1;
+  }
+  .checkbox-group {
+    display: flex;
+    align-items: center;
+    margin-right: 15px;
+  }
+  .checkbox {
+    margin-right: 5px;
+  }
+  .full-width {
+    width: 100%;
+  }
+  .half-width {
+    width: 48%;
+  }
+  .quarter-width {
+    width: 24%;
+  }
+  .signature-area { 
+    margin-top: 30px; 
+    border-top: 1px solid #000; 
+    padding-top: 15px;
+  }
+  .signature-line {
+    display: inline-block;
+    width: 200px;
+    border-bottom: 1px solid #000;
+    margin: 0 10px;
+  }
+  .declaration {
+    margin: 20px 0;
+    padding: 15px;
+    border: 1px solid #000;
+    background: #f9f9f9;
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+  }
+  .declaration p {
+    margin: 5px 0;
+    font-size: 11px;
+  }
+  .note {
+    font-size: 10px;
+    font-style: italic;
+    color: #666;
+    margin-top: 3px;
+  }
+  @media print {
+    body { margin: 0; padding: 10px; }
+    .form-container { border: none; padding: 10px; }
+    .section-title { background: #f0f0f0 !important; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+    .declaration { background: #f9f9f9 !important; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+  }
+</style>
         </head>
         <body>
           <div class="form-container">
@@ -3982,7 +4014,7 @@ const OnboardingTab = ({
                     <div className="section-title">DECLARATION BY PRESENT EMPLOYER</div>
 
                     <div className="space-y-2">
-                      <Label>A. The member Mr./Ms./Mrs. {epfFormData.memberName} has joined on {epfFormData.enrolledDate} and has been allotted PF Number ${createdEmployeeData?.uanNumber || createdEmployeeData?.uan || "Pending"}</Label>
+                     <Label>A. The member Mr./Ms./Mrs. {epfFormData.memberName} has joined on {epfFormData.enrolledDate} and has been allotted PF Number {createdEmployeeData?.uanNumber || createdEmployeeData?.uan || "Pending"}</Label>
                     </div>
 
                     <div className="space-y-2">

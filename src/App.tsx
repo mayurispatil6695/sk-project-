@@ -5,6 +5,9 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import { RoleProvider, useRole } from "@/context/RoleContext";
 import { ProtectedRoute } from "@/components/ProtectedRoute";
+// In your router file (e.g., App.tsx or router.tsx)
+import ManagerHRMS from "./pages/manager/ManagerHRMS";
+
 
 // Auth Pages
 import Login from "./pages/Login";
@@ -263,7 +266,7 @@ const App = () => (
                 <Route path="/manager/shift-deployment" element={<ManagerShiftDeployment />} />
                 <Route path="/manager/training" element={<ManagerTraining />} />
                 <Route path="/manager/briefing" element={<ManagerBriefing />} />
-
+                <Route path="hrms" element={<ManagerHRMS />} />
                 <Route path="notifications" element={<ManagerNotifications />} />
 
 

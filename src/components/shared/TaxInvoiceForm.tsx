@@ -192,8 +192,12 @@ export const TaxInvoiceForm: React.FC<TaxInvoiceFormProps> = ({
       // Generate unique invoice number with timestamp to avoid duplicates
       let invoiceNumber = formData.invoiceNumber;
       if (!invoiceNumber) {
-        const timestamp = new Date().getTime().toString().slice(-6);
-        invoiceNumber = `SK-2425-G${String(taxInvoicesCount + 1).padStart(3, '0')}-${timestamp}`;
+        // Use a high‑precision timestamp (milliseconds) and a 4‑digit random suffix
+        const timestamp = Date.now().toString();                // e.g., "1715678901234"
+        const randomSuffix = Math.floor(Math.random() * 10000).toString().padStart(4, '0');
+        const seq = String(taxInvoicesCount + 1).padStart(3, '0');
+        // Format: SK-2425-G001-1715678901234-1234
+        invoiceNumber = `SK-2425-G${seq}-${timestamp}-${randomSuffix}`;
       }
 
       const newInvoice: Invoice = {

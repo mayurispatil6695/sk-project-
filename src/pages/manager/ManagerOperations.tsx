@@ -3,7 +3,7 @@ import { useState, useEffect } from "react";
 import { DashboardHeader } from "@/components/shared/DashboardHeader";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Building, ClipboardList, ChevronDown, ChevronUp, Calendar } from "lucide-react";
+import { Building, ClipboardList, ChevronDown, ChevronUp, Calendar, Users, Settings, Bell } from "lucide-react";
 import { motion } from "framer-motion";
 import { useOutletContext } from "react-router-dom";
 import { Button } from "@/components/ui/button";
@@ -18,6 +18,7 @@ import {
 import { StatsCards } from "./components/StatsCards";
 import TasksSection from "./components/TasksSection";
 import SitesSection from "./components/SitesSection";
+import RosterSection from "./components/RosterSection";
 import ServicesSection from "./components/ServicesSection";
 import AlertsSection from "./components/AlertsSection";
 // ✅ CORRECT IMPORT - Use the fully working component
@@ -87,11 +88,13 @@ const ManagerOperations = () => {
     return () => window.removeEventListener('resize', checkMobile);
   }, []);
 
-  // Define tabs - changed "calculator" to "training"
+  // Define tabs - Added Roster, Services, Alerts & Issues
   const tabs = [
     { value: "tasks", label: "All Tasks", icon: <ClipboardList className="h-4 w-4" /> },
     { value: "sites", label: "Sites", icon: <Building className="h-4 w-4" /> },
-    
+    { value: "roster", label: "Roster", icon: <Users className="h-4 w-4" /> },
+    { value: "services", label: "Services", icon: <Settings className="h-4 w-4" /> },
+    { value: "alerts", label: "Alerts & Issues", icon: <Bell className="h-4 w-4" /> },
     { value: "training", label: "Training & Briefing", icon: <Calendar className="h-4 w-4" /> },
   ];
 
@@ -116,8 +119,8 @@ const ManagerOperations = () => {
         />
         
         <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-4 md:space-y-6">
-          {/* Desktop Tabs - 5 columns */}
-          <TabsList className="hidden lg:grid w-full grid-cols-5">
+          {/* Desktop Tabs - 6 columns */}
+          <TabsList className="hidden lg:grid w-full grid-cols-6">
             <TabsTrigger value="tasks" className="text-sm">
               <ClipboardList className="h-4 w-4 mr-2" />
               All Tasks
@@ -126,7 +129,18 @@ const ManagerOperations = () => {
               <Building className="h-4 w-4 mr-2" />
               Sites
             </TabsTrigger>
-          
+            <TabsTrigger value="roster" className="text-sm">
+              <Users className="h-4 w-4 mr-2" />
+              Roster
+            </TabsTrigger>
+            <TabsTrigger value="services" className="text-sm">
+              <Settings className="h-4 w-4 mr-2" />
+              Services
+            </TabsTrigger>
+            <TabsTrigger value="alerts" className="text-sm">
+              <Bell className="h-4 w-4 mr-2" />
+              Alerts & Issues
+            </TabsTrigger>
             <TabsTrigger value="training" className="text-sm">
               <Calendar className="h-4 w-4 mr-2" />
               Training & Briefing
@@ -141,8 +155,19 @@ const ManagerOperations = () => {
             <SitesSection />
           </TabsContent>
 
-          
-          {/* ✅ CORRECT - Using TrainingBriefingSectionManager */}
+          <TabsContent value="roster">
+            <RosterSection />
+          </TabsContent>
+
+          <TabsContent value="services">
+            <ServicesSection />
+          </TabsContent>
+
+          <TabsContent value="alerts">
+            <AlertsSection />
+          </TabsContent>
+
+          {/* ✅ Using TrainingBriefingSectionManager */}
           <TabsContent value="training">
             <TrainingBriefingSectionManager />
           </TabsContent>

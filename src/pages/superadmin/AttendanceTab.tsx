@@ -51,9 +51,16 @@ import {
   Shield,
   ShieldCheck,
   Camera,
-  ExternalLink, Home, Car, Trash2, Droplets, ShoppingCart, Settings, Cpu,       // <-- add
-  Shirt,     // <-- add
-  Images,    // <-- add
+  ExternalLink,
+  Home,
+  Car,
+  Trash2,
+  Droplets,
+  ShoppingCart,
+  Settings,
+  Cpu,
+  Shirt,
+  Images,
   Factory,
   MessageSquare,
 } from "lucide-react";
@@ -116,6 +123,7 @@ interface Employee {
   isManager?: boolean;
   isSupervisor?: boolean;
   totalHours?: number;
+  profileStatus?: "complete" | "incomplete";   // ✅ ADD THIS
 }
 
 // Attendance Record structure with photo fields
@@ -1792,9 +1800,10 @@ const SiteEmployeeDetails: React.FC<SiteEmployeeDetailsProps> = ({
         <title>Attendance - ${siteName} - ${monthStart}</title>
         <meta charset="UTF-8" />
         <style>
-          body { font-family: Arial, sans-serif; margin: 10px; }
+         body { margin: 0; padding: 0; font-family: Arial, sans-serif; }
+table { width: 100%; border-collapse: collapse; font-size: 10px; }
           h1 { text-align: center; color: #0E2568; font-size: 18px; }
-          table { border-collapse: collapse; width: 100%; font-size: 10px; table-layout: auto; }
+          
           th, td { border: 1px solid #ccc; padding: 3px 4px; text-align: center; }
           th { background: #0E2568; color: white; font-weight: bold; }
           .wo { background: #e9e9e9; color: #333; font-weight: bold; }
@@ -2171,7 +2180,7 @@ const SiteEmployeeDetails: React.FC<SiteEmployeeDetailsProps> = ({
                 <th className="p-2 text-left text-xs">Dept</th>
                 <th className="p-2 text-left text-xs">Position</th>
                 <th className="p-2 text-left text-xs">Role</th>
-                <th className="p-2 text-left text-xs">Remark</th>
+
                 {role === 'superadmin' && <th className="p-2 text-left text-xs">Edit</th>}
                 <th className="p-2 text-left text-xs">Status</th>
                 <th className="p-2 text-left text-xs">Check In</th>
@@ -2203,6 +2212,17 @@ const SiteEmployeeDetails: React.FC<SiteEmployeeDetailsProps> = ({
                       <td className="p-2"><Badge variant="outline" className="text-xs">{emp.department}</Badge></td>
                       <td className="p-2 text-xs">{emp.position}</td>
                       <td className="p-2">{emp.isManager ? <Badge className="bg-amber-100 text-amber-800 text-xs">Mgr</Badge> : emp.isSupervisor ? <Badge className="bg-teal-100 text-teal-800 text-xs">Sup</Badge> : <Badge className="bg-cyan-100 text-cyan-800 text-xs">Staff</Badge>}</td>
+
+                      {/* ✅ Edit button - now second */}
+                      {role === 'superadmin' && (
+                        <td className="p-2">
+                          <Button variant="ghost" size="sm" onClick={() => openEditEmployee(emp)}>
+                            <Edit className="h-3 w-3" />
+                          </Button>
+                        </td>
+                      )}
+
+                      {/* ✅ Status badge - now third */}
                       <td className="p-2">
                         <div className="flex items-center gap-2">
                           <Badge
@@ -2225,14 +2245,7 @@ const SiteEmployeeDetails: React.FC<SiteEmployeeDetailsProps> = ({
                           )}
                         </div>
                       </td>
-                      <td className="p-2"><Input value={emp.remark || ""} onChange={(e) => updateEmployeeRemark(emp.id, e.target.value)} placeholder="Remark" className="h-7 text-xs" /></td>
-                      {role === 'superadmin' && (
-                        <td className="p-2">
-                          <Button variant="ghost" size="sm" onClick={() => openEditEmployee(emp)}>
-                            <Edit className="h-3 w-3" />
-                          </Button>
-                        </td>
-                      )}
+
                       <td className="p-2 text-xs">{emp.checkInTime || "-"}</td>
                       <td className="p-2 text-xs">{emp.checkOutTime || "-"}</td>
                       <td className="p-2">{emp.checkInPhoto ? <Button variant="ghost" size="sm" onClick={() => handleViewPhoto(emp.checkInPhoto, "checkin")} className="h-6 px-1"><Camera className="h-3 w-3" /></Button> : "-"}</td>

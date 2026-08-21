@@ -188,8 +188,8 @@ const SupervisorHRMS = () => {
             setEmployees={setEmployees as any}
             setActiveTab={() => { }}
             selectedSite={selectedSite}
-
-            skipFetch={true}   // ADD THIS
+            sites={allSites}           // ← ADD THIS
+            skipFetch={true}
           />
         </div>
       </motion.div>

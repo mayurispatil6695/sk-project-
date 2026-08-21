@@ -125,6 +125,7 @@ interface Employee {
   updatedAt?: string;
   isManager?: boolean;
   isSupervisor?: boolean;
+  profileStatus?: "complete" | "incomplete";   // ✅ ADD THIS
 }
 
 interface SalaryStructure {

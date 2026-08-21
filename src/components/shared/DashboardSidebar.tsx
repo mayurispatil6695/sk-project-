@@ -139,7 +139,7 @@ const getSidebarItems = (role: UserRole) => {
         { name: "Assign Task", icon: ClipboardList, path: "assigntask" },
         { name: "Operations", icon: Workflow, path: "operations" },
         { name: "My Sites", icon: Building2, path: "sites" },  // ADD THIS
-
+ { name: "HRMS", icon: Users, path: "hrms" },
         { name: "Leave", icon: Calendar, path: "leave" },
 
       ];
