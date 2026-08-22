@@ -1,6 +1,7 @@
 import axios from "axios";
 
-const API_URL = import.meta.env.VITE_API_URL;
+const API_URL = import.meta.env.VITE_API_URL ||
+  (import.meta.env.DEV ? 'http://localhost:5001/api' : 'https://sk-backend-btbj.onrender.com/api');
 const api = axios.create({
   baseURL: API_URL,
   headers: {
@@ -40,7 +41,6 @@ api.interceptors.response.use(
     return Promise.reject(error);
   }
 );
-
 export interface RosterEntryData {
   date: string;
   employeeName: string;
@@ -50,11 +50,21 @@ export interface RosterEntryData {
   shift: string;
   shiftTiming: string;
   assignedTask: string;
+  assignedTaskId?: string;      // added
   hours: number;
   remark: string;
   type: "daily" | "weekly" | "fortnightly" | "monthly";
   siteClient: string;
-  supervisor: string;
+  siteId?: string;              // added
+  // Old single fields – made optional for backward compatibility
+  supervisor?: string;
+  supervisorId?: string;
+  manager?: string;
+  managerId?: string;
+  // New multiple fields – used by the component
+  supervisors?: Array<{ id: string; name: string }>;
+  managers?: Array<{ id: string; name: string }>;
+  createdBy?: string;           // optional, set by backend
 }
 
 export interface GetRosterParams {

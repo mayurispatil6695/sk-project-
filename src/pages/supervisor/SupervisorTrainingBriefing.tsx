@@ -615,12 +615,12 @@ const SupervisorTrainingBriefing: React.FC = () => {
   useEffect(() => {
     if (supervisorId && isAuthenticated) fetchSupervisorAssignedSites();
   }, [supervisorId, isAuthenticated, fetchSupervisorAssignedSites]);
-useEffect(() => {
-  // Fetch all data once we have at least one site name
-  if (supervisorAssignedSiteNames.length > 0) {
-    fetchAllData();
-  }
-}, [supervisorAssignedSiteNames]);
+  useEffect(() => {
+    // Fetch all data once we have at least one site name
+    if (supervisorAssignedSiteNames.length > 0) {
+      fetchAllData();
+    }
+  }, [supervisorAssignedSiteNames]);
   useEffect(() => {
     fetchTrainings();
     fetchBriefings();
@@ -690,7 +690,9 @@ useEffect(() => {
 
   const fetchEmployees = async () => {
     try {
-      const response = await axios.get(`${API_URL}/employees`);
+      const response = await axios.get(`${API_URL}/employees`, {
+        params: { limit: 10000 }
+      });
       if (response.data.success) {
         const employeesData = response.data.data || [];
         const filtered = employeesData.filter((emp: Employee) => (emp.siteName && supervisorAssignedSiteNames.includes(emp.siteName)) || (emp.assignedSites && emp.assignedSites.some(site => supervisorAssignedSites.includes(site))));

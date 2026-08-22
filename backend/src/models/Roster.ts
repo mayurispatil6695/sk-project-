@@ -67,15 +67,15 @@ const RosterSchema: Schema = new Schema(
     },
     shift: {
       type: String,
-      required: true,
+      default: "",        // optional, default empty
     },
     shiftTiming: {
       type: String,
-      required: true,
+      default: "",
     },
     assignedTask: {
       type: String,
-      required: true,
+      default: "",         // ✅ remove required: true and set default
     },
     assignedTaskId: {
       type: String,
@@ -83,7 +83,7 @@ const RosterSchema: Schema = new Schema(
     },
     hours: {
       type: Number,
-      required: true,
+      default: 0,          // optional, default 0
       min: 0,
       max: 24,
     },

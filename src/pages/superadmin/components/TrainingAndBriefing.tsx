@@ -1,34 +1,34 @@
 // components/TrainingAndBriefing.tsx
-import React, { useState, useRef, useEffect } from 'react';
+import React, { useState, useRef, useEffect, useMemo } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { 
+import {
   Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter
 } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Badge } from "@/components/ui/badge";
-import { 
-  Select, SelectContent, SelectItem, SelectTrigger, SelectValue 
+import {
+  Select, SelectContent, SelectItem, SelectTrigger, SelectValue
 } from "@/components/ui/select";
-import { 
+import {
   Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle,
   DialogTrigger, DialogFooter, DialogClose
 } from "@/components/ui/dialog";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { toast } from "sonner";
-import { 
-  Calendar, Clock, Users, FileText, Image as ImageIcon, Video, File, CheckCircle, XCircle, 
+import {
+  Calendar, Clock, Users, FileText, Image as ImageIcon, Video, File, CheckCircle, XCircle,
   Plus, Search, Filter, Download, Eye, Edit, Trash2, Upload, CalendarDays, Clock4, User,
   Building, Target, MessageSquare, AlertCircle, TrendingUp, ChevronRight, ChevronLeft,
-  CheckSquare, Square, RefreshCw, MoreVertical, ChevronDown, ChevronUp, X, List, UserCog, UserCheck,
+  CheckSquare, Square, RefreshCw, MoreVertical, ChevronDown, ChevronUp, X, List as ListIcon, UserCog, UserCheck,
   Link as LinkIcon, Download as DownloadIcon, ExternalLink,
   Check
 } from "lucide-react";
 import { format } from 'date-fns';
-import { trainingApi,trainingApi as trainingApiDefault } from '../../../services/trainingApi';
-import { briefingApi,briefingApi as briefingApiDefault } from '../../../services/briefingApi';
+import { trainingApi, trainingApi as trainingApiDefault } from '../../../services/trainingApi';
+import { briefingApi, briefingApi as briefingApiDefault } from '../../../services/briefingApi';
 import { siteService, Site } from '@/services/SiteService';
 import assignTaskService, { AssignTask } from '@/services/assignTaskService';
 
@@ -59,7 +59,10 @@ interface TrainingSession {
   createdAt: string;
   updatedAt: string;
 }
-
+interface TrainingAndBriefingProps {
+  selectedSite?: string;  // site ID or "all"
+  sites?: Site[];         // list of all sites (for display)
+}
 interface StaffBriefing {
   _id: string;
   id: string;
@@ -212,7 +215,7 @@ const TrainingDetailDialog = ({ training, open, onClose, onEdit, onUpdateStatus 
               Training Session Details
             </DialogTitle>
           </DialogHeader>
-          
+
           <div className="space-y-6 mt-4">
             <div className="bg-gradient-to-r from-blue-50 to-purple-50 rounded-lg p-4">
               <div className="flex flex-col md:flex-row justify-between items-start gap-3">
@@ -343,8 +346,8 @@ const TrainingDetailDialog = ({ training, open, onClose, onEdit, onUpdateStatus 
                     <div key={idx} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg cursor-pointer hover:bg-gray-100" onClick={() => setSelectedAttachment(att)}>
                       <div className="flex items-center gap-2">
                         {att.type === 'image' ? <ImageIcon className="h-4 w-4 text-blue-500" /> :
-                         att.type === 'video' ? <Video className="h-4 w-4 text-red-500" /> :
-                         <File className="h-4 w-4 text-gray-500" />}
+                          att.type === 'video' ? <Video className="h-4 w-4 text-red-500" /> :
+                            <File className="h-4 w-4 text-gray-500" />}
                         <span className="text-sm truncate max-w-[150px]">{att.name}</span>
                       </div>
                       <Eye className="h-4 w-4 text-gray-400" />
@@ -445,7 +448,7 @@ const BriefingDetailDialog = ({ briefing, open, onClose, onEdit, onUpdateAction 
               Staff Briefing Details
             </DialogTitle>
           </DialogHeader>
-          
+
           <div className="space-y-6 mt-4">
             <div className="bg-gradient-to-r from-green-50 to-teal-50 rounded-lg p-4">
               <div className="flex flex-col md:flex-row justify-between items-start gap-3">
@@ -590,8 +593,8 @@ const BriefingDetailDialog = ({ briefing, open, onClose, onEdit, onUpdateAction 
                     <div key={idx} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg cursor-pointer hover:bg-gray-100" onClick={() => setSelectedAttachment(att)}>
                       <div className="flex items-center gap-2">
                         {att.type === 'image' ? <ImageIcon className="h-4 w-4 text-blue-500" /> :
-                         att.type === 'video' ? <Video className="h-4 w-4 text-red-500" /> :
-                         <File className="h-4 w-4 text-gray-500" />}
+                          att.type === 'video' ? <Video className="h-4 w-4 text-red-500" /> :
+                            <File className="h-4 w-4 text-gray-500" />}
                         <span className="text-sm truncate max-w-[150px]">{att.name}</span>
                       </div>
                       <Eye className="h-4 w-4 text-gray-400" />
@@ -779,7 +782,7 @@ const MobileStatCard = ({ title, value, subValue, icon: Icon, color = "blue" }: 
   return (<Card><CardContent className="p-4"><div className="flex items-center justify-between"><div><p className="text-xs text-muted-foreground">{title}</p><p className="text-xl font-bold mt-1">{value}</p>{subValue && <p className="text-xs text-muted-foreground mt-1">{subValue}</p>}</div><div className={`p-3 rounded-lg ${colorClasses[color]}`}><Icon className="h-5 w-5" /></div></div></CardContent></Card>);
 };
 
-const TrainingAndBriefing: React.FC = () => {
+const TrainingAndBriefing: React.FC<TrainingAndBriefingProps> = ({ selectedSite = "all", sites = [] }) => {
   const [activeTab, setActiveTab] = useState<'training' | 'briefing'>('briefing');
   const [trainingSessions, setTrainingSessions] = useState<TrainingSession[]>([]);
   const [staffBriefings, setStaffBriefings] = useState<StaffBriefing[]>([]);
@@ -794,7 +797,7 @@ const TrainingAndBriefing: React.FC = () => {
   const [editingBriefing, setEditingBriefing] = useState<StaffBriefing | null>(null);
   const [showEditTrainingDialog, setShowEditTrainingDialog] = useState(false);
   const [showEditBriefingDialog, setShowEditBriefingDialog] = useState(false);
-  
+
   // File upload refs and states
   const trainingFileInputRef = useRef<HTMLInputElement>(null);
   const briefingFileInputRef = useRef<HTMLInputElement>(null);
@@ -806,64 +809,86 @@ const TrainingAndBriefing: React.FC = () => {
   const [editBriefingAttachments, setEditBriefingAttachments] = useState<ExistingAttachment[]>([]);
   const [editTrainingNewFiles, setEditTrainingNewFiles] = useState<File[]>([]);
   const [editBriefingNewFiles, setEditBriefingNewFiles] = useState<File[]>([]);
-  
+
   const [viewMode, setViewMode] = useState<'list' | 'calendar'>('list');
   const [currentMonth, setCurrentMonth] = useState(new Date());
   const [loading, setLoading] = useState(false);
   const [stats, setStats] = useState({ totalTrainings: 0, staffBriefings: 0, completedTraining: 0, pendingActions: 0 });
   const [isMobileView, setIsMobileView] = useState(false);
   const [showMobileFilters, setShowMobileFilters] = useState(false);
-  
+  const [selectedDateEvents, setSelectedDateEvents] = useState<{ date: Date; events: any[] } | null>(null);
   // Site and supervisor/manager states
-  const [sites, setSites] = useState<Site[]>([]);
+  const [localSites, setLocalSites] = useState<Site[]>([]);
   const [supervisors, setSupervisors] = useState<Supervisor[]>([]);
   const [managers, setManagers] = useState<Manager[]>([]);
   const [filteredSupervisors, setFilteredSupervisors] = useState<Supervisor[]>([]);
   const [filteredManagers, setFilteredManagers] = useState<Manager[]>([]);
-  
+
   // Multi-select states for training
   const [trainingSelectedSupervisors, setTrainingSelectedSupervisors] = useState<string[]>([]);
   const [trainingSelectedManagers, setTrainingSelectedManagers] = useState<string[]>([]);
   const [trainingSupervisorSearchQuery, setTrainingSupervisorSearchQuery] = useState("");
   const [trainingManagerSearchQuery, setTrainingManagerSearchQuery] = useState("");
-  
+
   // Multi-select states for briefing
   const [briefingSelectedSupervisors, setBriefingSelectedSupervisors] = useState<string[]>([]);
   const [briefingSelectedManagers, setBriefingSelectedManagers] = useState<string[]>([]);
   const [briefingSupervisorSearchQuery, setBriefingSupervisorSearchQuery] = useState("");
   const [briefingManagerSearchQuery, setBriefingManagerSearchQuery] = useState("");
-  
+
   // Training form state
-  const [trainingForm, setTrainingForm] = useState({ 
-    title: '', 
-    description: '', 
-    type: 'safety' as const, 
-    date: '', 
-    time: '', 
-    duration: '', 
-    trainer: '', 
-    site: '', 
-    department: 'All Departments', 
-    maxAttendees: 20, 
-    location: '', 
-    objectives: [''] 
-  });
-  
-  // Briefing form state
-  const [briefingForm, setBriefingForm] = useState({ 
-    date: '', 
-    time: '', 
-    conductedBy: '', 
-    site: '', 
-    department: '', 
-    attendeesCount: 0, 
-    topics: [''], 
-    keyPoints: [''], 
-    actionItems: [] as any[], 
-    notes: '', 
-    shift: 'morning' as const 
+  const [trainingForm, setTrainingForm] = useState({
+    title: '',
+    description: '',
+    type: 'safety' as const,
+    date: '',
+    time: '',
+    duration: '',
+    trainer: '',
+    site: '',
+    department: 'All Departments',
+    maxAttendees: 20,
+    location: '',
+    objectives: ['']
   });
 
+  // Briefing form state
+  const [briefingForm, setBriefingForm] = useState({
+    date: '',
+    time: '',
+    conductedBy: '',
+    site: '',
+    department: '',
+    attendeesCount: 0,
+    topics: [''],
+    keyPoints: [''],
+    actionItems: [] as any[],
+    notes: '',
+    shift: 'morning' as const
+  });
+
+  // Site filtering
+  const siteFilteredTrainingSessions = useMemo(() => {
+    if (selectedSite === "all") return trainingSessions;
+    const site = sites.find(s => s._id === selectedSite);
+    return trainingSessions.filter(session => site ? session.site === site.name : false);
+  }, [trainingSessions, selectedSite, sites]);
+
+  const siteFilteredStaffBriefings = useMemo(() => {
+    if (selectedSite === "all") return staffBriefings;
+    const site = sites.find(s => s._id === selectedSite);
+    return staffBriefings.filter(briefing => site ? briefing.site === site.name : false);
+  }, [staffBriefings, selectedSite, sites]);
+  // Stats from filtered data (replaces API stats)
+  const filteredStats = useMemo(() => {
+    const totalTrainings = siteFilteredTrainingSessions.length;
+    const totalBriefings = siteFilteredStaffBriefings.length;
+    const completedTrainings = siteFilteredTrainingSessions.filter(t => t.status === 'completed').length;
+    const pendingActions = siteFilteredStaffBriefings.reduce((acc, briefing) =>
+      acc + briefing.actionItems.filter(a => a.status === 'pending').length, 0
+    );
+    return { totalTrainings, totalBriefings, completedTraining: completedTrainings, pendingActions };
+  }, [siteFilteredTrainingSessions, siteFilteredStaffBriefings]);
   useEffect(() => {
     const checkMobile = () => setIsMobileView(window.innerWidth < 768);
     checkMobile();
@@ -918,27 +943,27 @@ const TrainingAndBriefing: React.FC = () => {
     }
   }, [briefingForm.site, sites, supervisors, managers]);
 
-  useEffect(() => { 
-    fetchTrainingSessions(); 
-    fetchStaffBriefings(); 
-    fetchStats(); 
+  useEffect(() => {
+    fetchTrainingSessions();
+    fetchStaffBriefings();
+    fetchStats();
   }, [searchTerm, filterDepartment, filterStatus]);
 
   const fetchSites = async () => {
-    try {
-      const data = await siteService.getAllSites();
-      setSites(data);
-    } catch (error) {
-      console.error("Error fetching sites:", error);
-    }
-  };
+  try {
+    const data = await siteService.getAllSites();
+    setLocalSites(data);
+  } catch (error) {
+    console.error("Error fetching sites:", error);
+  }
+};
 
   const fetchSupervisorsAndManagers = async () => {
     try {
       const tasksData = await assignTaskService.getAllAssignTasks();
       const supervisorMap = new Map<string, Supervisor>();
       const managerMap = new Map<string, Manager>();
-      
+
       tasksData.forEach((task: AssignTask) => {
         if (task.assignedSupervisors && Array.isArray(task.assignedSupervisors)) {
           task.assignedSupervisors.forEach(user => {
@@ -960,7 +985,7 @@ const TrainingAndBriefing: React.FC = () => {
             }
           });
         }
-        
+
         if (task.assignedManagers && Array.isArray(task.assignedManagers)) {
           task.assignedManagers.forEach(user => {
             if (!managerMap.has(user.userId)) {
@@ -982,7 +1007,7 @@ const TrainingAndBriefing: React.FC = () => {
           });
         }
       });
-      
+
       setSupervisors(Array.from(supervisorMap.values()));
       setManagers(Array.from(managerMap.values()));
     } catch (error) {
@@ -996,11 +1021,11 @@ const TrainingAndBriefing: React.FC = () => {
       const filters = { department: filterDepartment === 'all' ? '' : filterDepartment, status: filterStatus === 'all' ? '' : filterStatus, search: searchTerm };
       const response = await trainingApi.getAllTrainings(filters);
       setTrainingSessions(response.trainings || []);
-    } catch (error: any) { 
-      console.error('Error fetching training sessions:', error); 
-      toast.error('Error fetching training sessions'); 
-    } finally { 
-      setLoading(false); 
+    } catch (error: any) {
+      console.error('Error fetching training sessions:', error);
+      toast.error('Error fetching training sessions');
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -1009,46 +1034,46 @@ const TrainingAndBriefing: React.FC = () => {
       const filters = { department: filterDepartment === 'all' ? '' : filterDepartment, search: searchTerm };
       const response = await briefingApi.getAllBriefings(filters);
       setStaffBriefings(response.briefings || []);
-    } catch (error: any) { 
-      console.error('Error fetching staff briefings:', error); 
-      toast.error('Error fetching staff briefings'); 
+    } catch (error: any) {
+      console.error('Error fetching staff briefings:', error);
+      toast.error('Error fetching staff briefings');
     }
   };
 
   const fetchStats = async () => {
     try {
       const [trainingStats, briefingStats] = await Promise.all([trainingApi.getTrainingStats(), briefingApi.getBriefingStats()]);
-      setStats({ 
-        totalTrainings: trainingStats.data?.totalTrainings || trainingSessions.length, 
-        staffBriefings: briefingStats.data?.totalBriefings || staffBriefings.length, 
-        completedTraining: trainingStats.data?.completedTrainings || trainingSessions.filter(t => t.status === 'completed').length, 
-        pendingActions: briefingStats.data?.pendingActions || staffBriefings.reduce((acc, b) => acc + (b.actionItems?.filter(a => a.status === 'pending').length || 0), 0) 
+      setStats({
+        totalTrainings: trainingStats.data?.totalTrainings || trainingSessions.length,
+        staffBriefings: briefingStats.data?.totalBriefings || staffBriefings.length,
+        completedTraining: trainingStats.data?.completedTrainings || trainingSessions.filter(t => t.status === 'completed').length,
+        pendingActions: briefingStats.data?.pendingActions || staffBriefings.reduce((acc, b) => acc + (b.actionItems?.filter(a => a.status === 'pending').length || 0), 0)
       });
-    } catch (error) { 
-      console.error('Error fetching stats:', error); 
-      setStats({ 
-        totalTrainings: trainingSessions.length, 
-        staffBriefings: staffBriefings.length, 
-        completedTraining: trainingSessions.filter(t => t.status === 'completed').length, 
-        pendingActions: staffBriefings.reduce((acc, b) => acc + (b.actionItems?.filter(a => a.status === 'pending').length || 0), 0) 
-      }); 
+    } catch (error) {
+      console.error('Error fetching stats:', error);
+      setStats({
+        totalTrainings: trainingSessions.length,
+        staffBriefings: staffBriefings.length,
+        completedTraining: trainingSessions.filter(t => t.status === 'completed').length,
+        pendingActions: staffBriefings.reduce((acc, b) => acc + (b.actionItems?.filter(a => a.status === 'pending').length || 0), 0)
+      });
     }
   };
 
-  const filteredTrainingSessions = trainingSessions.filter(session => {
-    const matchesSearch = session.title?.toLowerCase().includes(searchTerm.toLowerCase()) || 
-                         session.description?.toLowerCase().includes(searchTerm.toLowerCase()) || 
-                         session.trainer?.toLowerCase().includes(searchTerm.toLowerCase()) || 
-                         session.site?.toLowerCase().includes(searchTerm.toLowerCase());
+  const filteredTrainingSessions = siteFilteredTrainingSessions.filter(session => {
+    const matchesSearch = session.title?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      session.description?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      session.trainer?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      session.site?.toLowerCase().includes(searchTerm.toLowerCase());
     const matchesDepartment = filterDepartment === 'all' || session.department === filterDepartment;
     const matchesStatus = filterStatus === 'all' || session.status === filterStatus;
     return matchesSearch && matchesDepartment && matchesStatus;
   });
 
-  const filteredStaffBriefings = staffBriefings.filter(briefing => {
-    const matchesSearch = briefing.conductedBy?.toLowerCase().includes(searchTerm.toLowerCase()) || 
-                         briefing.site?.toLowerCase().includes(searchTerm.toLowerCase()) || 
-                         briefing.topics?.some(topic => topic.toLowerCase().includes(searchTerm.toLowerCase()));
+  const filteredStaffBriefings = siteFilteredStaffBriefings.filter(briefing => {
+    const matchesSearch = briefing.conductedBy?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      briefing.site?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      briefing.topics?.some(topic => topic.toLowerCase().includes(searchTerm.toLowerCase()));
     const matchesDepartment = filterDepartment === 'all' || briefing.department === filterDepartment;
     return matchesSearch && matchesDepartment;
   });
@@ -1069,8 +1094,8 @@ const TrainingAndBriefing: React.FC = () => {
     const files = Array.from(e.target.files || []);
     const newAttachments = files.map(file => ({
       name: file.name,
-      type: file.type.startsWith('image/') ? 'image' as const : 
-            file.type.startsWith('video/') ? 'video' as const : 'document' as const,
+      type: file.type.startsWith('image/') ? 'image' as const :
+        file.type.startsWith('video/') ? 'video' as const : 'document' as const,
       url: URL.createObjectURL(file),
       size: `${(file.size / (1024 * 1024)).toFixed(1)} MB`,
       isNew: true,
@@ -1085,8 +1110,8 @@ const TrainingAndBriefing: React.FC = () => {
     const files = Array.from(e.target.files || []);
     const newAttachments = files.map(file => ({
       name: file.name,
-      type: file.type.startsWith('image/') ? 'image' as const : 
-            file.type.startsWith('video/') ? 'video' as const : 'document' as const,
+      type: file.type.startsWith('image/') ? 'image' as const :
+        file.type.startsWith('video/') ? 'video' as const : 'document' as const,
       url: URL.createObjectURL(file),
       size: `${(file.size / (1024 * 1024)).toFixed(1)} MB`,
       isNew: true,
@@ -1097,14 +1122,14 @@ const TrainingAndBriefing: React.FC = () => {
     toast.success(`${files.length} file(s) added to briefing`);
   };
 
-  const removeTrainingAttachment = (index: number) => { 
-    setTrainingAttachments(prev => prev.filter((_, i) => i !== index)); 
-    toast.info('File removed'); 
+  const removeTrainingAttachment = (index: number) => {
+    setTrainingAttachments(prev => prev.filter((_, i) => i !== index));
+    toast.info('File removed');
   };
 
-  const removeBriefingAttachment = (index: number) => { 
-    setBriefingAttachments(prev => prev.filter((_, i) => i !== index)); 
-    toast.info('File removed'); 
+  const removeBriefingAttachment = (index: number) => {
+    setBriefingAttachments(prev => prev.filter((_, i) => i !== index));
+    toast.info('File removed');
   };
 
   const removeEditTrainingAttachment = (index: number) => {
@@ -1174,52 +1199,43 @@ const TrainingAndBriefing: React.FC = () => {
   };
 
   const handleAddTraining = async () => {
-    if (!trainingForm.title || !trainingForm.date || !trainingForm.trainer) { 
-      toast.error('Please fill in all required fields (Title, Date, Trainer)'); 
-      return; 
+    if (!trainingForm.title || !trainingForm.date || !trainingForm.trainer) {
+      toast.error('Please fill in all required fields (Title, Date, Trainer)');
+      return;
     }
-    
-    if (trainingSelectedSupervisors.length === 0) { 
-      toast.error('Please select at least one supervisor'); 
-      return; 
-    }
-    
-    if (trainingSelectedManagers.length === 0) { 
-      toast.error('Please select at least one manager'); 
-      return; 
-    }
-    
+
+
     try {
       const supervisorsList = trainingSelectedSupervisors.map(supId => {
         const sup = filteredSupervisors.find(s => s._id === supId);
         return sup ? { id: sup._id, name: sup.name } : null;
       }).filter(Boolean);
-      
+
       const managersList = trainingSelectedManagers.map(mgrId => {
         const mgr = filteredManagers.find(m => m._id === mgrId);
         return mgr ? { id: mgr._id, name: mgr.name } : null;
       }).filter(Boolean);
-      
-      const trainingData = { 
-        title: trainingForm.title, 
-        description: trainingForm.description || '', 
-        type: trainingForm.type, 
-        date: trainingForm.date, 
-        time: trainingForm.time || '', 
-        duration: trainingForm.duration || '', 
-        trainer: trainingForm.trainer, 
-        site: trainingForm.site || '', 
-        department: trainingForm.department, 
-        maxAttendees: trainingForm.maxAttendees || 20, 
-        location: trainingForm.location || '', 
+
+      const trainingData = {
+        title: trainingForm.title,
+        description: trainingForm.description || '',
+        type: trainingForm.type,
+        date: trainingForm.date,
+        time: trainingForm.time || '',
+        duration: trainingForm.duration || '',
+        trainer: trainingForm.trainer,
+        site: trainingForm.site || '',
+        department: trainingForm.department,
+        maxAttendees: trainingForm.maxAttendees || 20,
+        location: trainingForm.location || '',
         objectives: trainingForm.objectives.filter(obj => obj.trim() !== ''),
         supervisors: supervisorsList,
         managers: managersList
       };
-      
+
       console.log('Sending training data:', trainingData);
       const response = await trainingApi.createTraining(trainingData, trainingAttachments);
-      
+
       if (response.success) {
         toast.success(response.message || 'Training session added successfully');
         await fetchTrainingSessions();
@@ -1230,66 +1246,58 @@ const TrainingAndBriefing: React.FC = () => {
       } else {
         throw new Error(response.message || 'Failed to create training');
       }
-    } catch (error: any) { 
-      console.error('Error:', error); 
-      toast.error(error.response?.data?.message || error.message || 'Error adding training session'); 
+    } catch (error: any) {
+      console.error('Error:', error);
+      toast.error(error.response?.data?.message || error.message || 'Error adding training session');
     }
   };
 
   const handleAddBriefing = async () => {
-    if (!briefingForm.date || !briefingForm.conductedBy || !briefingForm.site) { 
-      toast.error('Please fill in all required fields (Date, Conducted By, Site)'); 
-      return; 
+    if (!briefingForm.date || !briefingForm.conductedBy || !briefingForm.site) {
+      toast.error('Please fill in all required fields (Date, Conducted By, Site)');
+      return;
     }
-    
-    if (briefingSelectedSupervisors.length === 0) { 
-      toast.error('Please select at least one supervisor'); 
-      return; 
-    }
-    
-    if (briefingSelectedManagers.length === 0) { 
-      toast.error('Please select at least one manager'); 
-      return; 
-    }
-    
+
+
+
     try {
       const supervisorsList = briefingSelectedSupervisors.map(supId => {
         const sup = filteredSupervisors.find(s => s._id === supId);
         return sup ? { id: sup._id, name: sup.name } : null;
       }).filter(Boolean);
-      
+
       const managersList = briefingSelectedManagers.map(mgrId => {
         const mgr = filteredManagers.find(m => m._id === mgrId);
         return mgr ? { id: mgr._id, name: mgr.name } : null;
       }).filter(Boolean);
-      
-      const actionItems = briefingForm.actionItems.map((item: any) => ({ 
-        description: item.description, 
-        assignedTo: item.assignedTo, 
-        dueDate: item.dueDate, 
-        status: item.status || 'pending', 
-        priority: item.priority || 'medium' 
+
+      const actionItems = briefingForm.actionItems.map((item: any) => ({
+        description: item.description,
+        assignedTo: item.assignedTo,
+        dueDate: item.dueDate,
+        status: item.status || 'pending',
+        priority: item.priority || 'medium'
       }));
-      
-      const briefingData = { 
-        date: briefingForm.date, 
-        time: briefingForm.time || '', 
-        conductedBy: briefingForm.conductedBy, 
-        site: briefingForm.site, 
-        department: briefingForm.department || '', 
-        attendeesCount: briefingForm.attendeesCount || 0, 
-        topics: briefingForm.topics.filter(topic => topic.trim() !== ''), 
-        keyPoints: briefingForm.keyPoints.filter(point => point.trim() !== ''), 
-        actionItems: actionItems, 
-        notes: briefingForm.notes || '', 
+
+      const briefingData = {
+        date: briefingForm.date,
+        time: briefingForm.time || '',
+        conductedBy: briefingForm.conductedBy,
+        site: briefingForm.site,
+        department: briefingForm.department || '',
+        attendeesCount: briefingForm.attendeesCount || 0,
+        topics: briefingForm.topics.filter(topic => topic.trim() !== ''),
+        keyPoints: briefingForm.keyPoints.filter(point => point.trim() !== ''),
+        actionItems: actionItems,
+        notes: briefingForm.notes || '',
         shift: briefingForm.shift,
         supervisors: supervisorsList,
         managers: managersList
       };
-      
+
       console.log('Sending briefing data:', briefingData);
       const response = await briefingApi.createBriefing(briefingData, briefingAttachments);
-      
+
       if (response.success) {
         toast.success(response.message || 'Staff briefing added successfully');
         await fetchStaffBriefings();
@@ -1300,142 +1308,142 @@ const TrainingAndBriefing: React.FC = () => {
       } else {
         throw new Error(response.message || 'Failed to create briefing');
       }
-    } catch (error: any) { 
-      console.error('Error:', error); 
-      toast.error(error.response?.data?.message || error.message || 'Error adding staff briefing'); 
+    } catch (error: any) {
+      console.error('Error:', error);
+      toast.error(error.response?.data?.message || error.message || 'Error adding staff briefing');
     }
   };
 
- const handleUpdateTraining = async () => {
-  if (!editingTraining) return;
-  
-  try {
-    const supervisorsList = trainingSelectedSupervisors.map(supId => {
-      const sup = filteredSupervisors.find(s => s._id === supId);
-      return sup ? { id: sup._id, name: sup.name } : null;
-    }).filter(Boolean);
-    
-    const managersList = trainingSelectedManagers.map(mgrId => {
-      const mgr = filteredManagers.find(m => m._id === mgrId);
-      return mgr ? { id: mgr._id, name: mgr.name } : null;
-    }).filter(Boolean);
-    
-    const existingAttachments = editTrainingAttachments
-      .filter(att => !att.isNew)
-      .map(({ isNew, file, ...rest }) => rest);
-    
-    const newFiles = editTrainingNewFiles;
-    
-    const updateData = {
-      title: trainingForm.title,
-      description: trainingForm.description,
-      type: trainingForm.type,
-      date: trainingForm.date,
-      time: trainingForm.time,
-      duration: trainingForm.duration,
-      trainer: trainingForm.trainer,
-      site: trainingForm.site,
-      department: trainingForm.department,
-      maxAttendees: trainingForm.maxAttendees,
-      location: trainingForm.location,
-      objectives: trainingForm.objectives.filter(obj => obj.trim() !== ''),
-      supervisors: supervisorsList,
-      managers: managersList,
-      attachments: existingAttachments
-    };
-    
-    console.log('Updating training with data:', updateData);
-    console.log('New files to upload:', newFiles.length);
-    
-    // Make sure to use the imported trainingApi
-    const response = await trainingApi.updateTraining(editingTraining._id, updateData, newFiles);
-    
-    if (response.success) {
-      toast.success('Training session updated successfully');
-      await fetchTrainingSessions();
-      await fetchStats();
-      setShowEditTrainingDialog(false);
-      setEditingTraining(null);
-      resetTrainingForm();
-      setEditTrainingAttachments([]);
-      setEditTrainingNewFiles([]);
-    } else {
-      throw new Error(response.message || 'Failed to update training');
-    }
-  } catch (error: any) {
-    console.error('Error updating training:', error);
-    toast.error(error.response?.data?.message || error.message || 'Error updating training session');
-  }
-};
+  const handleUpdateTraining = async () => {
+    if (!editingTraining) return;
 
-const handleUpdateBriefing = async () => {
-  if (!editingBriefing) return;
-  
-  try {
-    const supervisorsList = briefingSelectedSupervisors.map(supId => {
-      const sup = filteredSupervisors.find(s => s._id === supId);
-      return sup ? { id: sup._id, name: sup.name } : null;
-    }).filter(Boolean);
-    
-    const managersList = briefingSelectedManagers.map(mgrId => {
-      const mgr = filteredManagers.find(m => m._id === mgrId);
-      return mgr ? { id: mgr._id, name: mgr.name } : null;
-    }).filter(Boolean);
-    
-    const actionItems = briefingForm.actionItems.map((item: any) => ({ 
-      description: item.description, 
-      assignedTo: item.assignedTo, 
-      dueDate: item.dueDate, 
-      status: item.status || 'pending', 
-      priority: item.priority || 'medium' 
-    }));
-    
-    const existingAttachments = editBriefingAttachments
-      .filter(att => !att.isNew)
-      .map(({ isNew, file, ...rest }) => rest);
-    
-    const newFiles = editBriefingNewFiles;
-    
-    const updateData = {
-      date: briefingForm.date,
-      time: briefingForm.time,
-      conductedBy: briefingForm.conductedBy,
-      site: briefingForm.site,
-      department: briefingForm.department,
-      attendeesCount: briefingForm.attendeesCount,
-      topics: briefingForm.topics.filter(topic => topic.trim() !== ''),
-      keyPoints: briefingForm.keyPoints.filter(point => point.trim() !== ''),
-      actionItems: actionItems,
-      notes: briefingForm.notes,
-      shift: briefingForm.shift,
-      supervisors: supervisorsList,
-      managers: managersList,
-      attachments: existingAttachments
-    };
-    
-    console.log('Updating briefing with data:', updateData);
-    console.log('New files to upload:', newFiles.length);
-    
-    // Make sure to use the imported briefingApi
-    const response = await briefingApi.updateBriefing(editingBriefing._id, updateData, newFiles);
-    
-    if (response.success) {
-      toast.success('Staff briefing updated successfully');
-      await fetchStaffBriefings();
-      await fetchStats();
-      setShowEditBriefingDialog(false);
-      setEditingBriefing(null);
-      resetBriefingForm();
-      setEditBriefingAttachments([]);
-      setEditBriefingNewFiles([]);
-    } else {
-      throw new Error(response.message || 'Failed to update briefing');
+    try {
+      const supervisorsList = trainingSelectedSupervisors.map(supId => {
+        const sup = filteredSupervisors.find(s => s._id === supId);
+        return sup ? { id: sup._id, name: sup.name } : null;
+      }).filter(Boolean);
+
+      const managersList = trainingSelectedManagers.map(mgrId => {
+        const mgr = filteredManagers.find(m => m._id === mgrId);
+        return mgr ? { id: mgr._id, name: mgr.name } : null;
+      }).filter(Boolean);
+
+      const existingAttachments = editTrainingAttachments
+        .filter(att => !att.isNew)
+        .map(({ isNew, file, ...rest }) => rest);
+
+      const newFiles = editTrainingNewFiles;
+
+      const updateData = {
+        title: trainingForm.title,
+        description: trainingForm.description,
+        type: trainingForm.type,
+        date: trainingForm.date,
+        time: trainingForm.time,
+        duration: trainingForm.duration,
+        trainer: trainingForm.trainer,
+        site: trainingForm.site,
+        department: trainingForm.department,
+        maxAttendees: trainingForm.maxAttendees,
+        location: trainingForm.location,
+        objectives: trainingForm.objectives.filter(obj => obj.trim() !== ''),
+        supervisors: supervisorsList,
+        managers: managersList,
+        attachments: existingAttachments
+      };
+
+      console.log('Updating training with data:', updateData);
+      console.log('New files to upload:', newFiles.length);
+
+      // Make sure to use the imported trainingApi
+      const response = await trainingApi.updateTraining(editingTraining._id, updateData, newFiles);
+
+      if (response.success) {
+        toast.success('Training session updated successfully');
+        await fetchTrainingSessions();
+        await fetchStats();
+        setShowEditTrainingDialog(false);
+        setEditingTraining(null);
+        resetTrainingForm();
+        setEditTrainingAttachments([]);
+        setEditTrainingNewFiles([]);
+      } else {
+        throw new Error(response.message || 'Failed to update training');
+      }
+    } catch (error: any) {
+      console.error('Error updating training:', error);
+      toast.error(error.response?.data?.message || error.message || 'Error updating training session');
     }
-  } catch (error: any) {
-    console.error('Error updating briefing:', error);
-    toast.error(error.response?.data?.message || error.message || 'Error updating staff briefing');
-  }
-};
+  };
+
+  const handleUpdateBriefing = async () => {
+    if (!editingBriefing) return;
+
+    try {
+      const supervisorsList = briefingSelectedSupervisors.map(supId => {
+        const sup = filteredSupervisors.find(s => s._id === supId);
+        return sup ? { id: sup._id, name: sup.name } : null;
+      }).filter(Boolean);
+
+      const managersList = briefingSelectedManagers.map(mgrId => {
+        const mgr = filteredManagers.find(m => m._id === mgrId);
+        return mgr ? { id: mgr._id, name: mgr.name } : null;
+      }).filter(Boolean);
+
+      const actionItems = briefingForm.actionItems.map((item: any) => ({
+        description: item.description,
+        assignedTo: item.assignedTo,
+        dueDate: item.dueDate,
+        status: item.status || 'pending',
+        priority: item.priority || 'medium'
+      }));
+
+      const existingAttachments = editBriefingAttachments
+        .filter(att => !att.isNew)
+        .map(({ isNew, file, ...rest }) => rest);
+
+      const newFiles = editBriefingNewFiles;
+
+      const updateData = {
+        date: briefingForm.date,
+        time: briefingForm.time,
+        conductedBy: briefingForm.conductedBy,
+        site: briefingForm.site,
+        department: briefingForm.department,
+        attendeesCount: briefingForm.attendeesCount,
+        topics: briefingForm.topics.filter(topic => topic.trim() !== ''),
+        keyPoints: briefingForm.keyPoints.filter(point => point.trim() !== ''),
+        actionItems: actionItems,
+        notes: briefingForm.notes,
+        shift: briefingForm.shift,
+        supervisors: supervisorsList,
+        managers: managersList,
+        attachments: existingAttachments
+      };
+
+      console.log('Updating briefing with data:', updateData);
+      console.log('New files to upload:', newFiles.length);
+
+      // Make sure to use the imported briefingApi
+      const response = await briefingApi.updateBriefing(editingBriefing._id, updateData, newFiles);
+
+      if (response.success) {
+        toast.success('Staff briefing updated successfully');
+        await fetchStaffBriefings();
+        await fetchStats();
+        setShowEditBriefingDialog(false);
+        setEditingBriefing(null);
+        resetBriefingForm();
+        setEditBriefingAttachments([]);
+        setEditBriefingNewFiles([]);
+      } else {
+        throw new Error(response.message || 'Failed to update briefing');
+      }
+    } catch (error: any) {
+      console.error('Error updating briefing:', error);
+      toast.error(error.response?.data?.message || error.message || 'Error updating staff briefing');
+    }
+  };
 
   const openEditTrainingDialog = (training: TrainingSession) => {
     setEditingTraining(training);
@@ -1455,14 +1463,14 @@ const handleUpdateBriefing = async () => {
     });
     setTrainingSelectedSupervisors(training.supervisors?.map(s => s.id) || []);
     setTrainingSelectedManagers(training.managers?.map(m => m.id) || []);
-    
+
     const existingAttachments = (training.attachments || []).map(att => ({
       ...att,
       isNew: false
     }));
     setEditTrainingAttachments(existingAttachments);
     setEditTrainingNewFiles([]);
-    
+
     setShowEditTrainingDialog(true);
   };
 
@@ -1483,20 +1491,20 @@ const handleUpdateBriefing = async () => {
     });
     setBriefingSelectedSupervisors(briefing.supervisors?.map(s => s.id) || []);
     setBriefingSelectedManagers(briefing.managers?.map(m => m.id) || []);
-    
+
     const existingAttachments = (briefing.attachments || []).map(att => ({
       ...att,
       isNew: false
     }));
     setEditBriefingAttachments(existingAttachments);
     setEditBriefingNewFiles([]);
-    
+
     setShowEditBriefingDialog(true);
   };
 
   const resetTrainingForm = () => {
-    setTrainingForm({ 
-      title: '', description: '', type: 'safety', date: '', time: '', duration: '', 
+    setTrainingForm({
+      title: '', description: '', type: 'safety', date: '', time: '', duration: '',
       trainer: '', site: '', department: 'All Departments', maxAttendees: 20, location: '', objectives: ['']
     });
     setTrainingSelectedSupervisors([]);
@@ -1507,8 +1515,8 @@ const handleUpdateBriefing = async () => {
   };
 
   const resetBriefingForm = () => {
-    setBriefingForm({ 
-      date: '', time: '', conductedBy: '', site: '', department: '', attendeesCount: 0, 
+    setBriefingForm({
+      date: '', time: '', conductedBy: '', site: '', department: '', attendeesCount: 0,
       topics: [''], keyPoints: [''], actionItems: [], notes: '', shift: 'morning'
     });
     setBriefingSelectedSupervisors([]);
@@ -1518,48 +1526,48 @@ const handleUpdateBriefing = async () => {
     setBriefingAttachments([]);
   };
 
-  const deleteTraining = async (id: string) => { 
-    try { 
-      await trainingApi.deleteTraining(id); 
-      await fetchTrainingSessions(); 
-      await fetchStats(); 
-      toast.success('Training session deleted'); 
-    } catch (error: any) { 
-      toast.error(error.response?.data?.message || 'Error deleting training session'); 
-    } 
+  const deleteTraining = async (id: string) => {
+    try {
+      await trainingApi.deleteTraining(id);
+      await fetchTrainingSessions();
+      await fetchStats();
+      toast.success('Training session deleted');
+    } catch (error: any) {
+      toast.error(error.response?.data?.message || 'Error deleting training session');
+    }
   };
-  
-  const deleteBriefing = async (id: string) => { 
-    try { 
-      await briefingApi.deleteBriefing(id); 
-      await fetchStaffBriefings(); 
-      await fetchStats(); 
-      toast.success('Staff briefing deleted'); 
-    } catch (error: any) { 
-      toast.error(error.response?.data?.message || 'Error deleting staff briefing'); 
-    } 
+
+  const deleteBriefing = async (id: string) => {
+    try {
+      await briefingApi.deleteBriefing(id);
+      await fetchStaffBriefings();
+      await fetchStats();
+      toast.success('Staff briefing deleted');
+    } catch (error: any) {
+      toast.error(error.response?.data?.message || 'Error deleting staff briefing');
+    }
   };
-  
-  const updateTrainingStatus = async (id: string, status: TrainingSession['status']) => { 
-    try { 
-      await trainingApi.updateTrainingStatus(id, status); 
-      await fetchTrainingSessions(); 
-      await fetchStats(); 
-      toast.success(`Training status updated to ${status}`); 
-    } catch (error: any) { 
-      toast.error(error.response?.data?.message || 'Error updating training status'); 
-    } 
+
+  const updateTrainingStatus = async (id: string, status: TrainingSession['status']) => {
+    try {
+      await trainingApi.updateTrainingStatus(id, status);
+      await fetchTrainingSessions();
+      await fetchStats();
+      toast.success(`Training status updated to ${status}`);
+    } catch (error: any) {
+      toast.error(error.response?.data?.message || 'Error updating training status');
+    }
   };
-  
-  const updateActionItemStatus = async (briefingId: string, actionItemId: string, status: string) => { 
-    try { 
-      await briefingApi.updateActionItemStatus(briefingId, actionItemId, status); 
-      await fetchStaffBriefings(); 
-      await fetchStats(); 
-      toast.success('Action item status updated'); 
-    } catch (error: any) { 
-      toast.error(error.response?.data?.message || 'Error updating action item status'); 
-    } 
+
+  const updateActionItemStatus = async (briefingId: string, actionItemId: string, status: string) => {
+    try {
+      await briefingApi.updateActionItemStatus(briefingId, actionItemId, status);
+      await fetchStaffBriefings();
+      await fetchStats();
+      toast.success('Action item status updated');
+    } catch (error: any) {
+      toast.error(error.response?.data?.message || 'Error updating action item status');
+    }
   };
 
   const addObjective = () => { setTrainingForm(prev => ({ ...prev, objectives: [...prev.objectives, ''] })); };
@@ -1575,56 +1583,60 @@ const handleUpdateBriefing = async () => {
   const removeActionItem = (index: number) => { setBriefingForm(prev => ({ ...prev, actionItems: prev.actionItems.filter((_, i) => i !== index) })); };
   const updateActionItem = (index: number, field: string, value: string) => { const newActionItems = [...briefingForm.actionItems]; newActionItems[index] = { ...newActionItems[index], [field]: value }; setBriefingForm(prev => ({ ...prev, actionItems: newActionItems })); };
 
-  const getStatusBadge = (status: string) => { 
-    switch (status) { 
-      case 'scheduled': return 'bg-blue-100 text-blue-800'; 
-      case 'ongoing': return 'bg-yellow-100 text-yellow-800'; 
-      case 'completed': return 'bg-green-100 text-green-800'; 
-      case 'cancelled': return 'bg-red-100 text-red-800'; 
-      default: return 'bg-gray-100 text-gray-800'; 
-    } 
+  const getStatusBadge = (status: string) => {
+    switch (status) {
+      case 'scheduled': return 'bg-blue-100 text-blue-800';
+      case 'ongoing': return 'bg-yellow-100 text-yellow-800';
+      case 'completed': return 'bg-green-100 text-green-800';
+      case 'cancelled': return 'bg-red-100 text-red-800';
+      default: return 'bg-gray-100 text-gray-800';
+    }
   };
-  
-  const getPriorityBadge = (priority: string) => { 
-    switch (priority) { 
-      case 'high': return 'bg-red-100 text-red-800'; 
-      case 'medium': return 'bg-yellow-100 text-yellow-800'; 
-      case 'low': return 'bg-green-100 text-green-800'; 
-      default: return 'bg-gray-100 text-gray-800'; 
-    } 
+
+  const getPriorityBadge = (priority: string) => {
+    switch (priority) {
+      case 'high': return 'bg-red-100 text-red-800';
+      case 'medium': return 'bg-yellow-100 text-yellow-800';
+      case 'low': return 'bg-green-100 text-green-800';
+      default: return 'bg-gray-100 text-gray-800';
+    }
   };
-  
-  const getShiftBadge = (shift: string) => { 
-    switch (shift) { 
-      case 'morning': return 'bg-blue-100 text-blue-800'; 
-      case 'evening': return 'bg-purple-100 text-purple-800'; 
-      case 'night': return 'bg-gray-100 text-gray-800'; 
-      default: return 'bg-gray-100 text-gray-800'; 
-    } 
+
+  const getShiftBadge = (shift: string) => {
+    switch (shift) {
+      case 'morning': return 'bg-blue-100 text-blue-800';
+      case 'evening': return 'bg-purple-100 text-purple-800';
+      case 'night': return 'bg-gray-100 text-gray-800';
+      default: return 'bg-gray-100 text-gray-800';
+    }
   };
-  
-  const getTypeColor = (type: string) => { 
-    const found = trainingTypes.find(t => t.value === type); 
-    return found?.color || 'bg-gray-100 text-gray-800'; 
+
+  const getTypeColor = (type: string) => {
+    const found = trainingTypes.find(t => t.value === type);
+    return found?.color || 'bg-gray-100 text-gray-800';
   };
-  
-  const formatDate = (dateString: string) => { 
-    try { 
-      const date = new Date(dateString); 
-      if (isNaN(date.getTime())) return dateString; 
-      return date.toLocaleDateString('en-US', { weekday: 'short', year: 'numeric', month: 'short', day: 'numeric' }); 
-    } catch { 
-      return dateString; 
-    } 
+
+  const formatDate = (dateString: string) => {
+    try {
+      const date = new Date(dateString);
+      if (isNaN(date.getTime())) return dateString;
+      return date.toLocaleDateString('en-US', { weekday: 'short', year: 'numeric', month: 'short', day: 'numeric' });
+    } catch {
+      return dateString;
+    }
   };
-  
+
   const nextMonth = () => { setCurrentMonth(prev => { const newDate = new Date(prev); newDate.setMonth(newDate.getMonth() + 1); return newDate; }); };
   const prevMonth = () => { setCurrentMonth(prev => { const newDate = new Date(prev); newDate.setMonth(newDate.getMonth() - 1); return newDate; }); };
-  const getCalendarEvents = () => { 
-    const events: any[] = []; 
-    trainingSessions.forEach(session => { events.push({ id: session._id, title: session.title, date: session.date, type: 'training', color: 'bg-blue-500', session }); }); 
-    staffBriefings.forEach(briefing => { events.push({ id: briefing._id, title: `Briefing - ${briefing.department}`, date: briefing.date, type: 'briefing', color: 'bg-green-500', briefing }); }); 
-    return events; 
+  const getCalendarEvents = () => {
+    const events: any[] = [];
+    siteFilteredTrainingSessions.forEach(session => {
+      events.push({ id: session._id, title: session.title, date: session.date, type: 'training', color: 'bg-blue-500', session });
+    });
+    siteFilteredStaffBriefings.forEach(briefing => {
+      events.push({ id: briefing._id, title: `Briefing - ${briefing.department}`, date: briefing.date, type: 'briefing', color: 'bg-green-500', briefing });
+    });
+    return events;
   };
   const calendarEvents = getCalendarEvents();
   const handleRefresh = () => { fetchTrainingSessions(); fetchStaffBriefings(); fetchStats(); toast.success('Data refreshed'); };
@@ -1659,36 +1671,14 @@ const handleUpdateBriefing = async () => {
             <div><label className="text-sm font-medium">Description</label><Textarea value={trainingForm.description} onChange={(e) => setTrainingForm(prev => ({ ...prev, description: e.target.value }))} rows={3} /></div>
           </div>
         </div>
-        
-        {/* Training Supervisors Multi-Select in Edit */}
-        <div className="py-4 border-t">
-          <div className="mb-4"><h3 className="text-lg font-semibold flex items-center gap-2"><UserCheck className="h-5 w-5" />Supervisors *</h3><p className="text-xs text-gray-500">Select supervisors assigned to this site</p></div>
-          <div className="space-y-2">
-            <Input placeholder="Search supervisors..." value={trainingSupervisorSearchQuery} onChange={(e) => setTrainingSupervisorSearchQuery(e.target.value)} className="h-9" disabled={!trainingForm.site || filteredSupervisors.length === 0} />
-            <div className="border rounded-lg max-h-40 overflow-y-auto p-2">
-              {filteredSupervisors.length > 0 ? (filteredTrainingSupervisors.map(sup => (<MobileSupervisorCard key={sup._id} supervisor={sup} selected={trainingSelectedSupervisors.includes(sup._id)} onToggle={handleTrainingSupervisorToggle} />))) : (<div className="text-center py-4 text-muted-foreground">{!trainingForm.site ? "Select a site first" : "No supervisors available for this site"}</div>)}
-            </div>
-            {trainingSelectedSupervisors.length > 0 && (<div className="flex flex-wrap gap-1 mt-2">{trainingSelectedSupervisors.map(id => { const sup = filteredSupervisors.find(s => s._id === id); return sup ? (<Badge key={id} variant="secondary" className="flex items-center gap-1 text-xs">{sup.name}<X className="h-3 w-3 cursor-pointer" onClick={() => handleTrainingSupervisorToggle(id)} /></Badge>) : null; })}</div>)}
-          </div>
-        </div>
-        
-        {/* Training Managers Multi-Select in Edit */}
-        <div className="py-4 border-t">
-          <div className="mb-4"><h3 className="text-lg font-semibold flex items-center gap-2"><UserCog className="h-5 w-5" />Managers *</h3><p className="text-xs text-gray-500">Select managers assigned to this site</p></div>
-          <div className="space-y-2">
-            <Input placeholder="Search managers..." value={trainingManagerSearchQuery} onChange={(e) => setTrainingManagerSearchQuery(e.target.value)} className="h-9" disabled={!trainingForm.site || filteredManagers.length === 0} />
-            <div className="border rounded-lg max-h-40 overflow-y-auto p-2">
-              {filteredManagers.length > 0 ? (filteredTrainingManagers.map(mgr => (<MobileManagerCard key={mgr._id} manager={mgr} selected={trainingSelectedManagers.includes(mgr._id)} onToggle={handleTrainingManagerToggle} />))) : (<div className="text-center py-4 text-muted-foreground">{!trainingForm.site ? "Select a site first" : "No managers available for this site"}</div>)}
-            </div>
-            {trainingSelectedManagers.length > 0 && (<div className="flex flex-wrap gap-1 mt-2">{trainingSelectedManagers.map(id => { const mgr = filteredManagers.find(m => m._id === id); return mgr ? (<Badge key={id} variant="secondary" className="flex items-center gap-1 text-xs">{mgr.name}<X className="h-3 w-3 cursor-pointer" onClick={() => handleTrainingManagerToggle(id)} /></Badge>) : null; })}</div>)}
-          </div>
-        </div>
-        
+
+
+
         {/* Training Objectives */}
         <div className="py-4 border-t">
           <div><label className="text-sm font-medium">Training Objectives</label><div className="space-y-2 mt-2">{trainingForm.objectives.map((objective, index) => (<div key={index} className="flex gap-2"><Input placeholder={`Objective ${index + 1}`} value={objective} onChange={(e) => updateObjective(index, e.target.value)} /><Button variant="ghost" size="sm" onClick={() => removeObjective(index)}><X className="h-4 w-4" /></Button></div>))}<Button variant="outline" size="sm" onClick={addObjective}><Plus className="h-4 w-4 mr-2" />Add Objective</Button></div></div>
         </div>
-        
+
         {/* Training Attachments Section in Edit */}
         <div className="py-4 border-t">
           <div className="flex justify-between items-center mb-4">
@@ -1711,7 +1701,7 @@ const handleUpdateBriefing = async () => {
               </Button>
             </div>
           </div>
-          
+
           {editTrainingAttachments.length > 0 && (
             <div className="space-y-2 max-h-60 overflow-y-auto">
               {editTrainingAttachments.map((att, index) => (
@@ -1753,7 +1743,7 @@ const handleUpdateBriefing = async () => {
             </div>
           )}
         </div>
-        
+
         <DialogFooter><Button onClick={handleUpdateTraining}>Update Training</Button><Button variant="outline" onClick={() => setShowEditTrainingDialog(false)}>Cancel</Button></DialogFooter>
       </DialogContent>
     </Dialog>
@@ -1783,37 +1773,16 @@ const handleUpdateBriefing = async () => {
             <div><label className="text-sm font-medium">Notes</label><Textarea value={briefingForm.notes} onChange={(e) => setBriefingForm(prev => ({ ...prev, notes: e.target.value }))} rows={3} /></div>
           </div>
         </div>
-        
-        {/* Briefing Supervisors Multi-Select in Edit */}
-        <div className="py-4 border-t">
-          <div className="mb-4"><h3 className="text-lg font-semibold flex items-center gap-2"><UserCheck className="h-5 w-5" />Supervisors *</h3><p className="text-xs text-gray-500">Select supervisors assigned to this site</p></div>
-          <div className="space-y-2">
-            <Input placeholder="Search supervisors..." value={briefingSupervisorSearchQuery} onChange={(e) => setBriefingSupervisorSearchQuery(e.target.value)} className="h-9" disabled={!briefingForm.site || filteredSupervisors.length === 0} />
-            <div className="border rounded-lg max-h-40 overflow-y-auto p-2">
-              {filteredSupervisors.length > 0 ? (filteredBriefingSupervisors.map(sup => (<MobileSupervisorCard key={sup._id} supervisor={sup} selected={briefingSelectedSupervisors.includes(sup._id)} onToggle={handleBriefingSupervisorToggle} />))) : (<div className="text-center py-4 text-muted-foreground">{!briefingForm.site ? "Select a site first" : "No supervisors available for this site"}</div>)}
-            </div>
-            {briefingSelectedSupervisors.length > 0 && (<div className="flex flex-wrap gap-1 mt-2">{briefingSelectedSupervisors.map(id => { const sup = filteredSupervisors.find(s => s._id === id); return sup ? (<Badge key={id} variant="secondary" className="flex items-center gap-1 text-xs">{sup.name}<X className="h-3 w-3 cursor-pointer" onClick={() => handleBriefingSupervisorToggle(id)} /></Badge>) : null; })}</div>)}
-          </div>
-        </div>
-        
-        {/* Briefing Managers Multi-Select in Edit */}
-        <div className="py-4 border-t">
-          <div className="mb-4"><h3 className="text-lg font-semibold flex items-center gap-2"><UserCog className="h-5 w-5" />Managers *</h3><p className="text-xs text-gray-500">Select managers assigned to this site</p></div>
-          <div className="space-y-2">
-            <Input placeholder="Search managers..." value={briefingManagerSearchQuery} onChange={(e) => setBriefingManagerSearchQuery(e.target.value)} className="h-9" disabled={!briefingForm.site || filteredManagers.length === 0} />
-            <div className="border rounded-lg max-h-40 overflow-y-auto p-2">
-              {filteredManagers.length > 0 ? (filteredBriefingManagers.map(mgr => (<MobileManagerCard key={mgr._id} manager={mgr} selected={briefingSelectedManagers.includes(mgr._id)} onToggle={handleBriefingManagerToggle} />))) : (<div className="text-center py-4 text-muted-foreground">{!briefingForm.site ? "Select a site first" : "No managers available for this site"}</div>)}
-            </div>
-            {briefingSelectedManagers.length > 0 && (<div className="flex flex-wrap gap-1 mt-2">{briefingSelectedManagers.map(id => { const mgr = filteredManagers.find(m => m._id === id); return mgr ? (<Badge key={id} variant="secondary" className="flex items-center gap-1 text-xs">{mgr.name}<X className="h-3 w-3 cursor-pointer" onClick={() => handleBriefingManagerToggle(id)} /></Badge>) : null; })}</div>)}
-          </div>
-        </div>
-        
+
+
+
+
         {/* Action Items Section in Edit */}
         <div className="py-4 border-t">
           <div className="flex justify-between items-center mb-4"><div><h3 className="text-lg font-semibold">Action Items</h3><p className="text-xs text-gray-500">Add tasks assigned during briefing</p></div><Button type="button" variant="outline" onClick={addActionItem}><Plus className="h-4 w-4 mr-2" />Add Item</Button></div>
           {briefingForm.actionItems.map((item, idx) => (<div key={idx} className="grid grid-cols-1 md:grid-cols-4 gap-2 p-3 bg-gray-50 rounded mb-2"><Input placeholder="Description" value={item.description} onChange={(e) => updateActionItem(idx, 'description', e.target.value)} /><Input placeholder="Assigned To" value={item.assignedTo} onChange={(e) => updateActionItem(idx, 'assignedTo', e.target.value)} /><Input type="date" value={item.dueDate} onChange={(e) => updateActionItem(idx, 'dueDate', e.target.value)} /><Select value={item.priority} onValueChange={(v) => updateActionItem(idx, 'priority', v)}><SelectTrigger><SelectValue /></SelectTrigger><SelectContent>{priorities.map(p => (<SelectItem key={p} value={p}>{p}</SelectItem>))}</SelectContent></Select><Button variant="ghost" size="sm" onClick={() => removeActionItem(idx)}><Trash2 className="h-4 w-4 text-red-500" /></Button></div>))}
         </div>
-        
+
         {/* Briefing Attachments Section in Edit */}
         <div className="py-4 border-t">
           <div className="flex justify-between items-center mb-4">
@@ -1836,7 +1805,7 @@ const handleUpdateBriefing = async () => {
               </Button>
             </div>
           </div>
-          
+
           {editBriefingAttachments.length > 0 && (
             <div className="space-y-2 max-h-60 overflow-y-auto">
               {editBriefingAttachments.map((att, index) => (
@@ -1878,7 +1847,7 @@ const handleUpdateBriefing = async () => {
             </div>
           )}
         </div>
-        
+
         <DialogFooter><Button onClick={handleUpdateBriefing}>Update Briefing</Button><Button variant="outline" onClick={() => setShowEditBriefingDialog(false)}>Cancel</Button></DialogFooter>
       </DialogContent>
     </Dialog>
@@ -1892,7 +1861,7 @@ const handleUpdateBriefing = async () => {
           <div className="flex flex-wrap gap-2">
             <Button variant="outline" size={isMobileView ? "sm" : "default"} onClick={() => setViewMode(viewMode === 'list' ? 'calendar' : 'list')} disabled={loading}>{viewMode === 'list' ? (<><CalendarDays className="h-4 w-4 mr-2" />{!isMobileView && "Calendar View"}{isMobileView && "Calendar"}</>) : (<><ListIcon className="h-4 w-4 mr-2" />{!isMobileView && "List View"}{isMobileView && "List"}</>)}</Button>
             <Button variant="outline" size={isMobileView ? "sm" : "default"} onClick={handleRefresh} disabled={loading}><RefreshCw className={`h-4 w-4 mr-2 ${loading ? 'animate-spin' : ''}`} />{!isMobileView && "Refresh"}</Button>
-            
+
             {/* Add Training Dialog */}
             <Dialog open={showAddTraining} onOpenChange={setShowAddTraining}>
               <DialogTrigger asChild><Button size={isMobileView ? "sm" : "default"}><Plus className="h-4 w-4 mr-2" />{!isMobileView && "Add Training"}{isMobileView && "Training"}</Button></DialogTrigger>
@@ -1915,46 +1884,26 @@ const handleUpdateBriefing = async () => {
                     <div><label className="text-sm font-medium">Description</label><Textarea value={trainingForm.description} onChange={(e) => setTrainingForm(prev => ({ ...prev, description: e.target.value }))} rows={3} /></div>
                   </div>
                 </div>
-                
-                {/* Training Supervisors Multi-Select */}
-                <div className="py-4 border-t">
-                  <div className="mb-4"><h3 className="text-lg font-semibold flex items-center gap-2"><UserCheck className="h-5 w-5" />Supervisors *</h3><p className="text-xs text-gray-500">Select supervisors assigned to this site</p></div>
-                  <div className="space-y-2">
-                    <Input placeholder="Search supervisors..." value={trainingSupervisorSearchQuery} onChange={(e) => setTrainingSupervisorSearchQuery(e.target.value)} className="h-9" disabled={!trainingForm.site || filteredSupervisors.length === 0} />
-                    <div className="border rounded-lg max-h-40 overflow-y-auto p-2">
-                      {filteredSupervisors.length > 0 ? (filteredTrainingSupervisors.map(sup => (<MobileSupervisorCard key={sup._id} supervisor={sup} selected={trainingSelectedSupervisors.includes(sup._id)} onToggle={handleTrainingSupervisorToggle} />))) : (<div className="text-center py-4 text-muted-foreground">{!trainingForm.site ? "Select a site first" : "No supervisors available for this site"}</div>)}
-                    </div>
-                    {trainingSelectedSupervisors.length > 0 && (<div className="flex flex-wrap gap-1 mt-2">{trainingSelectedSupervisors.map(id => { const sup = filteredSupervisors.find(s => s._id === id); return sup ? (<Badge key={id} variant="secondary" className="flex items-center gap-1 text-xs">{sup.name}<X className="h-3 w-3 cursor-pointer" onClick={() => handleTrainingSupervisorToggle(id)} /></Badge>) : null; })}</div>)}
-                  </div>
-                </div>
-                
-                {/* Training Managers Multi-Select */}
-                <div className="py-4 border-t">
-                  <div className="mb-4"><h3 className="text-lg font-semibold flex items-center gap-2"><UserCog className="h-5 w-5" />Managers *</h3><p className="text-xs text-gray-500">Select managers assigned to this site</p></div>
-                  <div className="space-y-2">
-                    <Input placeholder="Search managers..." value={trainingManagerSearchQuery} onChange={(e) => setTrainingManagerSearchQuery(e.target.value)} className="h-9" disabled={!trainingForm.site || filteredManagers.length === 0} />
-                    <div className="border rounded-lg max-h-40 overflow-y-auto p-2">
-                      {filteredManagers.length > 0 ? (filteredTrainingManagers.map(mgr => (<MobileManagerCard key={mgr._id} manager={mgr} selected={trainingSelectedManagers.includes(mgr._id)} onToggle={handleTrainingManagerToggle} />))) : (<div className="text-center py-4 text-muted-foreground">{!trainingForm.site ? "Select a site first" : "No managers available for this site"}</div>)}
-                    </div>
-                    {trainingSelectedManagers.length > 0 && (<div className="flex flex-wrap gap-1 mt-2">{trainingSelectedManagers.map(id => { const mgr = filteredManagers.find(m => m._id === id); return mgr ? (<Badge key={id} variant="secondary" className="flex items-center gap-1 text-xs">{mgr.name}<X className="h-3 w-3 cursor-pointer" onClick={() => handleTrainingManagerToggle(id)} /></Badge>) : null; })}</div>)}
-                  </div>
-                </div>
-                
+
+
+
+
+
                 {/* Training Objectives */}
                 <div className="py-4 border-t">
                   <div><label className="text-sm font-medium">Training Objectives</label><div className="space-y-2 mt-2">{trainingForm.objectives.map((objective, index) => (<div key={index} className="flex gap-2"><Input placeholder={`Objective ${index + 1}`} value={objective} onChange={(e) => updateObjective(index, e.target.value)} /><Button variant="ghost" size="sm" onClick={() => removeObjective(index)}><X className="h-4 w-4" /></Button></div>))}<Button variant="outline" size="sm" onClick={addObjective}><Plus className="h-4 w-4 mr-2" />Add Objective</Button></div></div>
                 </div>
-                
+
                 {/* Training Attachments */}
                 <div className="py-4 border-t">
                   <div className="flex justify-between items-center mb-4"><div><h3 className="text-lg font-semibold">Attachments</h3><p className="text-xs text-gray-500">Upload training materials, photos, or videos</p></div><div><input type="file" ref={trainingFileInputRef} multiple onChange={handleTrainingFileUpload} className="hidden" accept="image/*,video/*,.pdf,.doc,.docx,.ppt,.pptx" /><Button type="button" variant="outline" onClick={() => trainingFileInputRef.current?.click()}><Upload className="h-4 w-4 mr-2" />Upload Files</Button></div></div>
                   {trainingAttachments.length > 0 && (<div className="space-y-2 max-h-40 overflow-y-auto">{trainingAttachments.map((file, index) => (<div key={index} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg"><div className="flex items-center gap-3 flex-1">{file.type.startsWith('image/') ? <ImageIcon className="h-5 w-5 text-blue-500" /> : file.type.startsWith('video/') ? <Video className="h-5 w-5 text-red-500" /> : <File className="h-5 w-5 text-gray-500" />}<div className="flex-1 min-w-0"><p className="text-sm font-medium truncate">{file.name}</p><p className="text-xs text-gray-500">{(file.size / (1024 * 1024)).toFixed(1)} MB</p></div></div><Button variant="ghost" size="sm" onClick={() => removeTrainingAttachment(index)} className="h-8 w-8 p-0"><Trash2 className="h-4 w-4 text-red-500" /></Button></div>))}</div>)}
                 </div>
-                
+
                 <DialogFooter><Button onClick={handleAddTraining}>Add Training</Button><DialogClose asChild><Button variant="outline">Cancel</Button></DialogClose></DialogFooter>
               </DialogContent>
             </Dialog>
-            
+
             {/* Add Briefing Dialog */}
             <Dialog open={showAddBriefing} onOpenChange={setShowAddBriefing}>
               <DialogTrigger asChild><Button variant="secondary" size={isMobileView ? "sm" : "default"}><Plus className="h-4 w-4 mr-2" />{!isMobileView && "Add Briefing"}{isMobileView && "Briefing"}</Button></DialogTrigger>
@@ -1976,60 +1925,424 @@ const handleUpdateBriefing = async () => {
                     <div><label className="text-sm font-medium">Notes</label><Textarea value={briefingForm.notes} onChange={(e) => setBriefingForm(prev => ({ ...prev, notes: e.target.value }))} rows={3} /></div>
                   </div>
                 </div>
-                
-                {/* Briefing Supervisors Multi-Select */}
-                <div className="py-4 border-t">
-                  <div className="mb-4"><h3 className="text-lg font-semibold flex items-center gap-2"><UserCheck className="h-5 w-5" />Supervisors *</h3><p className="text-xs text-gray-500">Select supervisors assigned to this site</p></div>
-                  <div className="space-y-2">
-                    <Input placeholder="Search supervisors..." value={briefingSupervisorSearchQuery} onChange={(e) => setBriefingSupervisorSearchQuery(e.target.value)} className="h-9" disabled={!briefingForm.site || filteredSupervisors.length === 0} />
-                    <div className="border rounded-lg max-h-40 overflow-y-auto p-2">
-                      {filteredSupervisors.length > 0 ? (filteredBriefingSupervisors.map(sup => (<MobileSupervisorCard key={sup._id} supervisor={sup} selected={briefingSelectedSupervisors.includes(sup._id)} onToggle={handleBriefingSupervisorToggle} />))) : (<div className="text-center py-4 text-muted-foreground">{!briefingForm.site ? "Select a site first" : "No supervisors available for this site"}</div>)}
-                    </div>
-                    {briefingSelectedSupervisors.length > 0 && (<div className="flex flex-wrap gap-1 mt-2">{briefingSelectedSupervisors.map(id => { const sup = filteredSupervisors.find(s => s._id === id); return sup ? (<Badge key={id} variant="secondary" className="flex items-center gap-1 text-xs">{sup.name}<X className="h-3 w-3 cursor-pointer" onClick={() => handleBriefingSupervisorToggle(id)} /></Badge>) : null; })}</div>)}
-                  </div>
-                </div>
-                
-                {/* Briefing Managers Multi-Select */}
-                <div className="py-4 border-t">
-                  <div className="mb-4"><h3 className="text-lg font-semibold flex items-center gap-2"><UserCog className="h-5 w-5" />Managers *</h3><p className="text-xs text-gray-500">Select managers assigned to this site</p></div>
-                  <div className="space-y-2">
-                    <Input placeholder="Search managers..." value={briefingManagerSearchQuery} onChange={(e) => setBriefingManagerSearchQuery(e.target.value)} className="h-9" disabled={!briefingForm.site || filteredManagers.length === 0} />
-                    <div className="border rounded-lg max-h-40 overflow-y-auto p-2">
-                      {filteredManagers.length > 0 ? (filteredBriefingManagers.map(mgr => (<MobileManagerCard key={mgr._id} manager={mgr} selected={briefingSelectedManagers.includes(mgr._id)} onToggle={handleBriefingManagerToggle} />))) : (<div className="text-center py-4 text-muted-foreground">{!briefingForm.site ? "Select a site first" : "No managers available for this site"}</div>)}
-                    </div>
-                    {briefingSelectedManagers.length > 0 && (<div className="flex flex-wrap gap-1 mt-2">{briefingSelectedManagers.map(id => { const mgr = filteredManagers.find(m => m._id === id); return mgr ? (<Badge key={id} variant="secondary" className="flex items-center gap-1 text-xs">{mgr.name}<X className="h-3 w-3 cursor-pointer" onClick={() => handleBriefingManagerToggle(id)} /></Badge>) : null; })}</div>)}
-                  </div>
-                </div>
-                
+
+
+
+
+
                 {/* Action Items */}
                 <div className="py-4 border-t">
                   <div className="flex justify-between items-center mb-4"><div><h3 className="text-lg font-semibold">Action Items</h3><p className="text-xs text-gray-500">Add tasks assigned during briefing</p></div><Button type="button" variant="outline" onClick={addActionItem}><Plus className="h-4 w-4 mr-2" />Add Item</Button></div>
                   {briefingForm.actionItems.map((item, idx) => (<div key={idx} className="grid grid-cols-1 md:grid-cols-4 gap-2 p-3 bg-gray-50 rounded mb-2"><Input placeholder="Description" value={item.description} onChange={(e) => updateActionItem(idx, 'description', e.target.value)} /><Input placeholder="Assigned To" value={item.assignedTo} onChange={(e) => updateActionItem(idx, 'assignedTo', e.target.value)} /><Input type="date" value={item.dueDate} onChange={(e) => updateActionItem(idx, 'dueDate', e.target.value)} /><Select value={item.priority} onValueChange={(v) => updateActionItem(idx, 'priority', v)}><SelectTrigger><SelectValue /></SelectTrigger><SelectContent>{priorities.map(p => (<SelectItem key={p} value={p}>{p}</SelectItem>))}</SelectContent></Select><Button variant="ghost" size="sm" onClick={() => removeActionItem(idx)}><Trash2 className="h-4 w-4 text-red-500" /></Button></div>))}
                 </div>
-                
+
                 {/* Briefing Attachments */}
                 <div className="py-4 border-t">
                   <div className="flex justify-between items-center mb-4"><div><h3 className="text-lg font-semibold">Attachments</h3><p className="text-xs text-gray-500">Upload photos, documents, or other files</p></div><div><input type="file" ref={briefingFileInputRef} multiple onChange={handleBriefingFileUpload} className="hidden" accept="image/*,video/*,.pdf,.doc,.docx" /><Button type="button" variant="outline" onClick={() => briefingFileInputRef.current?.click()}><Upload className="h-4 w-4 mr-2" />Upload Files</Button></div></div>
                   {briefingAttachments.length > 0 && (<div className="space-y-2 max-h-40 overflow-y-auto">{briefingAttachments.map((file, index) => (<div key={index} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg"><div className="flex items-center gap-3 flex-1">{file.type.startsWith('image/') ? <ImageIcon className="h-5 w-5 text-blue-500" /> : file.type.startsWith('video/') ? <Video className="h-5 w-5 text-red-500" /> : <File className="h-5 w-5 text-gray-500" />}<div className="flex-1 min-w-0"><p className="text-sm font-medium truncate">{file.name}</p><p className="text-xs text-gray-500">{(file.size / (1024 * 1024)).toFixed(1)} MB</p></div></div><Button variant="ghost" size="sm" onClick={() => removeBriefingAttachment(index)} className="h-8 w-8 p-0"><Trash2 className="h-4 w-4 text-red-500" /></Button></div>))}</div>)}
                 </div>
-                
+
                 <DialogFooter><Button onClick={handleAddBriefing}>Add Briefing</Button><DialogClose asChild><Button variant="outline">Cancel</Button></DialogClose></DialogFooter>
               </DialogContent>
             </Dialog>
           </div>
         </div>
-        
+
         {/* Stats Cards */}
         <div className="grid grid-cols-2 md:grid-cols-4 gap-3 md:gap-4 mb-6">
-          {isMobileView ? (<><MobileStatCard title="Total Trainings" value={stats.totalTrainings} icon={Calendar} color="blue" /><MobileStatCard title="Staff Briefings" value={stats.staffBriefings} icon={Users} color="green" /><MobileStatCard title="Completed" value={stats.completedTraining} icon={CheckCircle} color="purple" /><MobileStatCard title="Pending Actions" value={stats.pendingActions} icon={AlertCircle} color="red" /></>) : (<><Card><CardContent className="p-6"><div><p className="text-sm text-gray-600">Total Training Sessions</p><p className="text-2xl font-bold">{stats.totalTrainings}</p></div><div className="p-3 bg-blue-100 rounded-full"><Calendar className="h-6 w-6 text-blue-600" /></div></CardContent></Card><Card><CardContent className="p-6"><div><p className="text-sm text-gray-600">Staff Briefings</p><p className="text-2xl font-bold">{stats.staffBriefings}</p></div><div className="p-3 bg-green-100 rounded-full"><Users className="h-6 w-6 text-green-600" /></div></CardContent></Card><Card><CardContent className="p-6"><div><p className="text-sm text-gray-600">Completed Training</p><p className="text-2xl font-bold">{stats.completedTraining}</p></div><div className="p-3 bg-purple-100 rounded-full"><CheckCircle className="h-6 w-6 text-purple-600" /></div></CardContent></Card><Card><CardContent className="p-6"><div><p className="text-sm text-gray-600">Pending Actions</p><p className="text-2xl font-bold">{stats.pendingActions}</p></div><div className="p-3 bg-red-100 rounded-full"><AlertCircle className="h-6 w-6 text-red-600" /></div></CardContent></Card></>)}
+          {isMobileView ? (<><MobileStatCard title="Total Trainings" value={filteredStats.totalTrainings} icon={Calendar} color="blue" /><MobileStatCard title="Staff Briefings" value={filteredStats.totalBriefings} icon={Users} color="green" /><MobileStatCard title="Completed" value={filteredStats.completedTraining} icon={CheckCircle} color="purple" /><MobileStatCard title="Pending Actions" value={filteredStats.pendingActions} icon={AlertCircle} color="red" /></>) : (<><Card><CardContent className="p-6"><div><p className="text-sm text-gray-600">Total Training Sessions</p><p className="text-2xl font-bold">{filteredStats.totalTrainings}</p></div><div className="p-3 bg-blue-100 rounded-full"><Calendar className="h-6 w-6 text-blue-600" /></div></CardContent></Card><Card><CardContent className="p-6"><div><p className="text-sm text-gray-600">Staff Briefings</p><p className="text-2xl font-bold">{filteredStats.totalBriefings}</p></div><div className="p-3 bg-green-100 rounded-full"><Users className="h-6 w-6 text-green-600" /></div></CardContent></Card><Card><CardContent className="p-6"><div><p className="text-sm text-gray-600">Completed Training</p><p className="text-2xl font-bold">{filteredStats.completedTraining}</p></div><div className="p-3 bg-purple-100 rounded-full"><CheckCircle className="h-6 w-6 text-purple-600" /></div></CardContent></Card><Card><CardContent className="p-6"><div><p className="text-sm text-gray-600">Pending Actions</p><p className="text-2xl font-bold">{filteredStats.pendingActions}</p></div><div className="p-3 bg-red-100 rounded-full"><AlertCircle className="h-6 w-6 text-red-600" /></div></CardContent></Card></>)}
         </div>
       </motion.div>
 
-      {/* Main Content */}
-      {loading && viewMode === 'list' ? (<div className="flex justify-center py-16"><RefreshCw className="h-8 w-8 animate-spin text-blue-500" /></div>) : viewMode === 'list' ? (<><Tabs defaultValue="briefing" onValueChange={(v: any) => setActiveTab(v)}><TabsList className="grid w-full grid-cols-2"><TabsTrigger value="training">Training</TabsTrigger><TabsTrigger value="briefing">Briefings</TabsTrigger></TabsList></Tabs>
-        <Card className="mt-4"><CardContent className="p-4"><div className="flex flex-col md:flex-row gap-4"><div className="flex items-center gap-2 flex-1"><Search className="h-4 w-4" /><Input placeholder="Search..." value={searchTerm} onChange={(e) => setSearchTerm(e.target.value)} /></div><div className="flex gap-2"><Select value={filterDepartment} onValueChange={setFilterDepartment}><SelectTrigger className="w-32"><SelectValue placeholder="Department" /></SelectTrigger><SelectContent><SelectItem value="all">All</SelectItem>{departments.map(d => (<SelectItem key={d} value={d}>{d}</SelectItem>))}</SelectContent></Select>{activeTab === 'training' && (<Select value={filterStatus} onValueChange={setFilterStatus}><SelectTrigger className="w-32"><SelectValue placeholder="Status" /></SelectTrigger><SelectContent><SelectItem value="all">All</SelectItem><SelectItem value="scheduled">Scheduled</SelectItem><SelectItem value="ongoing">Ongoing</SelectItem><SelectItem value="completed">Completed</SelectItem><SelectItem value="cancelled">Cancelled</SelectItem></SelectContent></Select>)}</div></div></CardContent></Card>
-        <AnimatePresence>{activeTab === 'training' ? (<motion.div key="training"><Card className="mt-4"><CardHeader><CardTitle>Training Sessions</CardTitle></CardHeader><CardContent>{filteredTrainingSessions.length === 0 ? (<div className="text-center py-12"><Calendar className="h-12 w-12 mx-auto text-gray-300" /><p>No training sessions found</p></div>) : isMobileView ? (<div className="space-y-3">{filteredTrainingSessions.map(s => (<MobileTrainingCard key={s._id} session={s} onView={(s) => { setSelectedTraining(s); }} onUpdateStatus={updateTrainingStatus} onDelete={deleteTraining} getTypeColor={getTypeColor} getStatusBadge={getStatusBadge} formatDate={formatDate} trainingTypes={trainingTypes} loading={loading} />))}</div>) : (<div className="space-y-4">{filteredTrainingSessions.map(s => (<Card key={s._id}><CardContent className="p-4"><div className="flex justify-between"><div><h3 className="font-semibold">{s.title}</h3><p className="text-sm text-gray-600">{s.trainer}</p></div><div className="flex gap-2"><Badge className={getTypeColor(s.type)}>{trainingTypes.find(t => t.value === s.type)?.label}</Badge><Badge className={getStatusBadge(s.status)}>{s.status}</Badge></div></div><div className="grid grid-cols-4 gap-4 mt-4"><div className="flex items-center gap-1"><Calendar className="h-3 w-3" /><span className="text-xs">{formatDate(s.date)}</span></div><div className="flex items-center gap-1"><Clock className="h-3 w-3" /><span className="text-xs">{s.time}</span></div><div className="flex items-center gap-1"><Building className="h-3 w-3" /><span className="text-xs">{s.site}</span></div><div className="flex items-center gap-1"><Users className="h-3 w-3" /><span className="text-xs">{s.attendees?.length}/{s.maxAttendees}</span></div></div><div className="flex justify-end gap-2 mt-4"><Button variant="outline" size="sm" onClick={() => setSelectedTraining(s)}><Eye className="h-4 w-4 mr-1" />View</Button><Button variant="outline" size="sm" onClick={() => openEditTrainingDialog(s)}><Edit className="h-4 w-4 mr-1" />Edit</Button><Button variant="destructive" size="sm" onClick={() => deleteTraining(s._id)}><Trash2 className="h-4 w-4" /></Button></div></CardContent></Card>))}</div>)}</CardContent></Card></motion.div>) : (<motion.div key="briefing"><Card className="mt-4"><CardHeader><CardTitle>Staff Briefings</CardTitle></CardHeader><CardContent>{filteredStaffBriefings.length === 0 ? (<div className="text-center py-12"><MessageSquare className="h-12 w-12 mx-auto text-gray-300" /><p>No staff briefings found</p></div>) : isMobileView ? (<div className="space-y-3">{filteredStaffBriefings.map(b => (<MobileBriefingCard key={b._id} briefing={b} onView={setSelectedBriefing} onDelete={deleteBriefing} onUpdateAction={updateActionItemStatus} getShiftBadge={getShiftBadge} getPriorityBadge={getPriorityBadge} formatDate={formatDate} loading={loading} />))}</div>) : (<div className="space-y-4">{filteredStaffBriefings.map(b => (<Card key={b._id}><CardContent className="p-4"><div className="flex justify-between"><div><h3 className="font-semibold">{b.site}</h3><p className="text-sm text-gray-600">by {b.conductedBy}</p></div><Badge className={getShiftBadge(b.shift)}>{b.shift}</Badge></div><div className="grid grid-cols-3 gap-4 mt-4"><div className="flex items-center gap-1"><Calendar className="h-3 w-3" /><span className="text-xs">{formatDate(b.date)}</span></div><div className="flex items-center gap-1"><Clock className="h-3 w-3" /><span className="text-xs">{b.time}</span></div><div className="flex items-center gap-1"><Users className="h-3 w-3" /><span className="text-xs">{b.attendeesCount} attendees</span></div></div><div className="flex justify-end gap-2 mt-4"><Button variant="outline" size="sm" onClick={() => setSelectedBriefing(b)}><Eye className="h-4 w-4 mr-1" />View</Button><Button variant="outline" size="sm" onClick={() => openEditBriefingDialog(b)}><Edit className="h-4 w-4 mr-1" />Edit</Button><Button variant="destructive" size="sm" onClick={() => deleteBriefing(b._id)}><Trash2 className="h-4 w-4" /></Button></div></CardContent></Card>))}</div>)}</CardContent></Card></motion.div>)}</AnimatePresence></>) : (<Card><CardHeader><CardTitle>Calendar View</CardTitle></CardHeader><CardContent><div className="text-center py-12 text-gray-500">Calendar view coming soon</div></CardContent></Card>)}
-      
+      {(() => {
+        if (loading && viewMode === 'list') {
+          return <div className="flex justify-center py-16"><RefreshCw className="h-8 w-8 animate-spin text-blue-500" /></div>;
+        }
+        if (viewMode === 'list') {
+          return (
+            <>
+              {/* Your entire list view content – Tabs, filters, etc. */}
+              <Tabs defaultValue="briefing" onValueChange={(v: any) => setActiveTab(v)}>
+                <TabsList className="grid w-full grid-cols-2">
+                  <TabsTrigger value="training">Training</TabsTrigger>
+                  <TabsTrigger value="briefing">Briefings</TabsTrigger>
+                </TabsList>
+              </Tabs>
+              <Card className="mt-4">
+                <CardContent className="p-4">
+                  <div className="flex flex-col md:flex-row gap-4">
+                    <div className="flex items-center gap-2 flex-1">
+                      <Search className="h-4 w-4" />
+                      <Input
+                        placeholder="Search..."
+                        value={searchTerm}
+                        onChange={(e) => setSearchTerm(e.target.value)}
+                      />
+                    </div>
+                    <div className="flex gap-2">
+                      <Select value={filterDepartment} onValueChange={setFilterDepartment}>
+                        <SelectTrigger className="w-32">
+                          <SelectValue placeholder="Department" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="all">All</SelectItem>
+                          {departments.map(d => (
+                            <SelectItem key={d} value={d}>{d}</SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                      {activeTab === 'training' && (
+                        <Select value={filterStatus} onValueChange={setFilterStatus}>
+                          <SelectTrigger className="w-32">
+                            <SelectValue placeholder="Status" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="all">All</SelectItem>
+                            <SelectItem value="scheduled">Scheduled</SelectItem>
+                            <SelectItem value="ongoing">Ongoing</SelectItem>
+                            <SelectItem value="completed">Completed</SelectItem>
+                            <SelectItem value="cancelled">Cancelled</SelectItem>
+                          </SelectContent>
+                        </Select>
+                      )}
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+              <AnimatePresence>
+                {activeTab === 'training' ? (
+                  <motion.div key="training">
+                    <Card className="mt-4">
+                      <CardHeader>
+                        <CardTitle>Training Sessions</CardTitle>
+                      </CardHeader>
+                      <CardContent>
+                        {filteredTrainingSessions.length === 0 ? (
+                          <div className="text-center py-12">
+                            <Calendar className="h-12 w-12 mx-auto text-gray-300" />
+                            <p>No training sessions found</p>
+                          </div>
+                        ) : isMobileView ? (
+                          <div className="space-y-3">
+                            {filteredTrainingSessions.map(s => (
+                              <MobileTrainingCard
+                                key={s._id}
+                                session={s}
+                                onView={(s) => setSelectedTraining(s)}
+                                onUpdateStatus={updateTrainingStatus}
+                                onDelete={deleteTraining}
+                                getTypeColor={getTypeColor}
+                                getStatusBadge={getStatusBadge}
+                                formatDate={formatDate}
+                                trainingTypes={trainingTypes}
+                                loading={loading}
+                              />
+                            ))}
+                          </div>
+                        ) : (
+                          <div className="space-y-4">
+                            {filteredTrainingSessions.map(s => (
+                              <Card key={s._id}>
+                                <CardContent className="p-4">
+                                  <div className="flex justify-between">
+                                    <div>
+                                      <h3 className="font-semibold">{s.title}</h3>
+                                      <p className="text-sm text-gray-600">{s.trainer}</p>
+                                    </div>
+                                    <div className="flex gap-2">
+                                      <Badge className={getTypeColor(s.type)}>
+                                        {trainingTypes.find(t => t.value === s.type)?.label}
+                                      </Badge>
+                                      <Badge className={getStatusBadge(s.status)}>
+                                        {s.status}
+                                      </Badge>
+                                    </div>
+                                  </div>
+                                  <div className="grid grid-cols-4 gap-4 mt-4">
+                                    <div className="flex items-center gap-1">
+                                      <Calendar className="h-3 w-3" />
+                                      <span className="text-xs">{formatDate(s.date)}</span>
+                                    </div>
+                                    <div className="flex items-center gap-1">
+                                      <Clock className="h-3 w-3" />
+                                      <span className="text-xs">{s.time}</span>
+                                    </div>
+                                    <div className="flex items-center gap-1">
+                                      <Building className="h-3 w-3" />
+                                      <span className="text-xs">{s.site}</span>
+                                    </div>
+                                    <div className="flex items-center gap-1">
+                                      <Users className="h-3 w-3" />
+                                      <span className="text-xs">{s.attendees?.length}/{s.maxAttendees}</span>
+                                    </div>
+                                  </div>
+                                  <div className="flex justify-end gap-2 mt-4">
+                                    <Button variant="outline" size="sm" onClick={() => setSelectedTraining(s)}>
+                                      <Eye className="h-4 w-4 mr-1" />View
+                                    </Button>
+                                    <Button variant="outline" size="sm" onClick={() => openEditTrainingDialog(s)}>
+                                      <Edit className="h-4 w-4 mr-1" />Edit
+                                    </Button>
+                                    <Button variant="destructive" size="sm" onClick={() => deleteTraining(s._id)}>
+                                      <Trash2 className="h-4 w-4" />
+                                    </Button>
+                                  </div>
+                                </CardContent>
+                              </Card>
+                            ))}
+                          </div>
+                        )}
+                      </CardContent>
+                    </Card>
+                  </motion.div>
+                ) : (
+                  <motion.div key="briefing">
+                    <Card className="mt-4">
+                      <CardHeader>
+                        <CardTitle>Staff Briefings</CardTitle>
+                      </CardHeader>
+                      <CardContent>
+                        {filteredStaffBriefings.length === 0 ? (
+                          <div className="text-center py-12">
+                            <MessageSquare className="h-12 w-12 mx-auto text-gray-300" />
+                            <p>No staff briefings found</p>
+                          </div>
+                        ) : isMobileView ? (
+                          <div className="space-y-3">
+                            {filteredStaffBriefings.map(b => (
+                              <MobileBriefingCard
+                                key={b._id}
+                                briefing={b}
+                                onView={setSelectedBriefing}
+                                onDelete={deleteBriefing}
+                                onUpdateAction={updateActionItemStatus}
+                                getShiftBadge={getShiftBadge}
+                                getPriorityBadge={getPriorityBadge}
+                                formatDate={formatDate}
+                                loading={loading}
+                              />
+                            ))}
+                          </div>
+                        ) : (
+                          <div className="space-y-4">
+                            {filteredStaffBriefings.map(b => (
+                              <Card key={b._id}>
+                                <CardContent className="p-4">
+                                  <div className="flex justify-between">
+                                    <div>
+                                      <h3 className="font-semibold">{b.site}</h3>
+                                      <p className="text-sm text-gray-600">by {b.conductedBy}</p>
+                                    </div>
+                                    <Badge className={getShiftBadge(b.shift)}>{b.shift}</Badge>
+                                  </div>
+                                  <div className="grid grid-cols-3 gap-4 mt-4">
+                                    <div className="flex items-center gap-1">
+                                      <Calendar className="h-3 w-3" />
+                                      <span className="text-xs">{formatDate(b.date)}</span>
+                                    </div>
+                                    <div className="flex items-center gap-1">
+                                      <Clock className="h-3 w-3" />
+                                      <span className="text-xs">{b.time}</span>
+                                    </div>
+                                    <div className="flex items-center gap-1">
+                                      <Users className="h-3 w-3" />
+                                      <span className="text-xs">{b.attendeesCount} attendees</span>
+                                    </div>
+                                  </div>
+                                  <div className="flex justify-end gap-2 mt-4">
+                                    <Button variant="outline" size="sm" onClick={() => setSelectedBriefing(b)}>
+                                      <Eye className="h-4 w-4 mr-1" />View
+                                    </Button>
+                                    <Button variant="outline" size="sm" onClick={() => openEditBriefingDialog(b)}>
+                                      <Edit className="h-4 w-4 mr-1" />Edit
+                                    </Button>
+                                    <Button variant="destructive" size="sm" onClick={() => deleteBriefing(b._id)}>
+                                      <Trash2 className="h-4 w-4" />
+                                    </Button>
+                                  </div>
+                                </CardContent>
+                              </Card>
+                            ))}
+                          </div>
+                        )}
+                      </CardContent>
+                    </Card>
+                  </motion.div>
+                )}
+              </AnimatePresence>
+            </>
+          );
+        }
+        // Calendar view
+        return (
+          <Card>
+            <CardHeader>
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                <div>
+                  <CardTitle className="text-base sm:text-lg">Training & Briefing Calendar</CardTitle>
+                  <CardDescription className="text-xs sm:text-sm">
+                    View all scheduled training sessions and staff briefings
+                  </CardDescription>
+                </div>
+                <div className="flex items-center gap-2">
+                  <Button variant="outline" size="sm" onClick={prevMonth} className="h-8 w-8 p-0">
+                    <ChevronLeft className="h-4 w-4" />
+                  </Button>
+                  <h3 className="text-sm sm:text-base font-semibold min-w-[140px] text-center">
+                    {currentMonth.toLocaleDateString('en-US', { month: 'long', year: 'numeric' })}
+                  </h3>
+                  <Button variant="outline" size="sm" onClick={nextMonth} className="h-8 w-8 p-0">
+                    <ChevronRight className="h-4 w-4" />
+                  </Button>
+                </div>
+              </div>
+            </CardHeader>
+            <CardContent className="p-3 sm:p-6">
+              <div className="grid grid-cols-7 gap-1 sm:gap-2 mb-4">
+                {['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'].map(day => (
+                  <div key={day} className="text-center font-medium text-gray-500 dark:text-gray-400 py-2 text-xs sm:text-sm">
+                    {isMobileView ? day.slice(0, 1) : day}
+                  </div>
+                ))}
+              </div>
+
+              {(() => {
+                const year = currentMonth.getFullYear();
+                const month = currentMonth.getMonth();
+                const firstDay = new Date(year, month, 1).getDay();
+                const daysInMonth = new Date(year, month + 1, 0).getDate();
+                const totalCells = Math.ceil((firstDay + daysInMonth) / 7) * 7;
+
+                const eventsByDate: Record<string, any[]> = {};
+                calendarEvents.forEach(ev => {
+                  const key = new Date(ev.date).toDateString();
+                  if (!eventsByDate[key]) eventsByDate[key] = [];
+                  eventsByDate[key].push(ev);
+                });
+
+                return (
+                  <div className="grid grid-cols-7 gap-1 sm:gap-2">
+                    {[...Array(totalCells)].map((_, idx) => {
+                      const dayNumber = idx - firstDay + 1;
+                      const isValid = dayNumber >= 1 && dayNumber <= daysInMonth;
+                      const dateObj = isValid ? new Date(year, month, dayNumber) : null;
+                      const dateKey = dateObj?.toDateString();
+                      const dayEvents = dateKey ? eventsByDate[dateKey] || [] : [];
+
+                      return (
+                        <div
+                          key={idx}
+                          className={`aspect-square border rounded p-1 sm:p-2 text-xs sm:text-sm transition-colors ${isValid
+                            ? 'hover:bg-gray-50 dark:hover:bg-gray-800 cursor-pointer'
+                            : 'opacity-0 pointer-events-none'
+                            }`}
+                          onClick={() => {
+                            if (isValid && dayEvents.length > 0) {
+                              setSelectedDateEvents({ date: dateObj!, events: dayEvents });
+                            }
+                          }}
+                        >
+
+                          {isValid && (
+                            <>
+                              <div className="text-right text-gray-600 dark:text-gray-400">{dayNumber}</div>
+                              {dayEvents.length > 0 && (
+                                <div className="flex flex-wrap gap-0.5 mt-1 justify-center">
+                                  {dayEvents.slice(0, 3).map((ev, i) => (
+                                    <div key={i} className={`w-1.5 h-1.5 rounded-full ${ev.color}`} />
+                                  ))}
+                                  {dayEvents.length > 3 && (
+                                    <span className="text-[8px] text-gray-400">+{dayEvents.length - 3}</span>
+                                  )}
+                                </div>
+                              )}
+                            </>
+                          )}
+                        </div>
+                      );
+                    })}
+                  </div>
+                );
+              })()}
+
+              <div className="space-y-3 mt-6 sm:mt-8">
+                <h4 className="text-sm sm:text-base font-semibold">Upcoming Events</h4>
+                {calendarEvents
+                  .filter(event => new Date(event.date) >= new Date())
+                  .sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime())
+                  .slice(0, 5)
+                  .map(event => (
+                    <div key={event.id} className="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-3 p-3 bg-gray-50 dark:bg-gray-800 rounded-lg">
+                      <div className="flex items-center gap-2">
+                        <div className={`h-2 w-2 sm:h-3 sm:w-3 rounded-full ${event.color}`}></div>
+                        <div className="flex-1">
+                          <p className="text-xs sm:text-sm font-medium truncate max-w-[200px]">{event.title}</p>
+                          <p className="text-xs text-gray-600 dark:text-gray-400">
+                            {formatDate(event.date)} • {event.type === 'training' ? 'Training' : 'Briefing'}
+                          </p>
+                        </div>
+                      </div>
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        className="text-xs sm:text-sm ml-auto sm:ml-0"
+                        onClick={() => {
+                          if (event.type === 'training') {
+                            setSelectedTraining(event.session);
+                          } else {
+                            setSelectedBriefing(event.briefing);
+                          }
+                        }}
+                      >
+                        View
+                      </Button>
+                    </div>
+                  ))}
+              </div>
+            </CardContent>
+          </Card>
+        );
+      })()}
+      {selectedDateEvents && (
+        <Dialog open={!!selectedDateEvents} onOpenChange={() => setSelectedDateEvents(null)}>
+          <DialogContent className="max-w-lg w-[95vw] max-h-[80vh] overflow-y-auto">
+            <DialogHeader>
+              <DialogTitle>
+                Events on {selectedDateEvents.date.toLocaleDateString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}
+              </DialogTitle>
+              <DialogDescription>Click on any event to view details</DialogDescription>
+            </DialogHeader>
+            <div className="space-y-3 mt-4">
+              {selectedDateEvents.events.map(ev => (
+                <Card key={ev.id} className="cursor-pointer hover:bg-gray-50" onClick={() => {
+                  if (ev.type === 'training') {
+                    setSelectedTraining(ev.session);
+                  } else {
+                    setSelectedBriefing(ev.briefing);
+                  }
+                  setSelectedDateEvents(null);
+                }}>
+                  <CardContent className="p-4 flex items-center justify-between">
+                    <div>
+                      <p className="font-medium">{ev.title}</p>
+                      <p className="text-sm text-gray-500">{ev.type === 'training' ? 'Training' : 'Briefing'}</p>
+                    </div>
+                    <Badge variant={ev.type === 'training' ? 'default' : 'secondary'}>
+                      {ev.type}
+                    </Badge>
+                  </CardContent>
+                </Card>
+              ))}
+              {selectedDateEvents.events.length === 0 && (
+                <p className="text-center text-gray-500">No events on this day</p>
+              )}
+            </div>
+            <DialogFooter>
+              <Button variant="outline" onClick={() => setSelectedDateEvents(null)}>Close</Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
+      )}
       {/* Detail Dialogs */}
       <TrainingDetailDialog training={selectedTraining} open={!!selectedTraining} onClose={() => setSelectedTraining(null)} onEdit={openEditTrainingDialog} onUpdateStatus={updateTrainingStatus} />
       <BriefingDetailDialog briefing={selectedBriefing} open={!!selectedBriefing} onClose={() => setSelectedBriefing(null)} onEdit={openEditBriefingDialog} onUpdateAction={updateActionItemStatus} />

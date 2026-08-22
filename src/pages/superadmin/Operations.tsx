@@ -17,14 +17,14 @@ import {
 import { toast } from 'sonner';
 import AssignTaskPage from "./components/AssignTaskPage";
 import SitesSection from "./components/SitesSection"; // superadmin version
-import TrainingBriefingSectionManager from "@/pages/manager/components/TrainingBriefingSectionManager";
+import TrainingAndBriefing from "./components/TrainingAndBriefing"; // superadmin version
 import { PullToRefreshWrapper } from '@/components/shared/PullToRefreshWrapper';
 import axios from "axios";
 
 // Import the new components (you'll need to create these or import from manager)
 import RosterSection from "./components/RosterSection";
 import ServicesSection from "./components/ServicesSection";
-import AlertsSection from "./components/AlertsSection";
+import { WorkQueryList } from "@/components/shared/WorkQueryList";
 
 const API_URL = import.meta.env.VITE_API_URL ||
   (import.meta.env.DEV ? 'http://localhost:5001/api' : 'https://sk-backend-btbj.onrender.com/api');
@@ -308,7 +308,7 @@ const SuperAdminOperations = () => {
               </TabsContent>
 
               <TabsContent value="training">
-                <TrainingBriefingSectionManager
+                <TrainingAndBriefing
                   selectedSite={selectedSite}
                   sites={allSites}
                 />
@@ -333,11 +333,9 @@ const SuperAdminOperations = () => {
               </TabsContent>
 
               <TabsContent value="alerts">
-                <AlertsSection
+                <WorkQueryList
+                  mode="superadmin"
                   refreshTrigger={refreshTrigger}
-                  selectedSite={selectedSite}
-                  sites={allSites}
-                  alertsData={alertsData}
                 />
               </TabsContent>
             </Tabs>

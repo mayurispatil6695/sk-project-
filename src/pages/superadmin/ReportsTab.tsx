@@ -313,8 +313,9 @@ const ReportsTab = ({ employees, attendance, selectedMonth = new Date().toISOStr
       setEmployeesLoading(true);
       setEmployeesError(null);
       
-      // Fetch all employees to calculate counts
-      const response = await axios.get(`${API_URL}/employees`);
+     const response = await axios.get(`${API_URL}/employees`, {
+  params: { limit: 10000 }
+});
       
       console.log("Employees API Response for counts:", response.data);
       

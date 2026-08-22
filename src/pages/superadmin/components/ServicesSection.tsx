@@ -38,16 +38,17 @@ const ServicesSection = () => {
   const [serviceDialogOpen, setServiceDialogOpen] = useState(false);
   const [viewServiceDialog, setViewServiceDialog] = useState<string | null>(null);
 
-const API_URL = import.meta.env.VITE_API_URL;
+  const API_URL = import.meta.env.VITE_API_URL ||
+    (import.meta.env.DEV ? 'http://localhost:5001/api' : 'https://sk-backend-btbj.onrender.com/api');
   // Fetch all services
   const fetchServices = async () => {
     try {
       setLoading(true);
       // Fetch all services (superadmin sees everything)
       const response = await fetch(`${API_URL}/services`);
-      
+
       if (!response.ok) throw new Error('Failed to fetch services');
-      
+
       const data = await response.json();
       if (data.success) {
         const transformedServices = data.data.map((service: any) => ({
@@ -65,15 +66,15 @@ const API_URL = import.meta.env.VITE_API_URL;
           createdAt: new Date(service.createdAt).toLocaleDateString('en-IN'),
           updatedAt: new Date(service.updatedAt).toLocaleDateString('en-IN')
         }));
-        
+
         setServices(transformedServices);
-        
+
         // Filter admin services
         const adminServices = transformedServices.filter(
           (service: Service) => service.createdByRole === 'admin'
         );
         setAdminServices(adminServices);
-        
+
         // Get shared services
         const sharedResponse = await fetch(`${API_URL}/services/shared`);
         if (sharedResponse.ok) {
@@ -109,7 +110,7 @@ const API_URL = import.meta.env.VITE_API_URL;
     e.preventDefault();
     try {
       const formData = new FormData(e.currentTarget);
-      
+
       const serviceData = {
         name: formData.get("name") as string,
         status: formData.get("status") as 'operational' | 'maintenance' | 'down',
@@ -121,7 +122,7 @@ const API_URL = import.meta.env.VITE_API_URL;
         sharedWithRoles: ['admin'], // Auto-share with admin
         visibility: 'all'
       };
-      
+
       const response = await fetch(`${API_URL}/services`, {
         method: 'POST',
         headers: {
@@ -129,12 +130,12 @@ const API_URL = import.meta.env.VITE_API_URL;
         },
         body: JSON.stringify(serviceData)
       });
-      
+
       if (!response.ok) {
         const error = await response.json();
         throw new Error(error.message || 'Failed to create service');
       }
-      
+
       const data = await response.json();
       if (data.success) {
         toast.success("Service created successfully");
@@ -154,42 +155,42 @@ const API_URL = import.meta.env.VITE_API_URL;
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({ 
+        body: JSON.stringify({
           status,
           updatedBy: "Super Admin",
           updatedByRole: "superadmin"
         })
       });
-      
+
       if (!response.ok) throw new Error('Failed to update service status');
-      
+
       const data = await response.json();
       if (data.success) {
         // Update all service lists
-        setServices(prev => prev.map(service => 
-          service._id === serviceId ? { 
-            ...service, 
+        setServices(prev => prev.map(service =>
+          service._id === serviceId ? {
+            ...service,
             status,
             lastChecked: new Date().toLocaleDateString('en-IN'),
           } : service
         ));
-        
-        setAdminServices(prev => prev.map(service => 
-          service._id === serviceId ? { 
-            ...service, 
+
+        setAdminServices(prev => prev.map(service =>
+          service._id === serviceId ? {
+            ...service,
             status,
             lastChecked: new Date().toLocaleDateString('en-IN'),
           } : service
         ));
-        
-        setAllSharedServices(prev => prev.map(service => 
-          service._id === serviceId ? { 
-            ...service, 
+
+        setAllSharedServices(prev => prev.map(service =>
+          service._id === serviceId ? {
+            ...service,
             status,
             lastChecked: new Date().toLocaleDateString('en-IN'),
           } : service
         ));
-        
+
         toast.success(`Service status updated to ${status}`);
       }
     } catch (error) {
@@ -260,9 +261,7 @@ const API_URL = import.meta.env.VITE_API_URL;
                     <Label htmlFor="description">Description</Label>
                     <Textarea id="description" name="description" rows={3} />
                   </div>
-                  <p className="text-sm text-muted-foreground">
-                    Note: Services added by superadmin are automatically visible to admin.
-                  </p>
+
                   <Button type="submit" className="w-full">Add Service</Button>
                 </form>
               </DialogContent>
@@ -276,7 +275,7 @@ const API_URL = import.meta.env.VITE_API_URL;
               <TabsTrigger value="admin">Admin Services ({adminServices.length})</TabsTrigger>
               <TabsTrigger value="shared">Shared Services ({allSharedServices.length})</TabsTrigger>
             </TabsList>
-            
+
             <TabsContent value="all">
               {loading ? (
                 <div className="text-center py-8">
@@ -328,22 +327,22 @@ const API_URL = import.meta.env.VITE_API_URL;
                           </p>
                         </div>
                         <div className="flex gap-2 pt-2">
-                          <Button 
-                            size="sm" 
+                          <Button
+                            size="sm"
                             variant={service.status === "operational" ? "default" : "outline"}
                             onClick={() => handleUpdateStatus(service._id, "operational")}
                           >
                             Operational
                           </Button>
-                          <Button 
-                            size="sm" 
+                          <Button
+                            size="sm"
                             variant={service.status === "maintenance" ? "secondary" : "outline"}
                             onClick={() => handleUpdateStatus(service._id, "maintenance")}
                           >
                             Maintenance
                           </Button>
-                          <Button 
-                            size="sm" 
+                          <Button
+                            size="sm"
                             variant={service.status === "down" ? "destructive" : "outline"}
                             onClick={() => handleUpdateStatus(service._id, "down")}
                           >
@@ -357,7 +356,7 @@ const API_URL = import.meta.env.VITE_API_URL;
                 </div>
               )}
             </TabsContent>
-            
+
             <TabsContent value="admin">
               {loading ? (
                 <div className="text-center py-8">
@@ -408,22 +407,22 @@ const API_URL = import.meta.env.VITE_API_URL;
                           </p>
                         </div>
                         <div className="flex gap-2 pt-2">
-                          <Button 
-                            size="sm" 
+                          <Button
+                            size="sm"
                             variant={service.status === "operational" ? "default" : "outline"}
                             onClick={() => handleUpdateStatus(service._id, "operational")}
                           >
                             Operational
                           </Button>
-                          <Button 
-                            size="sm" 
+                          <Button
+                            size="sm"
                             variant={service.status === "maintenance" ? "secondary" : "outline"}
                             onClick={() => handleUpdateStatus(service._id, "maintenance")}
                           >
                             Maintenance
                           </Button>
-                          <Button 
-                            size="sm" 
+                          <Button
+                            size="sm"
                             variant={service.status === "down" ? "destructive" : "outline"}
                             onClick={() => handleUpdateStatus(service._id, "down")}
                           >
@@ -437,7 +436,7 @@ const API_URL = import.meta.env.VITE_API_URL;
                 </div>
               )}
             </TabsContent>
-            
+
             <TabsContent value="shared">
               {loading ? (
                 <div className="text-center py-8">
@@ -480,15 +479,15 @@ const API_URL = import.meta.env.VITE_API_URL;
                         <TableCell>{service.lastChecked}</TableCell>
                         <TableCell>
                           <div className="flex gap-2">
-                            <Button 
-                              size="sm" 
+                            <Button
+                              size="sm"
                               variant="outline"
                               onClick={() => setViewServiceDialog(service._id)}
                             >
                               View
                             </Button>
-                            <Button 
-                              size="sm" 
+                            <Button
+                              size="sm"
                               variant="outline"
                               onClick={() => handleUpdateStatus(service._id, "operational")}
                             >
@@ -519,7 +518,7 @@ const API_URL = import.meta.env.VITE_API_URL;
               <div className="space-y-4">
                 <div className="grid grid-cols-2 gap-4">
                   <div><strong>Name:</strong> {service.name}</div>
-                  <div><strong>Status:</strong> 
+                  <div><strong>Status:</strong>
                     <Badge variant={getStatusColor(service.status)} className="ml-2">
                       {service.status}
                     </Badge>
