@@ -290,7 +290,7 @@ const PayrollTab = ({ selectedMonth, setSelectedMonth, selectedSite, sites }: Pa
   const [activePayrollTab, setActivePayrollTab] = useState("salary-slips");
   const [searchTerm, setSearchTerm] = useState("");
   const [statusFilter, setStatusFilter] = useState("all");
-
+  const [slipPaidDays, setSlipPaidDays] = useState<number | null>(null);
   // Data states
   const [employees, setEmployees] = useState<Employee[]>([]);
   const [payroll, setPayroll] = useState<Payroll[]>([]);
@@ -499,6 +499,71 @@ const PayrollTab = ({ selectedMonth, setSelectedMonth, selectedSite, sites }: Pa
     }
   };
 
+  // Fetch attendance records for a given month (returns raw array)
+  const fetchAttendanceRecordsForMonth = async (month: string): Promise<Attendance[]> => {
+    try {
+      const [year, monthNum] = month.split('-');
+      const startDate = `${year}-${monthNum}-01`;
+      const endDate = new Date(Number(year), Number(monthNum), 0).toISOString().split('T')[0];
+      const response = await axios.get(`${API_URL}/attendance`, {
+        params: { startDate, endDate, limit: 10000 }
+      });
+      let records = response.data?.data || response.data || [];
+      if (!Array.isArray(records)) records = [];
+      return records.map((r: any) => ({
+        employeeId: r.employeeId,
+        employeeName: r.employeeName,
+        date: r.date,
+        status: r.status,
+      }));
+    } catch (error) {
+      console.error('Failed to fetch attendance for month:', month, error);
+      return [];
+    }
+  };
+
+ const computePaidDays = (employeeId: string, month: string, records: Attendance[]): number | null => {
+  const employee = employees.find(e => e.employeeId === employeeId || e._id === employeeId);
+  if (!employee) {
+    console.warn('[computePaidDays] Employee not found for ID:', employeeId);
+    return null;
+  }
+
+  console.log('[computePaidDays] Matching employee:', employee.name, '(_id:', employee._id, 'employeeId:', employee.employeeId, ')');
+  console.log('[computePaidDays] Total attendance records for month:', records.length);
+
+  const monthAttendance = records.filter((a) => {
+    const empIdStr = String(a.employeeId);
+    const empMongoStr = String(employee._id);
+    const empCodeStr = String(employee.employeeId);
+    const nameMatch = a.employeeName?.trim().toLowerCase() === employee.name?.trim().toLowerCase();
+
+    const matches =
+      empIdStr === empMongoStr ||
+      empIdStr === empCodeStr ||
+      nameMatch;
+
+    if (matches) {
+      console.log('[computePaidDays] ✅ Matched record:', a.date, a.status);
+    }
+    return matches && a.date?.startsWith(month);
+  });
+
+  console.log('[computePaidDays] Matched records count:', monthAttendance.length);
+
+  let absentDays = 0, halfDays = 0;
+  monthAttendance.forEach(a => {
+    const status = a.status?.toLowerCase() || '';
+    if (status === 'half-day' || status === 'half day') halfDays++;
+    else if (status !== 'present') absentDays++;
+  });
+
+  const totalDays = getDaysInMonth(month);
+  const paid = totalDays - absentDays - halfDays * 0.5;
+  console.log('[computePaidDays] totalDays:', totalDays, 'absentDays:', absentDays, 'halfDays:', halfDays, 'paid:', paid);
+  return paid;
+};
+
   const fetchAllData = async () => {
     try {
       setLoading({
@@ -612,7 +677,23 @@ const PayrollTab = ({ selectedMonth, setSelectedMonth, selectedSite, sites }: Pa
   useEffect(() => {
     fetchAllData();
   }, [selectedMonth]);
+  useEffect(() => {
+    const compute = async () => {
+      if (!slipDialog.salarySlip) {
+        setSlipPaidDays(null);
+        return;
+      }
+      const slip = slipDialog.salarySlip;
+      // If the slip month matches the currently selected month, reuse the already-fetched attendance
+      const records = (slip.month === selectedMonth && attendance.length > 0)
+        ? attendance
+        : await fetchAttendanceRecordsForMonth(slip.month);
 
+      const paid = computePaidDays(slip.employeeId, slip.month, records);
+      setSlipPaidDays(paid);
+    };
+    compute();
+  }, [slipDialog.salarySlip, selectedMonth, attendance, employees]);
   // ----- HELPER FUNCTIONS -----
   const getEmployeeAttendance = (employeeId: string) => {
     const employee = employees.find(e =>
@@ -1176,7 +1257,7 @@ body {
   <strong>Bank Account:</strong> ${employee.accountNumber || "N/A"}<br>
   <strong>Bank:</strong> ${employee.bankName || "N/A"} - ${employee.bankBranch || "N/A"}<br>
 
-<strong>Paid Days:</strong> ${getDaysInMonth(slipDialog.salarySlip.month) - slipDialog.salarySlip.absentDays - (slipDialog.salarySlip.halfDays || 0) * 0.5}
+<strong>Paid Days:</strong> ${slipPaidDays !== null ? slipPaidDays : getDaysInMonth(slipDialog.salarySlip.month) - slipDialog.salarySlip.absentDays - (slipDialog.salarySlip.halfDays || 0) * 0.5}
 </div>
 </div>
 
@@ -1185,7 +1266,7 @@ body {
             <div class="section">
               <div class="section-title">EARNINGS</div>
               <table class="breakdown">
-                <tr><td>GROSS</td><td class="amount">₹${slipDialog.salarySlip.basicSalary.toLocaleString()}</td></tr>
+                <tr><td>BASIC</td><td class="amount">₹${slipDialog.salarySlip.basicSalary.toLocaleString()}</td></tr>
                 <tr><td>DA</td><td class="amount">₹${(structure?.da || 0).toLocaleString()}</td></tr>
                 <tr><td>HRA</td><td class="amount">₹${(structure?.hra || 0).toLocaleString()}</td></tr>
                 <tr><td>CCA</td><td class="amount">₹${(structure?.conveyance || 0).toLocaleString()}</td></tr>
@@ -1865,7 +1946,7 @@ body {
                       </div>
                       <div className="text-sm text-muted-foreground">
 
-                        Paid Days: {getDaysInMonth(slipDialog.salarySlip.month) - slipDialog.salarySlip.absentDays - (slipDialog.salarySlip.halfDays || 0) * 0.5}
+                        Paid Days: {slipPaidDays !== null ? slipPaidDays : getDaysInMonth(slipDialog.salarySlip.month) - slipDialog.salarySlip.absentDays - (slipDialog.salarySlip.halfDays || 0) * 0.5}
                       </div>
                       <div className="text-sm text-muted-foreground">
                         Bank: {employee.accountNumber ? `XXXX${employee.accountNumber.slice(-4)}` : "N/A"}
