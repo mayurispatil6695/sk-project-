@@ -85,7 +85,6 @@ const excelStorage = multer.diskStorage({
     cb(null, 'employee-import-' + uniqueSuffix + path.extname(file.originalname));
   }
 });
-
 // ─── Authentication Middleware ──────────────────────────────────────────
 const authenticate = async (req: Request, res: Response, next: NextFunction) => {
   try {
@@ -115,6 +114,8 @@ const authenticate = async (req: Request, res: Response, next: NextFunction) => 
     return res.status(401).json({ success: false, message: 'Invalid token' });
   }
 };
+
+// ─── Authentication Middleware ──────────────────────────────────────────
 router.get('/supervisor', authenticate, async (req: Request, res: Response) => {
   try {
     const supervisorId = (req as any).user?._id;
@@ -122,58 +123,72 @@ router.get('/supervisor', authenticate, async (req: Request, res: Response) => {
       return res.status(401).json({ success: false, error: 'Unauthorized' });
     }
 
-    const user = await User.findById(supervisorId).select('name assignedSites siteName');
+    const user = await User.findById(supervisorId).select('name assignedSites siteName role');
     if (!user) {
       return res.status(404).json({ success: false, error: 'User not found' });
     }
 
-    // Primary source of truth: sites derived from this supervisor's task assignments
-    const Task = mongoose.model('Task');
-    const tasks = await Task.find({
-      $or: [
-        { 'assignedUsers.userId': supervisorId },
-        { assignedTo: supervisorId }
-      ]
-    }).select('siteId siteName assignedUsers assignedTo');
-
-    const siteNameSet = new Set<string>();
-    tasks.forEach((task: any) => {
-      const isAssigned =
-        task.assignedUsers?.some((u: any) =>
-          String(u.userId) === String(supervisorId) ||
-          (u.name && user.name && u.name.toLowerCase() === user.name.toLowerCase())
-        ) || String(task.assignedTo) === String(supervisorId);
-
-      if (isAssigned && task.siteName) {
-        siteNameSet.add(task.siteName);
-      }
-    });
-
-    let siteNames = Array.from(siteNameSet);
-
-    // Fallback: legacy static assignment on the User doc, if tasks yielded nothing
-    if (siteNames.length === 0) {
-      let fallback = user.assignedSites || [];
-      if (!Array.isArray(fallback)) fallback = [fallback];
-      if (fallback.length === 0 && user.siteName) fallback = [user.siteName];
-      siteNames = fallback;
-    }
-
     console.log('🔍 Supervisor ID:', supervisorId);
-    console.log('🔍 Sites resolved from tasks (+ fallback):', siteNames);
+    console.log('🔍 Supervisor name:', user.name);
+    console.log('🔍 Assigned sites from User.assignedSites:', user.assignedSites);
 
-    if (siteNames.length === 0) {
-      console.warn('⚠️ No sites resolved for this supervisor via tasks or assignedSites');
-      return res.json({ success: true, data: [] });
+    // ✅ PRIORITIZE: Use assignedSites from User document FIRST
+    let siteNames = user.assignedSites || [];
+    
+    // Ensure it's an array
+    if (!Array.isArray(siteNames)) {
+      siteNames = [siteNames];
+    }
+    
+    // If assignedSites is empty, try siteName as fallback
+    if (siteNames.length === 0 && user.siteName) {
+      siteNames = [user.siteName];
     }
 
+    // 🔥 REMOVE the task-based logic entirely - use assignedSites as the source of truth
+    // If you still want to check tasks as a secondary source, add this:
+    if (siteNames.length === 0) {
+      // Fallback: try to get from tasks (but this should rarely be needed)
+      const Task = mongoose.model('Task');
+      const tasks = await Task.find({
+        $or: [
+          { 'assignedUsers.userId': supervisorId },
+          { assignedTo: supervisorId }
+        ]
+      }).select('siteName siteId');
+      
+      const taskSiteNames = new Set<string>();
+      tasks.forEach((task: any) => {
+        if (task.siteName) {
+          taskSiteNames.add(task.siteName);
+        }
+      });
+      
+      siteNames = Array.from(taskSiteNames);
+      console.log('⚠️ Fallback: Using site names from tasks:', siteNames);
+    }
+
+    console.log('🔍 Final site names to query:', siteNames);
+
+    if (siteNames.length === 0) {
+      console.warn('⚠️ No sites found for this supervisor');
+      return res.json({ success: true, data: [], message: 'No sites assigned yet' });
+    }
+
+    // Get all employees at these sites
     const employees = await Employee.find({
       siteName: { $in: siteNames },
       status: 'active'
-    });
+    }).select('-__v -photoPublicId -employeeSignaturePublicId -authorizedSignaturePublicId');
 
-    console.log(`✅ Found ${employees.length} employees`);
-    res.json({ success: true, data: employees });
+    console.log(`✅ Found ${employees.length} employees for supervisor ${user.name}`);
+
+    res.json({ 
+      success: true, 
+      data: employees,
+      siteNames: siteNames,
+      count: employees.length
+    });
   } catch (error: any) {
     console.error('Error in supervisor route:', error);
     res.status(500).json({ success: false, error: error.message });
@@ -223,12 +238,11 @@ const updateSiteHistory = (employee: IEmployee, newSiteName: string): IEmployee 
 };
 
 // ==================== BULK OPERATIONS ROUTES ====================
-
 router.patch('/bulk/site', async (req: any, res: any) => {
   try {
-    const { employeeIds, siteName } = req.body;
+    const { employeeIds, siteId } = req.body;   // ← changed from siteName to siteId
     
-    console.log('Bulk site assignment request:', { employeeIds, siteName });
+    console.log('Bulk site assignment request:', { employeeIds, siteId });
     
     if (!employeeIds || !Array.isArray(employeeIds) || employeeIds.length === 0) {
       return res.status(400).json({ 
@@ -237,12 +251,24 @@ router.patch('/bulk/site', async (req: any, res: any) => {
       });
     }
     
-    if (!siteName || siteName === '') {
+    if (!siteId || siteId === '') {
       return res.status(400).json({ 
         success: false, 
-        message: 'Please provide a valid site name' 
+        message: 'Please provide a valid site ID' 
       });
     }
+
+    // ✅ Fetch the site by ID to get the name
+    const Site = mongoose.model('Site');
+    const site = await Site.findById(siteId);
+    if (!site) {
+      return res.status(404).json({ 
+        success: false, 
+        message: 'Site not found' 
+      });
+    }
+
+    const siteName = site.name;
     
     const employees = await Employee.find({ _id: { $in: employeeIds } });
     
@@ -276,10 +302,12 @@ router.patch('/bulk/site', async (req: any, res: any) => {
           assignedDate: today
         });
         
+        // ✅ Now sets BOTH siteId AND siteName
         return await Employee.findByIdAndUpdate(
           employee._id,
           { 
             $set: { 
+              siteId: site._id,        // ← NEW: set the site ID
               siteName: siteName,
               siteHistory: siteHistory 
             } 

@@ -52,8 +52,7 @@ import communicationRoutes from './routes/communicationRoutes';
 // ... other imports ...
 // Add this with other imports
 import rosterRoutes from './routes/rosterRoutes';
-
-// After other route registrations, add:
+import paymentRoutes from './routes/paymentsRoute';  // Import the payments route
 
 
 import rateLimit from 'express-rate-limit';
@@ -280,6 +279,7 @@ app.use('/api/alerts',alertRoutes);
 app.use('/api/machines', machineRoutes);
 app.use('/api/services', serviceRoutes);
 app.use('/api/invoices', invoiceRoutes);
+app.use('/api/payments', paymentRoutes); 
 app.use('/api/manager-leaves', managerLeaveRoutes); 
 app.use('/api/attendance', attendanceRoutes);
 app.use('/api/supervisors', supervisorRoutes);

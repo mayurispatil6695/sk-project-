@@ -199,7 +199,7 @@ interface EmployeesTabProps {
   selectedSite?: string;
   sites?: Site[];
   skipFetch?: boolean;   // ADD THIS/
-   onAddEmployee?: () => void;  // ADD THIS
+  onAddEmployee?: () => void;  // ADD THIS
 }
 
 // ─── Site Filter Component ──────────────────────────────────────────────
@@ -240,7 +240,7 @@ const EmployeesTab = ({
   onEmployeesBulkUpdate,
   selectedSite: propSelectedSite = 'all',
   sites: propSites = [],
-  skipFetch = false  , // ✅ ADD THIS
+  skipFetch = false, // ✅ ADD THIS
   onAddEmployee,   // ADD THIS
 
 }: EmployeesTabProps) => {
@@ -712,17 +712,17 @@ const EmployeesTab = ({
   };
 
   // ─── Helper Functions ──────────────────────────────────────────────────
-const canAssignToSite = (siteName: string, employeesToAssign: ExtendedEmployee[]): {
-  allowed: boolean;
-  message?: string;
-  violations: Array<{
-    employee: ExtendedEmployee;
-    reason: string;
-  }>;
-} => {
-  // Capacity limits removed — any number of employees can be assigned to any site.
-  return { allowed: true, violations: [] };
-};
+  const canAssignToSite = (siteName: string, employeesToAssign: ExtendedEmployee[]): {
+    allowed: boolean;
+    message?: string;
+    violations: Array<{
+      employee: ExtendedEmployee;
+      reason: string;
+    }>;
+  } => {
+    // Capacity limits removed — any number of employees can be assigned to any site.
+    return { allowed: true, violations: [] };
+  };
 
   const updateSiteHistory = (employee: ExtendedEmployee, newSiteName: string): ExtendedEmployee => {
     const today = new Date().toISOString().split('T')[0];
@@ -1047,7 +1047,6 @@ const canAssignToSite = (siteName: string, employeesToAssign: ExtendedEmployee[]
   };
 
   // ─── Bulk Actions ────────────────────────────────────────────────────
-
   const handleBulkSiteAssignment = async () => {
     if (!selectedSiteForBulk) {
       toast.error("Please select a site");
@@ -1061,41 +1060,17 @@ const canAssignToSite = (siteName: string, employeesToAssign: ExtendedEmployee[]
 
     const employeesToAssign = employees.filter(emp => selectedEmployees.includes(emp.id || emp._id || ''));
 
-    const capacityCheck = canAssignToSite(selectedSiteForBulk, employeesToAssign);
-
-    if (!capacityCheck.allowed) {
-      toast.error(
-        <div className="space-y-2">
-          <div className="flex items-centergap-2">
-            <AlertCircle className="h-4 w-4 text-red-500" />
-            <span className="font-medium">Site Capacity Exceeded</span>
-          </div>
-          <div className="text-sm text-red-600 max-h-40 overflow-y-auto">
-            {capacityCheck.violations.map((violation, index) => (
-              <div key={index} className="mb-1">
-                • {violation.employee.name}: {violation.reason}
-              </div>
-            ))}
-          </div>
-          <div className="text-xs text-muted-foreground mt-2">
-            Please select different employees or adjust site requirements.
-          </div>
-        </div>,
-        { duration: 8000 }
-      );
-      return;
-    }
-
     try {
       setIsBulkUpdating(true);
 
       const employeeIds = employeesToAssign.map(emp => emp._id || emp.id);
 
-      console.log('Sending bulk site update:', { employeeIds, siteName: selectedSiteForBulk });
+      console.log('Sending bulk site update:', { employeeIds, siteId: selectedSiteForBulk });
 
+      // ✅ Send siteId instead of siteName
       const response = await apiClient.patch('/employees/bulk/site', {
         employeeIds: employeeIds,
-        siteName: selectedSiteForBulk
+        siteId: selectedSiteForBulk   // ← changed from siteName to siteId
       });
 
       if (response.data.success) {
@@ -1140,6 +1115,7 @@ const canAssignToSite = (siteName: string, employeesToAssign: ExtendedEmployee[]
       setIsBulkUpdating(false);
     }
   };
+
 
   const handleBulkDelete = async () => {
     if (selectedEmployees.length === 0) {
@@ -3332,136 +3308,183 @@ body {
 
     const photoUrl = getPhotoUrl(employee);
 
+    // ✅ Site-based color: red for Elpro Mall, blue for everyone else
+    const siteName = (employee.siteName || "").trim().toLowerCase();
+    const isElproMall = siteName.includes("elpro");
+    const themeColor = isElproMall ? "#c0392b" : "#1e3a8a"; // red vs blue
+
+
     printWindow.document.write(`
     <!DOCTYPE html>
     <html>
       <head>
         <title>ID Card - ${employee.name}</title>
         <style>
-          body { 
-            font-family: Arial, sans-serif; 
-            margin: 0; 
-            padding: 20px;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            min-height: 100vh;
-            background: #f5f5f5;
+          @page {
+            size: 51mm 85mm;   /* width 5.1cm, height 8.5cm — matches physical card stock */
+            margin: 0;
+          }
+          * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+          }
+         html, body {
+  width: 51mm;
+  height: 85mm;
+  margin: 0;
+  padding: 0;
+  overflow: hidden;
+}
+          body {
+            font-family: Arial, sans-serif;
+            background: white;
           }
           .id-card {
-            width: 420px;
+            width: 51mm;
+  height: 85mm;
+  min-width: 51mm;
+  min-height: 85mm;
+  max-width: 51mm;
+  max-height: 85mm;
+  overflow: hidden;
+  page-break-inside: avoid;
+  page-break-after: avoid;
             background: white;
-            border-radius: 15px;
-            box-shadow: 0 10px 30px rgba(0,0,0,0.3);
-            overflow: hidden;
-            border: 2px solid #e11d48;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            border: 0.5mm solid ${themeColor};
           }
           .header {
-            background: linear-gradient(135deg, #e11d48, #be123c);
-            color: white;
-            padding: 20px;
+            width: 100%;
+            padding: 3mm 2mm 2mm 2mm;
             text-align: center;
+            border-bottom: 0.6mm solid ${themeColor};
           }
           .header h1 {
-            margin: 0;
-            font-size: 24px;
+            font-size: 12pt;
             font-weight: bold;
+            color: ${themeColor};
+            letter-spacing: 0.3px;
           }
           .header .subtitle {
-            font-size: 12px;
-            opacity: 0.9;
+            font-size: 6pt;
+            color: #555;
+            margin-top: 0.5mm;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
           }
           .photo-section {
-            padding: 25px 20px 15px 20px;
-            text-align: center;
-            background: white;
+            padding: 3mm 0 2mm 0;
           }
           .employee-photo {
-            width: 160px;
-            height: 160px;
-            border-radius: 50%;
-            border: 4px solid #e11d48;
+            width: 22mm;
+            height: 22mm;
             object-fit: cover;
-            margin: 0 auto;
+            border: 0.5mm solid ${themeColor};
             background: #f5f5f5;
+            /* square photo — no border-radius */
           }
           .no-photo {
-            width: 160px;
-            height: 160px;
-            border-radius: 50%;
-            border: 4px solid #e11d48;
+            width: 22mm;
+            height: 22mm;
+            border: 0.5mm solid ${themeColor};
             background: #e5e7eb;
             display: flex;
             align-items: center;
             justify-content: center;
             color: #6b7280;
-            font-size: 14px;
-            margin: 0 auto;
+            font-size: 7pt;
           }
-          .details {
-            padding: 15px 25px 25px 25px;
-            background: white;
-          }
-          .detail-row {
-            display: flex;
-            justify-content: space-between;
-            padding: 6px 0;
-            border-bottom: 1px solid #f0f0f0;
-          }
+         .details {
+  width: 100%;
+  padding: 0 3mm;
+  flex: 1;
+  min-height: 0;
+  overflow: hidden;
+}
+         .detail-row {
+  display: flex;
+  justify-content: space-between;
+  gap: 1mm;
+  padding: 0.7mm 0;
+  border-bottom: 0.15mm solid #eee;
+  min-height: 4.5mm;
+}
           .detail-row:last-child {
             border-bottom: none;
           }
           .label {
-            font-weight: 600;
-            color: #6b7280;
-            font-size: 12px;
-            min-width: 100px;
+            font-weight: 700;
+            color: #333;
+            font-size: 6.5pt;
+            white-space: nowrap;
           }
           .value {
-            color: #1f2937;
-            font-size: 13px;
+            color: #111;
+            font-size: 6.5pt;
             font-weight: 500;
             text-align: right;
             word-break: break-word;
           }
-          .footer {
-            background: #f8f9fa;
-            padding: 12px 15px;
-            text-align: center;
-            border-top: 1px solid #e9ecef;
-          }
-          .footer-text {
-            font-size: 10px;
-            color: #6b7280;
-          }
+         .footer {
+  width: 100%;
+  padding: 1.5mm 2mm 2mm 2mm;
+  border-top: 0.4mm solid ${themeColor};
+  flex-shrink: 0;
+}
           .signature-area {
             display: flex;
             justify-content: space-between;
-            margin-top: 10px;
-            padding-top: 10px;
-            border-top: 1px solid #e5e7eb;
+            gap: 2mm;
           }
           .signature-item {
+            flex: 1;
             text-align: center;
-            font-size: 10px;
-            color: #6b7280;
+            font-size: 5.5pt;
+            color: #555;
           }
           .signature-line {
-            width: 100px;
-            border-top: 1px solid #1f2937;
-            margin: 4px auto 0 auto;
+            border-top: 0.3mm solid #333;
+            margin-top: 6mm;
+            padding-top: 1mm;
           }
-          @media print {
-            body { background: white; }
-            .id-card { box-shadow: none; }
+          .footer-text {
+            margin-top: 2mm;
+            font-size: 5pt;
+            color: #777;
+            text-align: center;
           }
+        @media print {
+  html, body {
+    width: 51mm;
+    height: 85mm;
+    margin: 0;
+    padding: 0;
+    overflow: hidden;
+  }
+
+  body {
+    background: white;
+  }
+
+  .id-card {
+    width: 51mm;
+    height: 85mm;
+    overflow: hidden;
+    box-shadow: none;
+    page-break-inside: avoid;
+    page-break-after: avoid;
+  }
+}
         </style>
       </head>
       <body>
         <div class="id-card">
           <div class="header">
             <h1>SK ENTERPRISES</h1>
-            <div class="subtitle">EMPLOYEE IDENTIFICATION CARD</div>
+           
           </div>
           <div class="photo-section">
             ${photoUrl
@@ -3470,54 +3493,55 @@ body {
         : '<div class="no-photo">No Photo</div>'
       }
           </div>
-          <div class="details">
-            <div class="detail-row">
-              <span class="label">Employee Name</span>
-              <span class="value">${employee.name}</span>
-            </div>
-            <div class="detail-row">
-              <span class="label">Employee ID</span>
-              <span class="value">${employee.employeeId}</span>
-            </div>
-            <div class="detail-row">
-              <span class="label">Designation</span>
-              <span class="value">${employee.position || "N/A"}</span>
-            </div>
-            <div class="detail-row">
-              <span class="label">Site Name</span>
-              <span class="value">${employee.siteName || "N/A"}</span>
-            </div>
-            <div class="detail-row">
-              <span class="label">Date of Birth</span>
-              <span class="value">${employee.dateOfBirth || "N/A"}</span>
-            </div>
-            <div class="detail-row">
-              <span class="label">Aadhaar Number</span>
-              <span class="value">${employee.aadharNumber ? employee.aadharNumber.replace(/(\d{4})(\d{4})(\d{4})/, '$1-$2-$3') : "N/A"}</span>
-            </div>
-            <div class="detail-row">
-              <span class="label">Blood Group</span>
-              <span class="value">${employee.bloodGroup || "N/A"}</span>
-            </div>
-            <div class="detail-row">
-              <span class="label">Join Date</span>
-              <span class="value">${employee.joinDate || "N/A"}</span>
-            </div>
-          </div>
+         <div class="details">
+  <div class="detail-row">
+    <span class="label">Name</span>
+    <span class="value">${employee.name || ''}</span>
+  </div>
+   <div class="detail-row">
+    <span class="label">Designation</span>
+    <span class="value">${employee.position || "N/A"}</span>
+  </div>
+   <div class="detail-row">
+    <span class="label">DOB</span>
+    <span class="value">${employee.dateOfBirth || "N/A"}</span>
+  </div>
+  <div class="detail-row">
+    <span class="label">Join Date</span>
+    <span class="value">${employee.joinDate || "N/A"}</span>
+  </div>
+  <div class="detail-row">
+    <span class="label">Employee ID</span>
+    <span class="value">${employee.employeeId || ''}</span>
+  </div>
+  <div class="detail-row">
+    <span class="label">Contact No.</span>
+    <span class="value">${employee.phone || "N/A"}</span>
+  </div>
+  <div class="detail-row">
+    <span class="label">Aadhaar</span>
+    <span class="value">${employee.aadharNumber ? employee.aadharNumber.replace(/(\d{4})(\d{4})(\d{4})/, '$1-$2-$3') : "N/A"}</span>
+  </div>
+
+  <div class="detail-row">
+    <span class="label">Site Name</span>
+    <span class="value">${employee.siteName || "N/A"}</span>
+  </div>
+ 
+ 
+  
+  
+</div>
           <div class="footer">
             <div class="signature-area">
               <div class="signature-item">
-                <div>Employee Signature</div>
-                <div class="signature-line"></div>
+                <div class="signature-line">Employee</div>
               </div>
               <div class="signature-item">
-                <div>Authorized Signature</div>
-                <div class="signature-line"></div>
+                <div class="signature-line">Authorized</div>
               </div>
             </div>
-            <div class="footer-text" style="margin-top: 8px;">
-              This card is the property of SK Enterprises • Valid until employment
-            </div>
+            <div class="footer-text">Property of SK Enterprises • Valid until employment</div>
           </div>
         </div>
         <script>
@@ -4116,6 +4140,7 @@ body {
             </SelectContent>
           </Select>
           <div className="flex flex-wrap gap-2 w-full">
+            {/* Assign Site - Always visible */}
             <Button
               variant="outline"
               onClick={() => setBulkSiteDialogOpen(true)}
@@ -4126,6 +4151,8 @@ body {
               <span className="hidden sm:inline">Assign Site </span>
               {selectedEmployees.length > 0 && `(${selectedEmployees.length})`}
             </Button>
+
+            {/* Bulk Delete - Only for admins/superadmins */}
             {!isSupervisor && (
               <Button
                 variant="outline"
@@ -4138,40 +4165,50 @@ body {
                 {selectedEmployees.length > 0 && `(${selectedEmployees.length})`}
               </Button>
             )}
+
+            {/* Import - HIDE for supervisors */}
+            {!isSupervisor && (
+              <Button
+                variant="outline"
+                onClick={() => setImportDialogOpen(true)}
+                className="flex-1 sm:flex-none"
+                disabled={isImporting}
+              >
+                {isImporting ? (
+                  <Loader2 className="h-4 w-4 mr-1 animate-spin" />
+                ) : (
+                  <Upload className="h-4 w-4 mr-1" />
+                )}
+                {isImporting ? "Importing..." : "Import"}
+              </Button>
+            )}
+
+            {/* Export - HIDE for supervisors */}
+            {!isSupervisor && (
+              <Button
+                variant="outline"
+                onClick={handleExportEmployees}
+                className="flex-1 sm:flex-none"
+                disabled={isExporting}
+              >
+                {isExporting ? (
+                  <Loader2 className="h-4 w-4 mr-1 animate-spin" />
+                ) : (
+                  <Download className="h-4 w-4 mr-1" />
+                )}
+                {isExporting ? "Exporting..." : "Export"}
+              </Button>
+            )}
+
+            {/* Add Employee - Always visible */}
             <Button
-              variant="outline"
-              onClick={() => setImportDialogOpen(true)}
+              onClick={() => (onAddEmployee ? onAddEmployee() : setActiveTab?.("onboarding"))}
               className="flex-1 sm:flex-none"
-              disabled={isImporting}
             >
-              {isImporting ? (
-                <Loader2 className="h-4 w-4 mr-1 animate-spin" />
-              ) : (
-                <Upload className="h-4 w-4 mr-1" />
-              )}
-              {isImporting ? "Importing..." : "Import"}
+              <Plus className="h-4 w-4 mr-1" />
+              <span className="hidden sm:inline">Add Employee</span>
+              <span className="sm:hidden">Add</span>
             </Button>
-            <Button
-              variant="outline"
-              onClick={handleExportEmployees}
-              className="flex-1 sm:flex-none"
-              disabled={isExporting}
-            >
-              {isExporting ? (
-                <Loader2 className="h-4 w-4 mr-1 animate-spin" />
-              ) : (
-                <Download className="h-4 w-4 mr-1" />
-              )}
-              {isExporting ? "Exporting..." : "Export"}
-            </Button>
-           <Button 
-  onClick={() => (onAddEmployee ? onAddEmployee() : setActiveTab?.("onboarding"))} 
-  className="flex-1 sm:flex-none"
->
-  <Plus className="h-4 w-4 mr-1" />
-  <span className="hidden sm:inline">Add Employee</span>
-  <span className="sm:hidden">Add</span>
-</Button>
           </div>
         </div>
       </div>
@@ -6271,19 +6308,25 @@ body {
                     </div>
                   ) : (
                     <>
-                      {Array.from(siteDeploymentStatus.values()).map(status => (
-                        <SelectItem key={status.siteName} value={status.siteName}>
-                          <div className="flex flex-col items-start">
-                            <span>{status.siteName}</span>
-                            <span className="text-xs text-muted-foreground">
-                              Managers: {status.managerCount}/{status.managerRequirement} |
-                              Supervisors: {status.supervisorCount}/{status.supervisorRequirement} |
-                              Staff: {status.staffCount}/{status.staffRequirement}
-                            </span>
-                          </div>
-                        </SelectItem>
-                      ))}
-                      {allSiteNames.length === 0 && (
+                      {/* ✅ Use sitesFromAPI with _id as value */}
+                      {sitesFromAPI.length > 0 ? (
+                        sitesFromAPI.map((site) => (
+                          <SelectItem key={site._id} value={site._id}>
+                            <div className="flex flex-col items-start">
+                              <span>{site.name}</span>
+                              <span className="text-xs text-muted-foreground">
+                                {siteDeploymentStatus.has(site.name) && (
+                                  <>
+                                    Managers: {siteDeploymentStatus.get(site.name)?.managerCount || 0}/{site.managerCount || 0} |
+                                    Supervisors: {siteDeploymentStatus.get(site.name)?.supervisorCount || 0}/{site.supervisorCount || 0} |
+                                    Staff: {siteDeploymentStatus.get(site.name)?.staffCount || 0}/{site.staffRequirement || 0}
+                                  </>
+                                )}
+                              </span>
+                            </div>
+                          </SelectItem>
+                        ))
+                      ) : (
                         <div className="p-4 text-center text-muted-foreground">
                           No sites available
                         </div>
@@ -6292,7 +6335,7 @@ body {
                   )}
                 </SelectContent>
               </Select>
-              {allSiteNames.length === 0 && !loadingSites && (
+              {sitesFromAPI.length === 0 && !loadingSites && (
                 <p className="text-xs text-amber-600 mt-1">
                   No sites found. Please add sites in the Sites page or import employees with sites.
                 </p>
