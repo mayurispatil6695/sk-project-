@@ -3478,6 +3478,28 @@ body {
     page-break-after: avoid;
   }
 }
+
+.authority-signature {
+  width: 100%;
+  text-align: right;
+  padding-right: 3mm;
+}
+
+.authority-signature img {
+  width: 18mm;
+  height: 8mm;
+  object-fit: contain;
+  display: block;
+  margin-left: auto;
+}
+
+.authority-signature div {
+  font-size: 5.5pt;
+  color: #555;
+  text-align: center;
+  width: 18mm;
+  margin-left: auto;
+}
         </style>
       </head>
       <body>
@@ -3532,17 +3554,19 @@ body {
   
   
 </div>
-          <div class="footer">
-            <div class="signature-area">
-              <div class="signature-item">
-                <div class="signature-line">Employee</div>
-              </div>
-              <div class="signature-item">
-                <div class="signature-line">Authorized</div>
-              </div>
-            </div>
-            <div class="footer-text">Property of SK Enterprises • Valid until employment</div>
-          </div>
+         <div class="footer">
+  <div class="authority-signature">
+    <img
+      src="/images/authority-signature.png"
+      alt="Authorized Signature"
+    />
+    <div>Authorized</div>
+  </div>
+
+  <div class="footer-text">
+    Property of SK Enterprises • Valid until employment
+  </div>
+</div>
         </div>
         <script>
           window.onload = function() {
