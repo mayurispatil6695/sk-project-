@@ -27,17 +27,15 @@ import apiClient from '@/lib/apiClient';  // or your path
 const API_URL = import.meta.env.VITE_API_URL ||
   (import.meta.env.DEV ? "http://localhost:5001/api" : "https://sk-backend-btbj.onrender.com/api");
 
-// ─── Extended Interfaces ──────────────────────────────────────────────────
-// Fields that must be filled for a "complete" profile (exclude panNumber, email, numberOfChildren)
 const EMPLOYEE_COMPLETE_FIELDS: (keyof ExtendedEmployee)[] = [
-  'name', 'phone', 'aadharNumber', 'esicNumber', 'uanNumber',
+  'name', 'phone', 'aadharNumber',
+
   'siteName', 'dateOfBirth', 'joinDate', 'bloodGroup', 'gender', 'maritalStatus',
-  'permanentAddress', 'permanentPincode', 'localAddress', 'localPincode',
+  'permanentAddress', 'localAddress',
   'bankName', 'accountNumber', 'ifscCode', 'branchName',
   'fatherName', 'motherName',
   'emergencyContactName', 'emergencyContactPhone', 'emergencyContactRelation',
   'nomineeName', 'nomineeRelation',
-  'pantSize', 'shirtSize', 'capSize',
   'department', 'position', 'salary',
 ];
 
@@ -67,11 +65,19 @@ interface ExtendedEmployee extends Employee {
   photo?: string | null;
   photoPublicId?: string | null;
   uanNumber: string;
-  dateOfJoining: string;            // ✅ ADD
-
+  dateOfJoining: string;
   _id?: string;
-  faceEmbeddings?: number[][];  // ✅ ADD THIS
-  profileStatus?: "complete" | "incomplete";   // ✅ ADD
+  faceEmbeddings?: number[][];
+  profileStatus?: "complete" | "incomplete";
+  // ADD THESE MISSING FIELDS:
+  permanentPincode?: string;
+  localPincode?: string;
+  pantSize?: string;
+  shirtSize?: string;
+  capSize?: string;
+  idCardIssued?: boolean;
+  westcoatIssued?: boolean;
+  apronIssued?: boolean;
 }
 
 interface EPFForm11Data {
@@ -521,13 +527,23 @@ const EmployeesTab = ({
             accountNumber: emp.accountNumber || emp.bankAccountNumber || "",
             ifscCode: emp.ifscCode || "",
             bankName: emp.bankName || "",
+            branchName: emp.branchName || "",        // ✅ ADD THIS LINE HERE
             permanentAddress: emp.permanentAddress || "",
             localAddress: emp.localAddress || "",
             emergencyContactName: emp.emergencyContactName || "",
             emergencyContactPhone: emp.emergencyContactPhone || "",
             emergencyContactRelation: emp.emergencyContactRelation || "",
+            permanentPincode: emp.permanentPincode || "",
+            localPincode: emp.localPincode || "",
+            pantSize: emp.pantSize || "",
+            shirtSize: emp.shirtSize || "",
+            capSize: emp.capSize || "",
+            idCardIssued: emp.idCardIssued || false,
+            westcoatIssued: emp.westcoatIssued || false,
+            apronIssued: emp.apronIssued || false,
             siteHistory: siteHistory,
             kycDocuments: emp.kycDocuments || [],
+
             isManager: false,
             isSupervisor: false,
             faceEmbeddings: (emp as any).faceEmbeddings || [],
@@ -550,8 +566,8 @@ const EmployeesTab = ({
           employee.isManager = position.includes('manager') || department.includes('manager');
           employee.isSupervisor = position.includes('supervisor') || department.includes('supervisor');
 
-          // ✅ NOW add profileStatus using the complete employee
-          employee.profileStatus = emp.profileStatus || (checkEmployeeCompleteness(employee) ? 'complete' : 'incomplete');
+          // ✅ ALWAYS recompute profileStatus fresh (don't trust stale DB value)
+          employee.profileStatus = checkEmployeeCompleteness(employee) ? 'complete' : 'incomplete';
 
           return employee;
         });
@@ -956,7 +972,7 @@ const EmployeesTab = ({
       const employeeId = selectedEmployeeForEdit.id || selectedEmployeeForEdit._id;
 
       const apiData = {
-        employeeId: editFormData.employeeId.trim(), // ✅ Include Employee ID
+        employeeId: editFormData.employeeId.trim(),
         ...editFormData,
         email: editFormData.email?.trim() || null,
         panNumber: editFormData.panNumber?.trim() || null,
@@ -967,9 +983,9 @@ const EmployeesTab = ({
         gender: editFormData.gender || null,
         maritalStatus: editFormData.maritalStatus || null,
         permanentAddress: editFormData.permanentAddress?.trim() || null,
-        permanentPincode: editFormData.permanentPincode?.trim() || null,
+        permanentPincode: editFormData.permanentPincode?.trim() || null,  // ← This should be preserved
         localAddress: editFormData.localAddress?.trim() || null,
-        localPincode: editFormData.localPincode?.trim() || null,
+        localPincode: editFormData.localPincode?.trim() || null,          // ← This should be preserved
         bankName: editFormData.bankName?.trim() || null,
         accountNumber: editFormData.accountNumber?.trim() || null,
         ifscCode: editFormData.ifscCode?.trim().toUpperCase() || null,
@@ -983,12 +999,12 @@ const EmployeesTab = ({
         emergencyContactRelation: editFormData.emergencyContactRelation?.trim() || null,
         nomineeName: editFormData.nomineeName?.trim() || null,
         nomineeRelation: editFormData.nomineeRelation?.trim() || null,
-        pantSize: editFormData.pantSize || null,
-        shirtSize: editFormData.shirtSize || null,
-        capSize: editFormData.capSize || null,
-        idCardIssued: editFormData.idCardIssued === true,
-        westcoatIssued: editFormData.westcoatIssued === true,
-        apronIssued: editFormData.apronIssued === true,
+        pantSize: editFormData.pantSize || null,          // ← This should be preserved
+        shirtSize: editFormData.shirtSize || null,        // ← This should be preserved
+        capSize: editFormData.capSize || null,            // ← This should be preserved
+        idCardIssued: editFormData.idCardIssued === true, // ← This should be preserved
+        westcoatIssued: editFormData.westcoatIssued === true, // ← This should be preserved
+        apronIssued: editFormData.apronIssued === true,   // ← This should be preserved
         salary: typeof editFormData.salary === 'string' ? parseFloat(editFormData.salary) : editFormData.salary,
       };
 
@@ -2644,9 +2660,7 @@ body {
 <div class="field-row">
   <span class="label">Emergency Cont. No.</span><span class="colon">:</span>
   <span class="value">
-    1)&nbsp;<span class="underline-fill">${employee.emergencyContactPhone || ''}</span>
-    &nbsp;&nbsp;&nbsp;&nbsp;
-    2)&nbsp;<span class="underline-fill"></span>
+    ${employee.emergencyContactPhone ? `<span class="underline-fill">${employee.emergencyContactPhone}</span>` : 'Not provided'}
   </span>
 </div>
       <div class="field-row">
@@ -3206,6 +3220,9 @@ body {
           <div className="flex-1 min-w-0">
             <div className="flex items-center gap-1 flex-wrap">
               <span className="font-semibold text-sm truncate max-w-[120px]">{employee.name}</span>
+              {employee.profileStatus === 'complete' && (
+                <Badge className="bg-green-100 text-green-800 text-[10px]">Complete</Badge>
+              )}
               {employee.profileStatus === 'incomplete' && (
                 <Badge className="bg-amber-100 text-amber-800 text-[10px]">Incomplete</Badge>
               )}
@@ -6051,6 +6068,9 @@ body {
                       <div className="min-w-0 flex-1">
                         <div className="flex flex-wrap items-center gap-2 mb-1">
                           <h4 className="font-semibold truncate">{employee.name}</h4>
+                          {employee.profileStatus === "complete" && (
+                            <Badge className="bg-green-100 text-green-800 border-green-200 text-xs">Complete</Badge>
+                          )}
                           {employee.profileStatus === "incomplete" && (
                             <Badge className="bg-amber-100 text-amber-800 border-amber-200 text-xs">Incomplete</Badge>
                           )}

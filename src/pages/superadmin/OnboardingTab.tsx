@@ -269,16 +269,17 @@ const departments = [
   "Maintenance",
   "Other"
 ];
-// Fields that must be filled for a "complete" profile (exclude panNumber, email, numberOfChildren)
+
 const FIELDS_REQUIRED_FOR_COMPLETE: (keyof NewEmployeeForm)[] = [
-  'employeeId', 'name', 'phone', 'aadharNumber', 'esicNumber', 'uanNumber',
+  'employeeId', 'name', 'phone', 'aadharNumber',
+  // 'esicNumber', // REMOVED - not required for everyone
+  // 'uanNumber',  // REMOVED - not required for everyone
   'siteName', 'dateOfBirth', 'dateOfJoining', 'bloodGroup', 'gender', 'maritalStatus',
-  'permanentAddress', 'permanentPincode', 'localAddress', 'localPincode',
+  'permanentAddress', 'localAddress',
   'bankName', 'accountNumber', 'ifscCode', 'branchName',
   'fatherName', 'motherName',
   'emergencyContactName', 'emergencyContactPhone', 'emergencyContactRelation',
   'nomineeName', 'nomineeRelation',
-  'pantSize', 'shirtSize', 'capSize',
   'department', 'position', 'salary',
 ];
 
@@ -820,7 +821,7 @@ const OnboardingTab = ({
                             {site.status === 'active' ? 'Active' : 'Inactive'}
                           </Badge>
 
-                        
+
                         </div>
                       </div>
 
@@ -837,7 +838,7 @@ const OnboardingTab = ({
                         </div>
                       )}
 
-                   
+
                     </div>
                   );
                 })}
@@ -905,7 +906,7 @@ const OnboardingTab = ({
             </div>
           </div>
 
-         
+
         </div>
       )}
 
@@ -1178,7 +1179,7 @@ const OnboardingTab = ({
       return;
     }
 
-   
+
 
     const employeesBySite: { [key: string]: NewEmployeeForm[] } = {};
     excelData.forEach(emp => {
@@ -1210,7 +1211,7 @@ const OnboardingTab = ({
       }
     }
 
-  
+
     setImporting(true);
     setImportProgress(0);
 
@@ -1750,7 +1751,7 @@ const OnboardingTab = ({
 
     // Validate site capacity
     // Validate site capacity – only enforce if the site has a real staff requirement set
-   
+
     // ----- Compute profile completeness -----
     const { isComplete, missingFields: missingCompleteFields } = checkEmployeeCompleteness(newEmployee);
     const profileStatus = isComplete ? 'complete' : 'incomplete';

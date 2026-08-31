@@ -595,7 +595,7 @@ EmployeeSchema.virtual('formattedDateOfExit').get(function() {
 
 // Virtual for KYC completion status
 EmployeeSchema.virtual('kycCompletionPercentage').get(function() {
-  const requiredDocs = ['aadhar', 'pan', 'police'];
+  const requiredDocs = ['aadhar', 'pan']; // police verification is optional
   const uploadedDocs = this.kycDocuments?.map((doc: any) => doc.documentType) || [];
   const verifiedDocs = this.kycDocuments?.filter((doc: any) => doc.verified).map((doc: any) => doc.documentType) || [];
   
@@ -651,11 +651,12 @@ EmployeeSchema.pre('save', function(next) {
     }
   });
   
-  const optionalFields = ['panNumber', 'esicNumber', 'uanNumber', 'permanentAddress',
-                         'localAddress', 'bankName', 'accountNumber', 'ifscCode',
-                         'branchName', 'fatherName', 'motherName', 'spouseName',
-                         'emergencyContactName', 'emergencyContactPhone',
-                         'emergencyContactRelation', 'nomineeName', 'nomineeRelation'];
+ const optionalFields = ['panNumber', 'esicNumber', 'uanNumber', 'permanentAddress', 'localAddress', 
+                       'bankName', 'accountNumber', 'ifscCode', 'branchName', 'fatherName', 
+                       'motherName', 'spouseName', 'emergencyContactName', 'emergencyContactPhone',
+                       'emergencyContactRelation', 'nomineeName', 'nomineeRelation', 'bloodGroup',
+                       'gender', 'maritalStatus', 'pantSize', 'shirtSize', 'capSize',
+                       'permanentPincode', 'localPincode'];  // ← ADD these
   
   optionalFields.forEach(field => {
     const value = this.get(field);
@@ -703,7 +704,7 @@ EmployeeSchema.statics.getDocumentTypes = function() {
     pan: { label: 'PAN Card', required: true },
     electricity: { label: 'Electricity Bill', required: false },
     driving: { label: 'Driving License', required: false },
-    police: { label: 'Police Verification', required: true },
+    police: { label: 'Police Verification', required: false },  // ← CHANGED TO false
     voter: { label: 'Voter ID', required: false },
     passport: { label: 'Passport', required: false },
     other: { label: 'Other Document', required: false }

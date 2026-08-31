@@ -1137,13 +1137,12 @@ router.post('/',
       employeeData.employeeSignaturePublicId = employeeSignaturePublicId;
       employeeData.authorizedSignature = authorizedSignatureUrl;
       employeeData.authorizedSignaturePublicId = authorizedSignaturePublicId;
-
-      const optionalFields = ['panNumber', 'esicNumber', 'uanNumber', 'permanentAddress', 'localAddress', 
-                             'bankName', 'accountNumber', 'ifscCode', 'branchName', 'fatherName', 
-                             'motherName', 'spouseName', 'emergencyContactName', 'emergencyContactPhone',
-                             'emergencyContactRelation', 'nomineeName', 'nomineeRelation', 'bloodGroup',
-                             'gender', 'maritalStatus', 'pantSize', 'shirtSize', 'capSize', 'siteName'];
-      
+const optionalFields = ['panNumber', 'esicNumber', 'uanNumber', 'permanentAddress', 'localAddress', 
+                       'bankName', 'accountNumber', 'ifscCode', 'branchName', 'fatherName', 
+                       'motherName', 'spouseName', 'emergencyContactName', 'emergencyContactPhone',
+                       'emergencyContactRelation', 'nomineeName', 'nomineeRelation', 'bloodGroup',
+                       'gender', 'maritalStatus', 'pantSize', 'shirtSize', 'capSize',
+                       'permanentPincode', 'localPincode'];  // ← ADD these
       optionalFields.forEach(field => {
         if (employeeData[field] === '' || employeeData[field] === undefined) {
           employeeData[field] = null;
@@ -1322,11 +1321,12 @@ const updateEmployeeHandler = async (req: any, res: any) => {
       employeeData.siteHistory = siteHistory;
     }
 
-    const optionalFields = ['panNumber', 'esicNumber', 'uanNumber', 'permanentAddress', 'localAddress', 
-                           'bankName', 'accountNumber', 'ifscCode', 'branchName', 'fatherName', 
-                           'motherName', 'spouseName', 'emergencyContactName', 'emergencyContactPhone',
-                           'emergencyContactRelation', 'nomineeName', 'nomineeRelation', 'bloodGroup',
-                           'gender', 'maritalStatus', 'pantSize', 'shirtSize', 'capSize'];
+  const optionalFields = ['panNumber', 'esicNumber', 'uanNumber', 'permanentAddress', 'localAddress', 
+                       'bankName', 'accountNumber', 'ifscCode', 'branchName', 'fatherName', 
+                       'motherName', 'spouseName', 'emergencyContactName', 'emergencyContactPhone',
+                       'emergencyContactRelation', 'nomineeName', 'nomineeRelation', 'bloodGroup',
+                       'gender', 'maritalStatus', 'pantSize', 'shirtSize', 'capSize',
+                       'permanentPincode', 'localPincode'];  // ← ADD these
     
     optionalFields.forEach(field => {
       if (employeeData[field] === '' || employeeData[field] === undefined) {
@@ -1350,7 +1350,16 @@ const updateEmployeeHandler = async (req: any, res: any) => {
     if (employeeData.dateOfBirth) employeeData.dateOfBirth = employeeData.dateOfBirth ? new Date(employeeData.dateOfBirth) : null;
     if (employeeData.dateOfJoining) employeeData.dateOfJoining = employeeData.dateOfJoining ? new Date(employeeData.dateOfJoining) : new Date();
     if (employeeData.dateOfExit) employeeData.dateOfExit = employeeData.dateOfExit ? new Date(employeeData.dateOfExit) : null;
-
+    // Add this after the optionalFields loop in updateEmployeeHandler:
+if (employeeData.idCardIssued !== undefined) {
+  employeeData.idCardIssued = employeeData.idCardIssued === 'true' || employeeData.idCardIssued === true;
+}
+if (employeeData.westcoatIssued !== undefined) {
+  employeeData.westcoatIssued = employeeData.westcoatIssued === 'true' || employeeData.westcoatIssued === true;
+}
+if (employeeData.apronIssued !== undefined) {
+  employeeData.apronIssued = employeeData.apronIssued === 'true' || employeeData.apronIssued === true;
+}
     console.log('Cleaned employee data for update:', employeeData);
 
     const updatedEmployee = await Employee.findByIdAndUpdate(
@@ -1781,7 +1790,7 @@ router.get('/:id/documents/stats', async (req: any, res: any) => {
       other: documents.filter(d => d.documentType === 'other').length
     };
 
-    const requiredDocs = ['aadhar', 'pan', 'police'];
+    const requiredDocs = ['aadhar', 'pan'];
     const uploadedRequired = requiredDocs.filter(type => 
       documents.some(d => d.documentType === type)
     ).length;
