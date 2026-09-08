@@ -1142,6 +1142,7 @@ export const manualAttendance = async (req: Request, res: Response) => {
       shiftId,
     } = req.body;
 
+    // Validate required fields
     if (!employeeId || !employeeName || !date) {
       return res.status(400).json({
         success: false,
@@ -1149,7 +1150,6 @@ export const manualAttendance = async (req: Request, res: Response) => {
       });
     }
 
-    // Validate date
     const attendanceDate = new Date(date);
     if (isNaN(attendanceDate.getTime())) {
       return res.status(400).json({
@@ -1158,70 +1158,44 @@ export const manualAttendance = async (req: Request, res: Response) => {
       });
     }
 
-    const formattedDate = formatDate(attendanceDate);
+    const formattedDate = formatDate(attendanceDate); // YYYY-MM-DD
 
-    // Get employee details
+    // Get employee details (optional, for department/site)
     const employee = await Employee.findById(employeeId);
 
-    // Check if record already exists
-    const existingRecord = await Attendance.findOne({
-      employeeId,
-      date: formattedDate,
-    });
+    // Build update object with all fields (null values are allowed by schema)
+    const updateData: any = {
+      employeeName,
+      checkInTime: checkInTime || null,
+      checkOutTime: checkOutTime || null,
+      checkInPhoto: checkInPhoto || null,
+      checkOutPhoto: checkOutPhoto || null,
+      breakStartTime: breakStartTime || null,
+      breakEndTime: breakEndTime || null,
+      status: status || 'present',
+      remarks: remarks || '',
+      totalHours: totalHours || 0,
+      isCheckedIn: isCheckedIn && !checkOutTime,
+      isOnBreak: !!(breakStartTime && !breakEndTime),
+      supervisorId: supervisorId || null,
+      department: employee?.department || 'General',
+      siteName: employee?.siteName || null,
+      shiftId: shiftId || null,
+      isManual: true,           // ✅ mark as manually entered
+      updatedAt: new Date(),
+    };
 
-    let attendance;
-    
-    if (existingRecord) {
-      // Update existing record
-      attendance = await Attendance.findByIdAndUpdate(
-        existingRecord._id,
-        {
-          employeeName,
-          checkInTime,
-          checkOutTime,
-          checkInPhoto,
-          checkOutPhoto,
-          breakStartTime,
-          breakEndTime,
-          status,
-          remarks,
-          totalHours,
-          isCheckedIn: isCheckedIn && !checkOutTime,
-          isOnBreak: !!breakStartTime && !breakEndTime,
-          supervisorId: supervisorId || existingRecord.supervisorId,
-          department: employee?.department || existingRecord.department,
-          siteName: employee?.siteName || existingRecord.siteName,
-          updatedAt: new Date(),
-          shiftId: shiftId || existingRecord.shiftId,
-          isManual: true,   // ✅ ADD THIS
-        },
-        { new: true }
-      );
-    } else {
-      // Create new record
-      attendance = await Attendance.create({
-        employeeId,
-        employeeName,
-        date: formattedDate,
-        checkInTime,
-        checkOutTime,
-        checkInPhoto,
-        checkOutPhoto,
-        breakStartTime,
-        breakEndTime,
-        status: status || 'present',
-        remarks: remarks || '',
-        totalHours,
-        isCheckedIn: isCheckedIn && !checkOutTime,
-        isOnBreak: !!breakStartTime && !breakEndTime,
-        supervisorId: supervisorId || null,
-        department: employee?.department || 'General',
-        siteName: employee?.siteName || null,
-        shiftId: shiftId || existingRecord.shiftId,
-        isManual: true,   // ✅ ADD THIS
-        
-      });
-    }
+    // Atomically update or insert
+    const attendance = await Attendance.findOneAndUpdate(
+      { employeeId, date: formattedDate }, // match by employee + day
+      { $set: updateData },                // apply all fields
+      {
+        upsert: true,                      // create if not exists
+        new: true,                         // return the updated/created doc
+        setDefaultsOnInsert: true,         // use schema defaults for missing fields
+        runValidators: true,               // validate against schema (optional)
+      }
+    );
 
     res.status(200).json({
       success: true,
@@ -1229,11 +1203,16 @@ export const manualAttendance = async (req: Request, res: Response) => {
       data: attendance,
     });
   } catch (error: any) {
-    console.error('❌ Manual attendance error:', error.message);
+    // ✅ IMPORTANT: log the full error stack to your terminal
+    console.error('❌ Manual attendance error:', error);
+    console.error('Stack:', error.stack);
+
+    // ✅ Send the actual error message to the frontend
     res.status(500).json({
       success: false,
-      message: 'Error recording attendance',
-      error: error.message,
+      message: error.message || 'Error recording attendance',
+      // (optional) include stack for debugging in dev only
+      ...(process.env.NODE_ENV === 'development' && { stack: error.stack }),
     });
   }
 };

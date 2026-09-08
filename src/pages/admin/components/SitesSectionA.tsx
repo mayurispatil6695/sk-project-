@@ -34,7 +34,8 @@ const StaffRoles = [
   "Housekeeping Staff",
   "Security Guard",
   "Parking Attendant",
-  "Waste Collector"
+  "Waste Collector",
+  "Technician"
 ];
 
 // Unified Client Service to fetch from CRM
@@ -758,7 +759,8 @@ const SitesSection = () => {
         'Housekeeping Staff',
         'Security Guard',
         'Parking Attendant',
-        'Waste Collector'
+        'Waste Collector',
+        'Technician'
       ],
       [
         'Phoenix Mall',
@@ -904,7 +906,7 @@ const SitesSection = () => {
       </div>
     );
   };
-  
+
   return (
     <div className="space-y-6 px-2 sm:px-4 md:px-6">
       {/* Error Display */}

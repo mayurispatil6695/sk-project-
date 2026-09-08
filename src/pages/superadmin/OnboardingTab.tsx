@@ -2432,9 +2432,9 @@ const OnboardingTab = ({
     }
     .doc-header h2 {
       font-size: 14px;
-      margin-bottom: 8mm;
+      margin-bottom: 4mm;
       border-bottom: 1px solid #000;
-      padding-bottom: 4mm;
+      padding-bottom: 2mm;
     }
     .doc-image-wrap {
       flex: 1;
@@ -2444,7 +2444,7 @@ const OnboardingTab = ({
     }
     .doc-image {
       max-width: 100%;
-      max-height: 250mm;
+      max-height: 200mm;
       object-fit: contain;
     }
     .doc-list {

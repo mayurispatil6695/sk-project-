@@ -439,7 +439,7 @@ const SiteForm = ({ onSuccess, onCancel }: { onSuccess: () => void; onCancel: ()
   ];
   const StaffRoles = [
     "Manager", "Supervisor", "Housekeeping Staff", "Security Guard",
-    "Parking Attendant", "Waste Collector"
+    "Parking Attendant", "Waste Collector","Technician"
   ];
 
   // Client service wrapper

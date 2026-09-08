@@ -373,7 +373,7 @@ const fetchAttendanceRecords = async (start: string, end: string): Promise<Atten
 
         // Filter records by date range if API doesn't support range filtering
         const filteredRecords = records.filter((record: any) => {
-          const recordDate = record.date;
+          const recordDate = normalizeDateStr(record.date); // you already have this helper
           return recordDate >= start && recordDate <= end;
         });
 
@@ -493,7 +493,8 @@ const fetchAttendanceRecords = async (start: string, end: string): Promise<Atten
             _id: record._id || record.id || `att_${Math.random()}`,
             employeeId: record.employeeId || record.employee?._id || '',
             employeeName: record.employeeName || record.employee?.name || 'Unknown',
-            date: record.date || dateStr,
+            // ✅ change to
+            date: normalizeDateStr(record.date) || dateStr,
             checkInTime: record.checkInTime || null,
             checkOutTime: record.checkOutTime || null,
             checkInPhoto: record.checkInPhoto || null,

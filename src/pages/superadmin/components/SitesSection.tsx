@@ -43,7 +43,8 @@ const StaffRoles = [
   "Housekeeping Staff",
   "Security Guard",
   "Parking Attendant",
-  "Waste Collector"
+  "Waste Collector",
+  "Technician"
 ];
 
 interface SitesSectionProps {
@@ -830,7 +831,8 @@ const SitesSection = ({ refreshTrigger = 0 }: SitesSectionProps) => {
         'Housekeeping Staff',
         'Security Guard',
         'Parking Attendant',
-        'Waste Collector'
+        'Waste Collector',
+        'Technician'
       ],
       [
         'Phoenix Mall',

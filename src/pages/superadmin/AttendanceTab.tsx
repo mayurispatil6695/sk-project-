@@ -380,7 +380,7 @@ const fetchAttendanceRecords = async (start: string, end: string): Promise<Atten
 
         // Filter records by date range if API doesn't support range filtering
         const filteredRecords = records.filter((record: any) => {
-          const recordDate = record.date;
+          const recordDate = normalizeDateStr(record.date); // you already have this helper
           return recordDate >= start && recordDate <= end;
         });
 
@@ -625,7 +625,7 @@ const generateEmployeeData = async (
       const currentDate = formatDate(date);
 
       for (const employee of siteEmployees) {
-        const empId = employee.employeeId || employee._id || employee.id || '';
+        const empId = employee._id || employee.id || employee.employeeId || '';
         const attendanceKey = `${empId}_${currentDate}`;
         const attendance = attendanceMap.get(attendanceKey) ||
           attendanceMap.get(`name_${employee.name}_${currentDate}`);

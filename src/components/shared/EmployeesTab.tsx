@@ -32,7 +32,7 @@ const EMPLOYEE_COMPLETE_FIELDS: (keyof ExtendedEmployee)[] = [
   'siteName', 'dateOfBirth', 'joinDate', 'bloodGroup', 'gender', 'maritalStatus', 'status',
   'permanentAddress', 'localAddress',
   'bankName', 'accountNumber', 'ifscCode', 'branchName',
-   'emergencyContactPhone','emergencyPhone2',
+  'emergencyContactPhone', 'emergencyPhone2',
   'nomineeName', 'nomineeRelation',
   'department', 'position', 'salary',
 ];
@@ -532,7 +532,7 @@ const EmployeesTab = ({
             branchName: emp.branchName || "",        // ✅ ADD THIS LINE HERE
             permanentAddress: emp.permanentAddress || "",
             localAddress: emp.localAddress || "",
-           
+
             emergencyContactPhone: emp.emergencyContactPhone || "",
             emergencyPhone2: emp.emergencyPhone2 || "",
 
@@ -896,7 +896,7 @@ const EmployeesTab = ({
       relation: employee.relation || "",
       dateOfJoining: dateOfJoiningFormatted,
       numberOfChildren: employee.numberOfChildren?.toString() || "0",
-     
+
       emergencyContactPhone: employee.emergencyContactPhone || "",
       emergencyPhone2: employee.emergencyPhone2 || "",
 
@@ -1001,7 +1001,7 @@ const EmployeesTab = ({
         relativeName: editFormData.relativeName?.trim() || null,
         relation: editFormData.relation?.trim() || null,
         numberOfChildren: editFormData.numberOfChildren?.toString() || "0",
-       
+
         emergencyContactPhone: editFormData.emergencyContactPhone?.trim() || null,
         emergencyPhone2: editFormData.emergencyPhone2?.trim() || null,
 
@@ -2011,7 +2011,7 @@ const EmployeesTab = ({
           localAddress: localAddress || null,
           nomineeName: nomineeName || null,
           nomineeRelation: nomineeRelation || null,
-        
+
           emergencyContactPhone: emergencyContactPhone || null,
           emergencyPhone2: emergencyPhone2 || null,
 
@@ -2813,9 +2813,9 @@ const EmployeesTab = ({
     }
     .doc-header h2 {
       font-size: 14px;
-      margin-bottom: 8mm;
+      margin-bottom: 4mm;
       border-bottom: 1px solid #000;
-      padding-bottom: 4mm;
+      padding-bottom: 2mm;
     }
     .doc-image-wrap {
       flex: 1;
@@ -2825,7 +2825,7 @@ const EmployeesTab = ({
     }
     .doc-image {
       max-width: 100%;
-      max-height: 250mm;
+      max-height: 200mm;
       object-fit: contain;
     }
     .doc-list {
@@ -3571,8 +3571,31 @@ const EmployeesTab = ({
     // ✅ Site-based color: red for Elpro Mall, blue for everyone else
     const siteName = (employee.siteName || "").trim().toLowerCase();
     const isElproMall = siteName.includes("elpro");
-    const themeColor = isElproMall ? "#c0392b" : "#1e3a8a"; // red vs blue
+    const themeColor = isElproMall ? "#c0392b" : "#1e3a8a";
 
+    // Format Aadhar with hyphens
+    const formatAadhar = (aadhar: string) => {
+      if (!aadhar) return "N/A";
+      const cleaned = aadhar.replace(/\D/g, '');
+      if (cleaned.length === 12) {
+        return cleaned.replace(/(\d{4})(\d{4})(\d{4})/, '$1-$2-$3');
+      }
+      return aadhar;
+    };
+
+    // ✅ Get signature URL with fallback
+    const getSignatureUrl = () => {
+      // Try multiple sources
+      const sources = [
+        '/images/authority-signature.png',
+        import.meta.env.VITE_AUTHORIZED_SIGNATURE_URL,
+        employee.authorizedSignature,
+      ].filter(Boolean);
+
+      return sources[0] || '/images/authority-signature.png';
+    };
+
+    const signatureUrl = getSignatureUrl();
 
     printWindow.document.write(`
     <!DOCTYPE html>
@@ -3581,7 +3604,7 @@ const EmployeesTab = ({
         <title>ID Card - ${employee.name}</title>
         <style>
           @page {
-            size: 51mm 85mm;   /* width 5.1cm, height 8.5cm — matches physical card stock */
+            size: 51mm 85mm;
             margin: 0;
           }
           * {
@@ -3589,27 +3612,27 @@ const EmployeesTab = ({
             padding: 0;
             box-sizing: border-box;
           }
-         html, body {
-  width: 51mm;
-  height: 85mm;
-  margin: 0;
-  padding: 0;
-  overflow: hidden;
-}
+          html, body {
+            width: 51mm;
+            height: 85mm;
+            margin: 0;
+            padding: 0;
+            overflow: hidden;
+          }
           body {
             font-family: Arial, sans-serif;
             background: white;
           }
           .id-card {
             width: 51mm;
-  height: 85mm;
-  min-width: 51mm;
-  min-height: 85mm;
-  max-width: 51mm;
-  max-height: 85mm;
-  overflow: hidden;
-  page-break-inside: avoid;
-  page-break-after: avoid;
+            height: 85mm;
+            min-width: 51mm;
+            min-height: 85mm;
+            max-width: 51mm;
+            max-height: 85mm;
+            overflow: hidden;
+            page-break-inside: avoid;
+            page-break-after: avoid;
             background: white;
             display: flex;
             flex-direction: column;
@@ -3618,155 +3641,138 @@ const EmployeesTab = ({
           }
           .header {
             width: 100%;
-            padding: 3mm 2mm 2mm 2mm;
+            padding: 2mm 2mm 1mm 2mm;
             text-align: center;
             border-bottom: 0.6mm solid ${themeColor};
           }
           .header h1 {
-            font-size: 12pt;
+            font-size: 11pt;
             font-weight: bold;
             color: ${themeColor};
             letter-spacing: 0.3px;
           }
           .header .subtitle {
-            font-size: 6pt;
+            font-size: 5pt;
             color: #555;
             margin-top: 0.5mm;
             text-transform: uppercase;
             letter-spacing: 0.5px;
           }
           .photo-section {
-            padding: 3mm 0 2mm 0;
+            padding: 2mm 0 1.5mm 0;
           }
           .employee-photo {
-            width: 22mm;
-            height: 22mm;
+            width: 20mm;
+            height: 20mm;
             object-fit: cover;
             border: 0.5mm solid ${themeColor};
             background: #f5f5f5;
-            /* square photo — no border-radius */
           }
           .no-photo {
-            width: 22mm;
-            height: 22mm;
+            width: 20mm;
+            height: 20mm;
             border: 0.5mm solid ${themeColor};
             background: #e5e7eb;
             display: flex;
             align-items: center;
             justify-content: center;
             color: #6b7280;
-            font-size: 7pt;
+            font-size: 6pt;
           }
-         .details {
-  width: 100%;
-  padding: 0 3mm;
-  flex: 1;
-  min-height: 0;
-  overflow: hidden;
-}
-         .detail-row {
-  display: flex;
-  justify-content: space-between;
-  gap: 1mm;
-  padding: 0.7mm 0;
-  border-bottom: 0.15mm solid #eee;
-  min-height: 4.5mm;
-}
+          .details {
+            width: 100%;
+            padding: 0 2.5mm;
+            flex: 1;
+            min-height: 0;
+            overflow: hidden;
+          }
+          .detail-row {
+            display: flex;
+            justify-content: space-between;
+            gap: 0.5mm;
+            padding: 0.5mm 0;
+            border-bottom: 0.15mm solid #eee;
+            min-height: 4mm;
+          }
           .detail-row:last-child {
             border-bottom: none;
           }
           .label {
             font-weight: 700;
             color: #333;
-            font-size: 6.5pt;
+            font-size: 5.5pt;
             white-space: nowrap;
+            min-width: 16mm;
           }
           .value {
             color: #111;
-            font-size: 6.5pt;
+            font-size: 5.5pt;
             font-weight: 500;
             text-align: right;
             word-break: break-word;
-          }
-         .footer {
-  width: 100%;
-  padding: 1.5mm 2mm 2mm 2mm;
-  border-top: 0.4mm solid ${themeColor};
-  flex-shrink: 0;
-}
-          .signature-area {
-            display: flex;
-            justify-content: space-between;
-            gap: 2mm;
-          }
-          .signature-item {
             flex: 1;
-            text-align: center;
-            font-size: 5.5pt;
-            color: #555;
           }
-          .signature-line {
+          .footer {
+            width: 100%;
+            padding: 1mm 2mm 1.5mm 2mm;
+            border-top: 0.4mm solid ${themeColor};
+            flex-shrink: 0;
+          }
+          .authority-signature {
+            width: 100%;
+            text-align: right;
+            padding-right: 2mm;
+          }
+          .authority-signature img {
+            width: 16mm;
+            height: 7mm;
+            object-fit: contain;
+            display: block;
+            margin-left: auto;
+            background: white;
+          }
+          .authority-signature .fallback {
+            font-size: 4.5pt;
+            color: #555;
+            text-align: center;
+            width: 16mm;
+            margin-left: auto;
+            padding: 1mm 0;
             border-top: 0.3mm solid #333;
-            margin-top: 6mm;
-            padding-top: 1mm;
           }
           .footer-text {
-            margin-top: 2mm;
-            font-size: 5pt;
+            margin-top: 0.5mm;
+            font-size: 4.5pt;
             color: #777;
             text-align: center;
           }
-        @media print {
-  html, body {
-    width: 51mm;
-    height: 85mm;
-    margin: 0;
-    padding: 0;
-    overflow: hidden;
-  }
-
-  body {
-    background: white;
-  }
-
-  .id-card {
-    width: 51mm;
-    height: 85mm;
-    overflow: hidden;
-    box-shadow: none;
-    page-break-inside: avoid;
-    page-break-after: avoid;
-  }
-}
-
-.authority-signature {
-  width: 100%;
-  text-align: right;
-  padding-right: 3mm;
-}
-
-.authority-signature img {
-  width: 18mm;
-  height: 8mm;
-  object-fit: contain;
-  display: block;
-  margin-left: auto;
-}
-
-.authority-signature div {
-  font-size: 5.5pt;
-  color: #555;
-  text-align: center;
-  width: 18mm;
-  margin-left: auto;
-}
+          @media print {
+            html, body {
+              width: 51mm;
+              height: 85mm;
+              margin: 0;
+              padding: 0;
+              overflow: hidden;
+            }
+            body {
+              background: white;
+            }
+            .id-card {
+              width: 51mm;
+              height: 85mm;
+              overflow: hidden;
+              box-shadow: none;
+              page-break-inside: avoid;
+              page-break-after: avoid;
+            }
+          }
         </style>
       </head>
       <body>
         <div class="id-card">
           <div class="header">
             <h1>SK ENTERPRISES</h1>
-           
+            <div class="subtitle">Housekeeping • Parking • Waste Management</div>
           </div>
           <div class="photo-section">
             ${photoUrl
@@ -3775,58 +3781,59 @@ const EmployeesTab = ({
         : '<div class="no-photo">No Photo</div>'
       }
           </div>
-         <div class="details">
-  <div class="detail-row">
-    <span class="label">Name</span>
-    <span class="value">${employee.name || ''}</span>
-  </div>
-   <div class="detail-row">
-    <span class="label">Designation</span>
-    <span class="value">${employee.position || "N/A"}</span>
-  </div>
-   <div class="detail-row">
-    <span class="label">DOB</span>
-    <span class="value">${employee.dateOfBirth || "N/A"}</span>
-  </div>
-  <div class="detail-row">
-    <span class="label">Join Date</span>
-    <span class="value">${employee.joinDate || "N/A"}</span>
-  </div>
-  <div class="detail-row">
-    <span class="label">Employee ID</span>
-    <span class="value">${employee.employeeId || ''}</span>
-  </div>
-  <div class="detail-row">
-    <span class="label">Contact No.</span>
-    <span class="value">${employee.phone || "N/A"}</span>
-  </div>
-  <div class="detail-row">
-    <span class="label">Aadhaar</span>
-    <span class="value">${employee.aadharNumber ? employee.aadharNumber.replace(/(\d{4})(\d{4})(\d{4})/, '$1-$2-$3') : "N/A"}</span>
-  </div>
-
-  <div class="detail-row">
-    <span class="label">Site Name</span>
-    <span class="value">${employee.siteName || "N/A"}</span>
-  </div>
- 
- 
-  
-  
-</div>
-         <div class="footer">
-  <div class="authority-signature">
-    <img
-      src="/images/authority-signature.png"
-      alt="Authorized Signature"
-    />
-    <div>Authorized</div>
-  </div>
-
-  <div class="footer-text">
-    Property of SK Enterprises • Valid until employment
-  </div>
-</div>
+          <div class="details">
+            <div class="detail-row">
+              <span class="label">NAME</span>
+              <span class="value">${employee.name || ''}</span>
+            </div>
+            <div class="detail-row">
+              <span class="label">DESIGNATION</span>
+              <span class="value">${employee.position || "N/A"}</span>
+            </div>
+            <div class="detail-row">
+              <span class="label">DATE OF BIRTH</span>
+              <span class="value">${employee.dateOfBirth || "N/A"}</span>
+            </div>
+            <div class="detail-row">
+              <span class="label">DATE OF JOINING</span>
+              <span class="value">${employee.joinDate || employee.dateOfJoining || "N/A"}</span>
+            </div>
+            <div class="detail-row">
+              <span class="label">EMPLOYEE ID</span>
+              <span class="value">${employee.employeeId || ''}</span>
+            </div>
+            <div class="detail-row">
+              <span class="label">EMG. CONTACT NO.</span>
+              <span class="value">${employee.emergencyContactPhone || employee.phone || "N/A"}</span>
+            </div>
+            <div class="detail-row">
+              <span class="label">AADHAR NO</span>
+              <span class="value">${formatAadhar(employee.aadharNumber)}</span>
+            </div>
+            <div class="detail-row">
+              <span class="label">BLOOD GROUP</span>
+              <span class="value">${employee.bloodGroup || "N/A"}</span>
+            </div>
+            <div class="detail-row">
+              <span class="label">SITE NAME</span>
+              <span class="value">${employee.siteName || "N/A"}</span>
+            </div>
+          </div>
+          <div class="footer">
+            <div class="authority-signature">
+              <img
+                src="${signatureUrl}"
+                alt="Authorized Signature"
+                onerror="
+                  this.style.display='none'; 
+                  this.parentElement.innerHTML='<div class=\\'fallback\\'>Authorized</div>';
+                "
+              />
+            </div>
+            <div class="footer-text">
+              Property of SK Enterprises • Valid until employment
+            </div>
+          </div>
         </div>
         <script>
           window.onload = function() {
@@ -5642,7 +5649,7 @@ const EmployeesTab = ({
                 />
               </div>
 
-             
+
 
               <div className="space-y-2">
                 <Label htmlFor="edit-emergencyContactPhone">Emergency Contact Phone</Label>

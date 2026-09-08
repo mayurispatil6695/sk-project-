@@ -28,6 +28,7 @@ import {
   ChevronUp,
   FileSpreadsheet,
   UserCog,
+  UserCheck
 } from "lucide-react";
 import { toast } from "sonner";
 import axios from "axios";
@@ -323,16 +324,16 @@ const Attendance = () => {
       setUpdatingEmployeeStatus(false);
     }
   };
-useEffect(() => {
-  if (currentUser && currentUser.role === "supervisor") {
-    const init = async () => {
-      setLoading(true);
-      await fetchEmployees();   // fetchSupervisorSites() removed
-      setLoading(false);
-    };
-    init();
-  }
-}, [currentUser]);
+  useEffect(() => {
+    if (currentUser && currentUser.role === "supervisor") {
+      const init = async () => {
+        setLoading(true);
+        await fetchEmployees();   // fetchSupervisorSites() removed
+        setLoading(false);
+      };
+      init();
+    }
+  }, [currentUser]);
 
   useEffect(() => {
     if (employees.length > 0) {
@@ -429,6 +430,41 @@ useEffect(() => {
       toast.dismiss(toastId);
       console.error('Attendance photo error:', error);
       toast.error(error.response?.data?.message || "Failed to mark present with photo");
+    }
+  };
+
+  const handleQuickMarkPresent = async (emp: Employee) => {
+    const toastId = toast.loading(`Marking ${emp.name} present...`);
+    try {
+      const now = new Date().toISOString(); // captured as check-in time
+
+      const response = await axios.post(`${API_URL}/attendance/manual`, {
+        employeeId: emp._id,
+        employeeName: emp.name,
+        date: selectedDate,
+        checkInTime: now,
+        checkOutTime: null,
+        breakStartTime: null,
+        breakEndTime: null,
+        status: "present",
+        remarks: "Marked present manually (no camera)",
+        totalHours: 0,
+        isCheckedIn: true,
+        supervisorId: currentUser?._id || currentUser?.id,
+      });
+
+      toast.dismiss(toastId);
+
+      if (response.data.success) {
+        toast.success(`${emp.name} marked present at ${new Date(now).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}`);
+        await loadAttendanceRecords();
+      } else {
+        toast.error(response.data.message || "Failed to mark present");
+      }
+    } catch (error: any) {
+      toast.dismiss(toastId);
+      console.error("Quick mark present error:", error);
+      toast.error(error.response?.data?.message || "Error marking present");
     }
   };
   const handleCheckoutPhotoCapture = async (photoFile: File) => {
@@ -901,17 +937,29 @@ useEffect(() => {
                     <div className="flex gap-1 flex-wrap">
                       {/* 1. Mark Present (If Absent, Half-Day, or Weekly Off) */}
                       {derived.status === 'absent' || derived.status === 'half-day' || derived.status === 'weekly-off' ? (
-                        <Button
-                          variant="outline"
-                          size="sm"
-                          className="text-green-600 border-green-600 hover:bg-green-50"
-                          onClick={() => {
-                            setAttendancePhotoTarget(emp);
-                            setAttendanceCameraOpen(true);
-                          }}
-                        >
-                          <Camera className="h-4 w-4 mr-1" /> Mark Present
-                        </Button>
+                        <>
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            className="text-green-600 border-green-600 hover:bg-green-50"
+                            onClick={() => {
+                              setAttendancePhotoTarget(emp);
+                              setAttendanceCameraOpen(true);
+                            }}
+                          >
+                            <Camera className="h-4 w-4 mr-1" /> Mark Present
+                          </Button>
+
+                          {/* NEW: no-camera fallback, one tap */}
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            className="text-emerald-700 border-emerald-700 hover:bg-emerald-50"
+                            onClick={() => handleQuickMarkPresent(emp)}
+                          >
+                            <UserCheck className="h-4 w-4 mr-1" /> Present
+                          </Button>
+                        </>
                       ) : null}
 
                       {/* 2. Check Out (If Present and not checked out yet) */}
@@ -1094,17 +1142,29 @@ useEffect(() => {
 
                           {/* 1. If Absent / Half-Day / Weekly-Off -> Show Mark Present */}
                           {derived.status === 'absent' || derived.status === 'half-day' || derived.status === 'weekly-off' ? (
-                            <Button
-                              variant="outline"
-                              size="sm"
-                              className="text-green-600 border-green-600 hover:bg-green-50"
-                              onClick={() => {
-                                setAttendancePhotoTarget(emp);
-                                setAttendanceCameraOpen(true);
-                              }}
-                            >
-                              <Camera className="h-4 w-4 mr-1" /> Mark Present
-                            </Button>
+                            <>
+                              <Button
+                                variant="outline"
+                                size="sm"
+                                className="text-green-600 border-green-600 hover:bg-green-50"
+                                onClick={() => {
+                                  setAttendancePhotoTarget(emp);
+                                  setAttendanceCameraOpen(true);
+                                }}
+                              >
+                                <Camera className="h-4 w-4 mr-1" /> Mark Present
+                              </Button>
+
+                              {/* NEW: no-camera fallback, one tap */}
+                              <Button
+                                variant="outline"
+                                size="sm"
+                                className="text-emerald-700 border-emerald-700 hover:bg-emerald-50"
+                                onClick={() => handleQuickMarkPresent(emp)}
+                              >
+                                <UserCheck className="h-4 w-4 mr-1" /> Present
+                              </Button>
+                            </>
                           ) : null}
 
                           {/* 2. If Present (Checked In) -> Show Mark Check Out */}
