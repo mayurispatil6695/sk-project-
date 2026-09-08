@@ -9,6 +9,7 @@ import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
 import CameraCapture from "./CameraCapture";
+import employeeService from "@/services/employeeService";
 import {
   Calendar,
   CheckCircle,
@@ -165,7 +166,7 @@ const Attendance = () => {
 
   const [employees, setEmployees] = useState<Employee[]>([]);
   const [attendanceRecords, setAttendanceRecords] = useState<AttendanceRecord[]>([]);
-  const [supervisorSites, setSupervisorSites] = useState<Site[]>([]);
+
   const [loading, setLoading] = useState(true);
   const [updatingStatus, setUpdatingStatus] = useState(false);
 
@@ -215,43 +216,7 @@ const Attendance = () => {
   const [newEmployeeStatus, setNewEmployeeStatus] = useState<"active" | "inactive" | "left">("active");
   const [updatingEmployeeStatus, setUpdatingEmployeeStatus] = useState(false);
   // Data fetching
-  const fetchSupervisorSites = useCallback(async () => {
-    if (!currentUser) return [];
-    try {
-      const supervisorId = currentUser._id || currentUser.id;
-      const supervisorName = currentUser.name;
-      const response = await axios.get(`${API_URL}/tasks`, { params: { limit: 1000 } });
-      let allTasks = response.data?.data || response.data || [];
-      if (!Array.isArray(allTasks)) allTasks = [];
 
-      const siteIdSet = new Set<string>();
-      allTasks.forEach((task: any) => {
-        const assigned =
-          task.assignedUsers?.some((u: any) =>
-            u.userId === supervisorId ||
-            (u.name && supervisorName && u.name.toLowerCase() === supervisorName.toLowerCase())
-          ) ||
-          task.assignedTo === supervisorId;
-        if (assigned && task.siteId) siteIdSet.add(task.siteId);
-      });
-
-      const sitesRes = await axios.get(`${API_URL}/sites`);
-      let allSites = sitesRes.data?.data || sitesRes.data || [];
-      if (!Array.isArray(allSites)) allSites = [];
-
-      const filtered = allSites.filter((s: any) => siteIdSet.has(s._id));
-
-      if (filtered.length === 0) {
-        console.warn("⚠️ No sites found via task assignment for this supervisor — check that this supervisor has at least one task with a siteId set.");
-      }
-
-      setSupervisorSites(filtered);
-      return filtered;
-    } catch (error) {
-      console.error("Error fetching supervisor sites:", error);
-      return [];
-    }
-  }, [currentUser]);
 
   const fetchSiteShifts = async (siteName: string) => {
     if (!siteName) return;
@@ -282,39 +247,20 @@ const Attendance = () => {
   const fetchEmployees = useCallback(async () => {
     if (!currentUser) return;
     try {
-      let sites = supervisorSites;
-      if (sites.length === 0) sites = await fetchSupervisorSites();
+      const response = await employeeService.getSupervisorEmployees();
+      const allSupervisorEmployees = response?.data || (response as any)?.employees || [];
 
-      if (sites.length === 0) {
-        console.warn("⚠️ No sites resolved for this supervisor (no tasks with siteId?)");
-        setEmployees([]);
-        return;
-      }
+      const activeEmployees = (Array.isArray(allSupervisorEmployees) ? allSupervisorEmployees : [])
+        .filter((emp: any) => emp.status === 'active');
 
-      const siteIds = sites.map((s: any) => s._id).filter(Boolean);
-      const siteNames = sites
-        .map((s: any) => (s.name || "").trim().toLowerCase())
-        .filter(Boolean);
-
-      const response = await axios.get(`${API_URL}/employees`, { params: { limit: 1000 } });
-      let allEmployees = response.data?.data || response.data?.employees || response.data || [];
-      if (!Array.isArray(allEmployees)) allEmployees = [];
-
-      // ✅ Match by siteId OR siteName (fallback), same as SuperAdmin view does
-      const filtered = allEmployees.filter((emp: any) => {
-        if (emp.status !== 'active') return false;
-        const empSiteId = emp.siteId;
-        const empSiteName = (emp.siteName || emp.site || "").trim().toLowerCase();
-        return siteIds.includes(empSiteId) || siteNames.includes(empSiteName);
-      });
-
-      console.log(`✅ Supervisor employees resolved: ${filtered.length} (siteIds: ${siteIds.length}, siteNames: ${siteNames.length}, totalEmployees: ${allEmployees.length})`);
-      setEmployees(filtered);
+      console.log(`✅ Supervisor employees resolved: ${activeEmployees.length}`);
+      setEmployees(activeEmployees);
     } catch (error) {
       console.error("Error fetching employees:", error);
       toast.error("Failed to load employees");
+      setEmployees([]);
     }
-  }, [currentUser, supervisorSites, fetchSupervisorSites]);
+  }, [currentUser]);
 
   const loadAttendanceRecords = useCallback(async () => {
     if (employees.length === 0) {
@@ -377,17 +323,16 @@ const Attendance = () => {
       setUpdatingEmployeeStatus(false);
     }
   };
-  useEffect(() => {
-    if (currentUser && currentUser.role === "supervisor") {
-      const init = async () => {
-        setLoading(true);
-        await fetchSupervisorSites();
-        await fetchEmployees();
-        setLoading(false);
-      };
-      init();
-    }
-  }, [currentUser]);
+useEffect(() => {
+  if (currentUser && currentUser.role === "supervisor") {
+    const init = async () => {
+      setLoading(true);
+      await fetchEmployees();   // fetchSupervisorSites() removed
+      setLoading(false);
+    };
+    init();
+  }
+}, [currentUser]);
 
   useEffect(() => {
     if (employees.length > 0) {
