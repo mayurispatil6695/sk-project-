@@ -547,18 +547,16 @@ router.get('/template', async (req: any, res: any) => {
       'maritalStatus': 'Married',
       'bloodGroup': 'O+',
       'permanentAddress': '123 Main Street, Mumbai',
-      'permanentPincode': '400001',
+      
       'localAddress': '456 Local Street, Mumbai',
-      'localPincode': '400002',
+      
       'bankName': 'State Bank of India',
       'accountNumber': '12345678901234',
       'ifscCode': 'SBIN0001234',
       'branchName': 'Main Branch',
-      'fatherName': 'Robert Doe',
-      'motherName': 'Jane Doe',
-      'spouseName': 'Alice Doe',
+     
       'numberOfChildren': '2',
-      'emergencyContactName': 'Robert Doe',
+      
       'emergencyContactPhone': '9876543211',
       'emergencyContactRelation': 'Father',
       'nomineeName': 'Alice Doe',
@@ -668,19 +666,19 @@ router.post('/import', excelUpload.single('file'), async (req: any, res: any) =>
           gender: row.gender || null,
           maritalStatus: row.maritalStatus || null,
           permanentAddress: row.permanentAddress || null,
-          permanentPincode: row.permanentPincode || null,
+         
           localAddress: row.localAddress || null,
-          localPincode: row.localPincode || null,
+          
           bankName: row.bankName || null,
           accountNumber: row.accountNumber || null,
           ifscCode: row.ifscCode || null,
           branchName: row.branchName || null,
-          fatherName: row.fatherName || null,
-          motherName: row.motherName || null,
-          spouseName: row.spouseName || null,
+         relativeName: row.relativeName || null,
+          relation: row.relation || null,
           numberOfChildren: parseInt(row.numberOfChildren) || 0,
-          emergencyContactName: row.emergencyContactName || null,
+         
           emergencyContactPhone: row.emergencyContactPhone || null,
+          emergencyPhone2: row.emergencyPhone2 || null,
           emergencyContactRelation: row.emergencyContactRelation || null,
           nomineeName: row.nomineeName || null,
           nomineeRelation: row.nomineeRelation || null,
@@ -817,6 +815,7 @@ router.post('/bulk-import', authenticate, async (req: any, res: any) => {
 });
 
 // ─── Async Import ──────────────────────────────────────────────────────
+// ─── Async Import ──────────────────────────────────────────────────────
 router.post('/start', authenticate, excelUpload.single('file'), async (req: any, res: any) => {
   try {
     const file = req.file;
@@ -828,17 +827,41 @@ router.post('/start', authenticate, excelUpload.single('file'), async (req: any,
       status: 'pending',
       fileName: file.originalname,
       startedAt: new Date(),
-      totalRows: 0
+      totalRows: 0,
     });
     await job.save();
 
-    setImmediate(() => processImportJob(jobId, file.path));
+    console.log(`✅ [IMPORT] Job ${jobId} created, file: ${file.path}`);
+
+    // Run import asynchronously
+    setImmediate(async () => {
+      console.log(`🚀 [IMPORT] Starting background job for ${jobId}`);
+      try {
+        await processImportJob(jobId, file.path);
+        console.log(`✅ [IMPORT] Job ${jobId} finished successfully`);
+      } catch (error: any) {
+        console.error(`❌ [IMPORT] Job ${jobId} failed:`, error);
+        await ImportJob.findOneAndUpdate(
+          { jobId },
+          {
+            status: 'failed',
+            importErrors: [{ message: error.message }],
+            completedAt: new Date(),
+          }
+        );
+        // Clean up file if it still exists
+        if (fs.existsSync(file.path)) {
+          fs.unlinkSync(file.path);
+        }
+      }
+    });
+
     res.json({ success: true, jobId });
   } catch (err: any) {
+    console.error('❌ [IMPORT] /start error:', err);
     res.status(500).json({ error: err.message });
   }
 });
-
 router.get('/status/:jobId', authenticate, async (req: any, res: any) => {
   try {
     const job = await ImportJob.findOne({ jobId: req.params.jobId });
@@ -906,9 +929,8 @@ router.get('/export', async (req: any, res: any) => {
       'Bank Name': emp.bankName || '',
       'Account Number': emp.accountNumber || '',
       'IFSC Code': emp.ifscCode || '',
-      'Father Name': emp.fatherName || '',
-      'Mother Name': emp.motherName || '',
-      'Spouse Name': emp.spouseName || '',
+      'Relative Name': emp.relativeName || '',
+      'Relation': emp.relation || '',
       'Number of Children': emp.numberOfChildren || 0,
       'Nominee Name': emp.nomineeName || '',
       'Nominee Relation': emp.nomineeRelation || '',
@@ -1138,11 +1160,10 @@ router.post('/',
       employeeData.authorizedSignature = authorizedSignatureUrl;
       employeeData.authorizedSignaturePublicId = authorizedSignaturePublicId;
 const optionalFields = ['panNumber', 'esicNumber', 'uanNumber', 'permanentAddress', 'localAddress', 
-                       'bankName', 'accountNumber', 'ifscCode', 'branchName', 'fatherName', 
-                       'motherName', 'spouseName', 'emergencyContactName', 'emergencyContactPhone',
-                       'emergencyContactRelation', 'nomineeName', 'nomineeRelation', 'bloodGroup',
+                       'bankName', 'accountNumber', 'ifscCode', 'branchName', 'relativeName', 'relation',  'emergencyContactPhone',
+                       'emergencyPhone2', 'nomineeName', 'nomineeRelation', 'bloodGroup',
                        'gender', 'maritalStatus', 'pantSize', 'shirtSize', 'capSize',
-                       'permanentPincode', 'localPincode'];  // ← ADD these
+                       ];  // ← ADD these
       optionalFields.forEach(field => {
         if (employeeData[field] === '' || employeeData[field] === undefined) {
           employeeData[field] = null;
@@ -1322,11 +1343,10 @@ const updateEmployeeHandler = async (req: any, res: any) => {
     }
 
   const optionalFields = ['panNumber', 'esicNumber', 'uanNumber', 'permanentAddress', 'localAddress', 
-                       'bankName', 'accountNumber', 'ifscCode', 'branchName', 'fatherName', 
-                       'motherName', 'spouseName', 'emergencyContactName', 'emergencyContactPhone',
-                       'emergencyContactRelation', 'nomineeName', 'nomineeRelation', 'bloodGroup',
+                       'bankName', 'accountNumber', 'ifscCode', 'branchName', 'relativeName', 'relation', 'emergencyContactPhone',
+                        'nomineeName', 'nomineeRelation', 'bloodGroup',
                        'gender', 'maritalStatus', 'pantSize', 'shirtSize', 'capSize',
-                       'permanentPincode', 'localPincode'];  // ← ADD these
+                      'emergencyPhone2'];  // ← ADD these
     
     optionalFields.forEach(field => {
       if (employeeData[field] === '' || employeeData[field] === undefined) {
