@@ -555,32 +555,34 @@ const Attendance = () => {
     setStatusDialogOpen(true);
   };
 
-  const submitStatusUpdate = async () => {
-    if (!selectedEmployeeForStatus) return;
-    setUpdatingStatus(true);
-    try {
-      const response = await axios.post(`${API_URL}/attendance/update-status`, {
-        employeeId: statusUpdateData.employeeId,
-        attendanceId: statusUpdateData.attendanceId || null,
-        date: statusUpdateData.date,
-        status: statusUpdateData.newStatus,
-        remarks: statusUpdateData.remarks,
-        supervisorId: currentUser?._id || currentUser?.id,
-        employeeName: selectedEmployeeForStatus.name,
-      });
-      if (response.data.success) {
-        toast.success(`Status updated to ${statusUpdateData.newStatus.replace('-', ' ')}`);
-        setStatusDialogOpen(false);
-        await loadAttendanceRecords();
-      } else {
-        toast.error(response.data.message || "Update failed");
-      }
-    } catch (error) {
-      toast.error("Error updating status");
-    } finally {
-      setUpdatingStatus(false);
+const submitStatusUpdate = async () => {
+  if (!selectedEmployeeForStatus) return;
+  setUpdatingStatus(true);
+  try {
+    const response = await axios.post(`${API_URL}/attendance/update-status`, {
+      employeeId: statusUpdateData.employeeId,
+      attendanceId: statusUpdateData.attendanceId || null,
+      date: statusUpdateData.date,
+      status: statusUpdateData.newStatus,
+      remarks: statusUpdateData.remarks,
+      supervisorId: currentUser?._id || currentUser?.id,
+      employeeName: selectedEmployeeForStatus.name,
+      siteName: selectedEmployeeForStatus.siteName || '',   // ✅ ADD THIS LINE
+      department: selectedEmployeeForStatus.department || '', // ✅ ADD THIS LINE (optional, helps other reports)
+    });
+    if (response.data.success) {
+      toast.success(`Status updated to ${statusUpdateData.newStatus.replace('-', ' ')}`);
+      setStatusDialogOpen(false);
+      await loadAttendanceRecords();
+    } else {
+      toast.error(response.data.message || "Update failed");
     }
-  };
+  } catch (error) {
+    toast.error("Error updating status");
+  } finally {
+    setUpdatingStatus(false);
+  }
+};
 
   const handleViewPhoto = (photoUrl: string | null, type: 'checkin' | 'checkout') => {
     if (photoUrl) {
