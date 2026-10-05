@@ -119,10 +119,10 @@ const authenticate = async (req: Request, res: Response, next: NextFunction) => 
     const decoded = jwt.verify(token, process.env.JWT_SECRET as string) as any;
     (req as any).user = { id: decoded.id, role: decoded.role };
     next();
-  }  catch (err: any) {
-  console.error('JWT error:', err.message);
-  return res.status(401).json({ success: false, message: 'Invalid token' });
-
+  } catch (err: any) {
+    console.error('JWT error:', err.message);
+    return res.status(401).json({ success: false, message: 'Invalid token' });
+  }
 };
 
 // Then, when registering the route:
