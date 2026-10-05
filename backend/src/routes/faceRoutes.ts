@@ -6,7 +6,7 @@ import Employee from '../models/Employee';
 
 const FACE_SERVICE_URL = process.env.FACE_SERVICE_URL || 
   (process.env.NODE_ENV === 'production' 
-    ? 'https://sk-face-service.onrender.com' 
+    ? 'https://sk-project-face.onrender.com' 
     : 'http://localhost:8000');
 const router = Router();
 const upload = multer({ storage: multer.memoryStorage() });

@@ -12,7 +12,7 @@ import Site from '../models/Site';
 import { notifyRolesServerSide } from '../utils/notifyRoles';
 const FACE_SERVICE_URL = process.env.FACE_SERVICE_URL || 
   (process.env.NODE_ENV === 'production' 
-    ? 'https://sk-face-service.onrender.com' 
+    ? 'https://sk-project-face.onrender.com' 
     : 'http://localhost:8000');
 // ------------------ Types and helpers ------------------
 
