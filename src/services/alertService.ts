@@ -4,7 +4,7 @@ import { Alert } from '@/types/alert';
 
 // Your working backend URL
 const API_URL = import.meta.env.VITE_API_URL || 
-  (import.meta.env.DEV ? `http://localhost:5001/api` : 'https://sk-backend-btbj.onrender.com/api');
+  (import.meta.env.DEV ? `http://localhost:5001/api` : 'https://sk-backend-868y.onrender.com');
 
 
 console.log('🔧 Using alerts backend at:', API_URL);

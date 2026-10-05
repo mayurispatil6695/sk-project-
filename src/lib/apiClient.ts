@@ -7,7 +7,7 @@ const getApiUrl = () => {
     return import.meta.env.VITE_API_URL;
   }
   if (import.meta.env.PROD) {
-    return 'https://sk-backend-btbj.onrender.com/api';
+    return 'https://sk-backend-868y.onrender.com';
   }
   return 'http://localhost:5001/api';
 };

@@ -2,12 +2,12 @@
 import React, { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { 
-  Plus, 
-  FileText, 
-  Calendar, 
-  Eye, 
-  Edit, 
+import {
+  Plus,
+  FileText,
+  Calendar,
+  Eye,
+  Edit,
   Trash2,
   Loader2,
   Building,
@@ -109,11 +109,11 @@ interface AssignTaskPageProps {
   sites?: Site[];          // ← ADD
 }
 
-const API_URL = import.meta.env.VITE_API_URL || 
-  (import.meta.env.DEV ? 'http://localhost:5001/api' : 'https://sk-backend-btbj.onrender.com/api');
+const API_URL = import.meta.env.VITE_API_URL ||
+  (import.meta.env.DEV ? 'http://localhost:5001/api' : 'https://sk-backend-868y.onrender.com');
 
-const AssignTaskPage: React.FC<AssignTaskPageProps> = ({ 
-  refreshTrigger = 0, 
+const AssignTaskPage: React.FC<AssignTaskPageProps> = ({
+  refreshTrigger = 0,
   selectedSite: propSelectedSite = 'all',  // ← rename to avoid conflict
   sites: propSites = []                    // ← rename
 }) => {
@@ -129,26 +129,26 @@ const AssignTaskPage: React.FC<AssignTaskPageProps> = ({
   const [priorityFilter, setPriorityFilter] = useState<string>('all');
   const [showFilters, setShowFilters] = useState(false);
   const [sites, setSites] = useState<any[]>([]);
-  
+
   // Site filter state
- 
-  
+
+
   // State for site staff counts
   const [siteStaffCounts, setSiteStaffCounts] = useState<SiteStaffCounts>({});
   const [isLoadingStaffCounts, setIsLoadingStaffCounts] = useState(false);
-  
+
   // State for site staff data (for view dialog)
-  const [siteStaffData, setSiteStaffData] = useState<{ 
+  const [siteStaffData, setSiteStaffData] = useState<{
     managers: Array<{ userId: string; name: string; taskCount: number }>,
     supervisors: Array<{ userId: string; name: string; taskCount: number }>
   }>({ managers: [], supervisors: [] });
-  
+
   const [isLoadingStaff, setIsLoadingStaff] = useState(false);
 
-  
+
 
   // Fetch all sites for filter dropdown
- 
+
   useEffect(() => {
     if (refreshTrigger > 0) {
       fetchTasks();
@@ -179,7 +179,7 @@ const AssignTaskPage: React.FC<AssignTaskPageProps> = ({
     return () => window.removeEventListener('refreshOperations', handleRefresh as EventListener);
   }, []);
 
-  
+
 
   // Fetch staff counts whenever tasks change
   useEffect(() => {
@@ -201,7 +201,7 @@ const AssignTaskPage: React.FC<AssignTaskPageProps> = ({
     try {
       setIsLoading(true);
       const fetchedTasks = await assignTaskService.getAllAssignTasks();
-      
+
       // Calculate derived status for each task based on assigned users
       const tasksWithDerivedStatus = fetchedTasks.map(task => {
         const derivedStatus = calculateTaskStatusFromAssignments(task);
@@ -210,15 +210,15 @@ const AssignTaskPage: React.FC<AssignTaskPageProps> = ({
           derivedStatus
         };
       });
-      
+
       // Filter tasks by selected site if not 'all'
       let filteredTasks = tasksWithDerivedStatus;
       if (propSelectedSite !== 'all') {
-  filteredTasks = tasksWithDerivedStatus.filter(task => 
-    task.siteId === propSelectedSite || task.siteName === propSelectedSite
-  );
-}
-      
+        filteredTasks = tasksWithDerivedStatus.filter(task =>
+          task.siteId === propSelectedSite || task.siteName === propSelectedSite
+        );
+      }
+
       setTasks(filteredTasks);
     } catch (error) {
       console.error('Error fetching tasks:', error);
@@ -232,40 +232,40 @@ const AssignTaskPage: React.FC<AssignTaskPageProps> = ({
   const calculateTaskStatusFromAssignments = (task: AssignTask): 'pending' | 'in-progress' | 'completed' | 'cancelled' => {
     // Collect all assigned users' statuses
     const allStatuses: string[] = [];
-    
+
     if (task.assignedManagers && task.assignedManagers.length > 0) {
       allStatuses.push(...task.assignedManagers.map(m => m.status));
     }
-    
+
     if (task.assignedSupervisors && task.assignedSupervisors.length > 0) {
       allStatuses.push(...task.assignedSupervisors.map(s => s.status));
     }
-    
+
     // If no assigned users, return task status
     if (allStatuses.length === 0) {
       return task.status;
     }
-    
+
     // If any user has 'in-progress', task is in-progress
     if (allStatuses.includes('in-progress')) {
       return 'in-progress';
     }
-    
+
     // If any user has 'cancelled', task is cancelled
     if (allStatuses.includes('cancelled')) {
       return 'cancelled';
     }
-    
+
     // If all users have 'completed', task is completed
     if (allStatuses.every(status => status === 'completed')) {
       return 'completed';
     }
-    
+
     // If all users have 'pending', task is pending
     if (allStatuses.every(status => status === 'pending')) {
       return 'pending';
     }
-    
+
     // Mixed statuses (some pending, some completed) - show as in-progress
     return 'in-progress';
   };
@@ -275,16 +275,16 @@ const AssignTaskPage: React.FC<AssignTaskPageProps> = ({
     const managers = task.assignedManagers || [];
     const supervisors = task.assignedSupervisors || [];
     const totalAssigned = managers.length + supervisors.length;
-    
+
     if (totalAssigned === 0) {
       return { message: 'No staff assigned', counts: { pending: 0, inProgress: 0, completed: 0, cancelled: 0, total: 0 } };
     }
-    
+
     const allAssignments = [
       ...managers.map(m => ({ role: 'manager', ...m })),
       ...supervisors.map(s => ({ role: 'supervisor', ...s }))
     ];
-    
+
     const counts = {
       pending: allAssignments.filter(a => a.status === 'pending').length,
       inProgress: allAssignments.filter(a => a.status === 'in-progress').length,
@@ -292,7 +292,7 @@ const AssignTaskPage: React.FC<AssignTaskPageProps> = ({
       cancelled: allAssignments.filter(a => a.status === 'cancelled').length,
       total: totalAssigned
     };
-    
+
     let message = '';
     if (counts.inProgress > 0) {
       message = `${counts.inProgress} staff in progress`;
@@ -303,22 +303,22 @@ const AssignTaskPage: React.FC<AssignTaskPageProps> = ({
     } else {
       message = `${counts.pending} staff pending`;
     }
-    
+
     return { message, counts };
   };
 
   const calculateSiteStaffCounts = async () => {
     try {
       setIsLoadingStaffCounts(true);
-      
+
       // Get all tasks to calculate staff counts
       const allTasks = await taskService.getAllTasks();
-      
+
       const counts: SiteStaffCounts = {};
-      
+
       allTasks.forEach(task => {
         if (!task.siteId) return;
-        
+
         if (!counts[task.siteId]) {
           counts[task.siteId] = {
             managers: 0,
@@ -327,11 +327,11 @@ const AssignTaskPage: React.FC<AssignTaskPageProps> = ({
             totalSupervisors: 0
           };
         }
-        
+
         // Count unique managers and supervisors for this site
         const uniqueManagers = new Set();
         const uniqueSupervisors = new Set();
-        
+
         task.assignedUsers?.forEach(user => {
           if (user.role === 'manager') {
             uniqueManagers.add(user.userId);
@@ -339,15 +339,15 @@ const AssignTaskPage: React.FC<AssignTaskPageProps> = ({
             uniqueSupervisors.add(user.userId);
           }
         });
-        
+
         counts[task.siteId].managers = uniqueManagers.size;
         counts[task.siteId].supervisors = uniqueSupervisors.size;
-        
+
         // Also get total counts including duplicates across tasks
         counts[task.siteId].totalManagers += task.assignedUsers?.filter(u => u.role === 'manager').length || 0;
         counts[task.siteId].totalSupervisors += task.assignedUsers?.filter(u => u.role === 'supervisor').length || 0;
       });
-      
+
       setSiteStaffCounts(counts);
       console.log('✅ Site staff counts calculated:', counts);
     } catch (error) {
@@ -387,7 +387,7 @@ const AssignTaskPage: React.FC<AssignTaskPageProps> = ({
         setSelectedTask(task);
       }
       setShowViewDialog(true);
-      
+
       // Fetch staff for this site
       await fetchSiteStaff(task.siteId);
     } catch (error) {
@@ -418,7 +418,7 @@ const AssignTaskPage: React.FC<AssignTaskPageProps> = ({
       await assignTaskService.deleteAssignTask(taskId);
       toast.success('Task deleted successfully');
       fetchTasks();
-      
+
       // Close view dialog if open and it's the deleted task
       if (selectedTask && selectedTask._id === taskId) {
         setShowViewDialog(false);
@@ -534,12 +534,12 @@ const AssignTaskPage: React.FC<AssignTaskPageProps> = ({
     // Search filter
     if (searchQuery) {
       const query = searchQuery.toLowerCase();
-      const matchesSearch = 
+      const matchesSearch =
         task.taskTitle.toLowerCase().includes(query) ||
         task.description.toLowerCase().includes(query) ||
         task.siteName.toLowerCase().includes(query) ||
         task.clientName.toLowerCase().includes(query);
-      
+
       if (!matchesSearch) return false;
     }
 
@@ -578,7 +578,7 @@ const AssignTaskPage: React.FC<AssignTaskPageProps> = ({
         </Button>
       </div>
 
-      
+
 
       {/* Summary Cards */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
@@ -591,7 +591,7 @@ const AssignTaskPage: React.FC<AssignTaskPageProps> = ({
             <FileText className="h-8 w-8 text-blue-500" />
           </CardContent>
         </Card>
-        
+
         <Card className="border-l-4 border-l-yellow-500 hover:shadow-md transition-shadow">
           <CardContent className="p-4 flex items-center justify-between">
             <div>
@@ -601,7 +601,7 @@ const AssignTaskPage: React.FC<AssignTaskPageProps> = ({
             <Clock className="h-8 w-8 text-yellow-500" />
           </CardContent>
         </Card>
-        
+
         <Card className="border-l-4 border-l-green-500 hover:shadow-md transition-shadow">
           <CardContent className="p-4 flex items-center justify-between">
             <div>
@@ -611,7 +611,7 @@ const AssignTaskPage: React.FC<AssignTaskPageProps> = ({
             <CheckCircle className="h-8 w-8 text-green-500" />
           </CardContent>
         </Card>
-        
+
         <Card className="border-l-4 border-l-red-500 hover:shadow-md transition-shadow">
           <CardContent className="p-4 flex items-center justify-between">
             <div>
@@ -704,7 +704,7 @@ const AssignTaskPage: React.FC<AssignTaskPageProps> = ({
               <Calendar className="h-12 w-12 mx-auto mb-4 opacity-50" />
               <p className="text-lg">No tasks found</p>
               <p className="text-sm">
-                {tasks.length === 0 
+                {tasks.length === 0
                   ? 'Click the "Assign New Task" button to create your first task'
                   : 'Try adjusting your search or filters'}
               </p>
@@ -729,7 +729,7 @@ const AssignTaskPage: React.FC<AssignTaskPageProps> = ({
                     const staffCounts = getStaffCountsForSite(task.siteId);
                     const progress = getAssignmentProgressSummary(task);
                     const displayStatus = task.derivedStatus || task.status;
-                    
+
                     return (
                       <TableRow key={task._id}>
                         <TableCell>
@@ -1001,7 +1001,7 @@ const AssignTaskPage: React.FC<AssignTaskPageProps> = ({
                             ...(selectedTask.assignedManagers || []).map(m => ({ role: 'manager', ...m })),
                             ...(selectedTask.assignedSupervisors || []).map(s => ({ role: 'supervisor', ...s }))
                           ];
-                          
+
                           const counts = {
                             pending: allAssignments.filter(a => a.status === 'pending').length,
                             inProgress: allAssignments.filter(a => a.status === 'in-progress').length,
@@ -1009,15 +1009,15 @@ const AssignTaskPage: React.FC<AssignTaskPageProps> = ({
                             cancelled: allAssignments.filter(a => a.status === 'cancelled').length,
                             total: allAssignments.length
                           };
-                          
+
                           return (
                             <div className="space-y-2">
                               {counts.inProgress > 0 && (
                                 <div className="flex items-center gap-2">
                                   <span className="text-xs w-20">In Progress:</span>
                                   <div className="flex-1 h-2 bg-gray-100 rounded-full overflow-hidden">
-                                    <div 
-                                      className="h-full bg-blue-500 rounded-full" 
+                                    <div
+                                      className="h-full bg-blue-500 rounded-full"
                                       style={{ width: `${(counts.inProgress / counts.total) * 100}%` }}
                                     />
                                   </div>
@@ -1028,8 +1028,8 @@ const AssignTaskPage: React.FC<AssignTaskPageProps> = ({
                                 <div className="flex items-center gap-2">
                                   <span className="text-xs w-20">Completed:</span>
                                   <div className="flex-1 h-2 bg-gray-100 rounded-full overflow-hidden">
-                                    <div 
-                                      className="h-full bg-green-500 rounded-full" 
+                                    <div
+                                      className="h-full bg-green-500 rounded-full"
                                       style={{ width: `${(counts.completed / counts.total) * 100}%` }}
                                     />
                                   </div>
@@ -1040,8 +1040,8 @@ const AssignTaskPage: React.FC<AssignTaskPageProps> = ({
                                 <div className="flex items-center gap-2">
                                   <span className="text-xs w-20">Pending:</span>
                                   <div className="flex-1 h-2 bg-gray-100 rounded-full overflow-hidden">
-                                    <div 
-                                      className="h-full bg-yellow-500 rounded-full" 
+                                    <div
+                                      className="h-full bg-yellow-500 rounded-full"
                                       style={{ width: `${(counts.pending / counts.total) * 100}%` }}
                                     />
                                   </div>
@@ -1133,7 +1133,7 @@ const AssignTaskPage: React.FC<AssignTaskPageProps> = ({
                             <Building className="h-4 w-4" />
                             All Staff at {selectedTask.siteName}
                           </p>
-                          
+
                           {/* All managers at site */}
                           {siteStaffData.managers.length > 0 && (
                             <div className="mb-4">
@@ -1145,14 +1145,13 @@ const AssignTaskPage: React.FC<AssignTaskPageProps> = ({
                                 {siteStaffData.managers.map(manager => {
                                   const isInThisTask = selectedTask.assignedManagers?.some(m => m.userId === manager.userId);
                                   return (
-                                    <Badge 
-                                      key={manager.userId} 
-                                      variant="outline" 
-                                      className={`flex items-center gap-1 py-1 px-2 ${
-                                        isInThisTask 
-                                          ? 'bg-blue-100 border-blue-300 text-blue-700' 
+                                    <Badge
+                                      key={manager.userId}
+                                      variant="outline"
+                                      className={`flex items-center gap-1 py-1 px-2 ${isInThisTask
+                                          ? 'bg-blue-100 border-blue-300 text-blue-700'
                                           : 'bg-gray-50'
-                                      }`}
+                                        }`}
                                     >
                                       <User className={`h-3 w-3 ${isInThisTask ? 'text-blue-600' : 'text-gray-500'}`} />
                                       {manager.name}
@@ -1168,7 +1167,7 @@ const AssignTaskPage: React.FC<AssignTaskPageProps> = ({
                               </div>
                             </div>
                           )}
-                          
+
                           {/* All supervisors at site */}
                           {siteStaffData.supervisors.length > 0 && (
                             <div>
@@ -1180,14 +1179,13 @@ const AssignTaskPage: React.FC<AssignTaskPageProps> = ({
                                 {siteStaffData.supervisors.map(supervisor => {
                                   const isInThisTask = selectedTask.assignedSupervisors?.some(s => s.userId === supervisor.userId);
                                   return (
-                                    <Badge 
-                                      key={supervisor.userId} 
-                                      variant="outline" 
-                                      className={`flex items-center gap-1 py-1 px-2 ${
-                                        isInThisTask 
-                                          ? 'bg-emerald-100 border-emerald-300 text-emerald-700' 
+                                    <Badge
+                                      key={supervisor.userId}
+                                      variant="outline"
+                                      className={`flex items-center gap-1 py-1 px-2 ${isInThisTask
+                                          ? 'bg-emerald-100 border-emerald-300 text-emerald-700'
                                           : 'bg-gray-50'
-                                      }`}
+                                        }`}
                                     >
                                       <Briefcase className={`h-3 w-3 ${isInThisTask ? 'text-emerald-600' : 'text-gray-500'}`} />
                                       {supervisor.name}

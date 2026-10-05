@@ -13,8 +13,8 @@ import { toast } from "sonner";
 import { motion } from "framer-motion";
 import axios from "axios";
 
-const API_URL = import.meta.env.VITE_API_URL || 
-  (import.meta.env.DEV ? 'http://localhost:5001/api' : 'https://sk-backend-btbj.onrender.com/api');
+const API_URL = import.meta.env.VITE_API_URL ||
+  (import.meta.env.DEV ? 'http://localhost:5001/api' : 'https://sk-backend-868y.onrender.com');
 
 const UsersRoles = () => {
   const [searchQuery, setSearchQuery] = useState("");
@@ -73,7 +73,7 @@ const UsersRoles = () => {
     const newStatus = currentStatus === "active" ? "inactive" : "active";
     try {
       await axios.patch(`${API_URL}/users/${userId}/toggle-status`);
-      setUsers(users.map(user => 
+      setUsers(users.map(user =>
         user._id === userId ? { ...user, isActive: newStatus === "active" } : user
       ));
       toast.success(`User ${newStatus === "active" ? "activated" : "deactivated"} successfully!`);
@@ -82,7 +82,7 @@ const UsersRoles = () => {
     }
   };
 
-  const filteredUsers = users.filter(user => 
+  const filteredUsers = users.filter(user =>
     user.name?.toLowerCase().includes(searchQuery.toLowerCase()) ||
     user.email?.toLowerCase().includes(searchQuery.toLowerCase())
   );
@@ -90,8 +90,8 @@ const UsersRoles = () => {
   return (
     <div className="min-h-screen bg-background">
       <DashboardHeader title="Users & Roles Management" />
-      
-      <motion.div 
+
+      <motion.div
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
         className="p-6 space-y-6"
@@ -113,29 +113,29 @@ const UsersRoles = () => {
                 <form onSubmit={handleAddUser} className="space-y-4">
                   <div className="space-y-2">
                     <Label htmlFor="name">Full Name</Label>
-                    <Input 
-                      id="name" 
-                      placeholder="Enter full name" 
-                      required 
+                    <Input
+                      id="name"
+                      placeholder="Enter full name"
+                      required
                       value={formData.name}
                       onChange={(e) => setFormData({ ...formData, name: e.target.value })}
                     />
                   </div>
                   <div className="space-y-2">
                     <Label htmlFor="email">Email</Label>
-                    <Input 
-                      id="email" 
-                      type="email" 
-                      placeholder="Enter email" 
-                      required 
+                    <Input
+                      id="email"
+                      type="email"
+                      placeholder="Enter email"
+                      required
                       value={formData.email}
                       onChange={(e) => setFormData({ ...formData, email: e.target.value })}
                     />
                   </div>
                   <div className="space-y-2">
                     <Label htmlFor="role">Role</Label>
-                    <Select 
-                      required 
+                    <Select
+                      required
                       value={formData.role}
                       onValueChange={(value) => setFormData({ ...formData, role: value })}
                     >
@@ -152,11 +152,11 @@ const UsersRoles = () => {
                   </div>
                   <div className="space-y-2">
                     <Label htmlFor="password">Password</Label>
-                    <Input 
-                      id="password" 
-                      type="password" 
-                      placeholder="Enter password" 
-                      required 
+                    <Input
+                      id="password"
+                      type="password"
+                      placeholder="Enter password"
+                      required
                       value={formData.password}
                       onChange={(e) => setFormData({ ...formData, password: e.target.value })}
                     />
@@ -181,7 +181,7 @@ const UsersRoles = () => {
                 />
               </div>
             </div>
-            
+
             {loading ? (
               <div className="flex justify-center py-8">
                 <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
@@ -215,8 +215,8 @@ const UsersRoles = () => {
                           <Button variant="ghost" size="icon">
                             <Edit className="h-4 w-4" />
                           </Button>
-                          <Button 
-                            variant="ghost" 
+                          <Button
+                            variant="ghost"
                             size="icon"
                             onClick={() => toggleStatus(user._id, user.isActive ? "active" : "inactive")}
                           >

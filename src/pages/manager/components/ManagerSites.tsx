@@ -7,8 +7,8 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { 
-  Building, MapPin, Camera, Upload, Plus, Eye, Calendar, 
+import {
+  Building, MapPin, Camera, Upload, Plus, Eye, Calendar,
   Loader2, AlertCircle, CheckCircle, XCircle, Clock,
   Image, FileText, ChevronRight, Search, Filter, Users,
   Briefcase, User, RefreshCw, Trash2, Download
@@ -19,8 +19,8 @@ import { useRole } from "@/context/RoleContext";
 import taskService from "@/services/TaskService";
 import siteVisitService, { Site, SiteVisitReport, WorkQuery } from "@/services/SiteVisitService";
 import { motion } from "framer-motion";
-const API_URL = import.meta.env.VITE_API_URL || 
-  (import.meta.env.DEV ? 'http://localhost:5001/api' : 'https://sk-backend-btbj.onrender.com/api');
+const API_URL = import.meta.env.VITE_API_URL ||
+  (import.meta.env.DEV ? 'http://localhost:5001/api' : 'https://sk-backend-868y.onrender.com');
 // Camera Component
 interface CameraComponentProps {
   onCapture: (imageData: string) => void;
@@ -50,18 +50,18 @@ const CameraComponent: React.FC<CameraComponentProps> = ({ onCapture, onClose })
       const devices = await navigator.mediaDevices.enumerateDevices();
       const videoDevices = devices.filter(device => device.kind === 'videoinput');
       setDevices(videoDevices);
-      
+
       if (videoDevices.length === 0) {
         setError('No camera found on this device');
         setHasPermission(false);
         return;
       }
-      
+
       const stream = await navigator.mediaDevices.getUserMedia({ video: true });
       stream.getTracks().forEach(track => track.stop());
       setHasPermission(true);
       setError(null);
-      
+
       if (videoDevices.length > 0 && !selectedDeviceId) {
         setSelectedDeviceId(videoDevices[0].deviceId);
       }
@@ -84,14 +84,14 @@ const CameraComponent: React.FC<CameraComponentProps> = ({ onCapture, onClose })
     try {
       setIsLoading(true);
       stopCamera();
-      
+
       const constraints: MediaStreamConstraints = {
         video: selectedDeviceId ? { deviceId: { exact: selectedDeviceId } } : true
       };
-      
+
       const stream = await navigator.mediaDevices.getUserMedia(constraints);
       streamRef.current = stream;
-      
+
       if (videoRef.current) {
         videoRef.current.srcObject = stream;
         videoRef.current.onloadedmetadata = () => {
@@ -121,7 +121,7 @@ const CameraComponent: React.FC<CameraComponentProps> = ({ onCapture, onClose })
       const video = videoRef.current;
       const canvas = canvasRef.current;
       const context = canvas.getContext('2d');
-      
+
       if (context && video.videoWidth > 0 && video.videoHeight > 0) {
         canvas.width = video.videoWidth;
         canvas.height = video.videoHeight;
@@ -181,7 +181,7 @@ const CameraComponent: React.FC<CameraComponentProps> = ({ onCapture, onClose })
           </select>
         </div>
       )}
-      
+
       <div className="relative bg-gray-100 rounded-lg overflow-hidden" style={{ minHeight: '320px' }}>
         <video
           ref={videoRef}
@@ -196,7 +196,7 @@ const CameraComponent: React.FC<CameraComponentProps> = ({ onCapture, onClose })
           </div>
         )}
       </div>
-      
+
       <div className="flex gap-2">
         <Button onClick={capturePhoto} className="flex-1 bg-blue-600 hover:bg-blue-700">
           <Camera className="h-4 w-4 mr-2" />
@@ -206,7 +206,7 @@ const CameraComponent: React.FC<CameraComponentProps> = ({ onCapture, onClose })
           Cancel
         </Button>
       </div>
-      
+
       <canvas ref={canvasRef} className="hidden" />
     </div>
   );
@@ -223,98 +223,98 @@ const ManagerSites = () => {
   const [selectedReport, setSelectedReport] = useState<SiteVisitReport | null>(null);
   const [searchQuery, setSearchQuery] = useState("");
   const [filterStatus, setFilterStatus] = useState<string>("all");
-  
+
   // Camera states
   const [showCameraDialog, setShowCameraDialog] = useState(false);
   const [capturedImage, setCapturedImage] = useState<string | null>(null);
   const [uploadingPhoto, setUploadingPhoto] = useState(false);
-  
+
   // Form states
   const [photos, setPhotos] = useState<File[]>([]);
   const [workQueries, setWorkQueries] = useState<WorkQuery[]>([]);
   const [currentQuery, setCurrentQuery] = useState<Partial<WorkQuery>>({});
-  
+
   // Upload states
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [photoPreviews, setPhotoPreviews] = useState<string[]>([]);
-  
+
   // Get current user info
   const managerId = authUser?._id || authUser?.id || "";
   const managerName = authUser?.name || "Manager";
-  
+
   // Fetch assigned sites
   // Fetch assigned sites - SHOW ALL SITES
-// src/components/Manager/ManagerSites.tsx - Replace fetchAssignedSites
+  // src/components/Manager/ManagerSites.tsx - Replace fetchAssignedSites
 
-const fetchAssignedSites = useCallback(async () => {
-  try {
-    setIsLoading(true);
-    console.log('🔍 Fetching sites for manager...');
-    
-    // Get ALL sites directly from API
-    const token = localStorage.getItem('sk_token');
-    const response = await fetch(`${API_URL}/sites`, {
-      method: 'GET',
-      headers: {
-        'Content-Type': 'application/json',
-        ...(token && { 'Authorization': `Bearer ${token}` })
+  const fetchAssignedSites = useCallback(async () => {
+    try {
+      setIsLoading(true);
+      console.log('🔍 Fetching sites for manager...');
+
+      // Get ALL sites directly from API
+      const token = localStorage.getItem('sk_token');
+      const response = await fetch(`${API_URL}/sites`, {
+        method: 'GET',
+        headers: {
+          'Content-Type': 'application/json',
+          ...(token && { 'Authorization': `Bearer ${token}` })
+        }
+      });
+
+      console.log('📡 Sites API response status:', response.status);
+
+      if (!response.ok) {
+        console.error('❌ Failed to fetch sites:', response.status);
+        setSites([]);
+        setIsLoading(false);
+        return;
       }
-    });
-    
-    console.log('📡 Sites API response status:', response.status);
-    
-    if (!response.ok) {
-      console.error('❌ Failed to fetch sites:', response.status);
+
+      const data = await response.json();
+      console.log('📡 Sites data:', data);
+
+      // Extract sites from response
+      let allSites = [];
+      if (data.success && Array.isArray(data.data)) {
+        allSites = data.data;
+      } else if (Array.isArray(data)) {
+        allSites = data;
+      } else if (Array.isArray(data.sites)) {
+        allSites = data.sites;
+      } else {
+        console.warn('⚠️ No sites found in response');
+        setSites([]);
+        setIsLoading(false);
+        return;
+      }
+
+      console.log(`📡 Found ${allSites.length} sites`);
+
+      // Transform sites to match the Site interface
+      const transformedSites = allSites.map((site: any) => ({
+        _id: site._id || site.id,
+        name: site.name || 'Unnamed Site',
+        clientName: site.clientName || site.client || 'N/A',
+        location: site.location || '',
+        status: site.status || 'active',
+        lastVisited: null,
+        visitCount: 0,
+        managerCount: site.managerCount || 0,
+        supervisorCount: site.supervisorCount || 0
+      }));
+
+      setSites(transformedSites);
+      console.log(`✅ Loaded ${transformedSites.length} sites for manager`);
+
+    } catch (error: any) {
+      console.error('❌ Error fetching sites:', error);
+      toast.error(error.message || 'Failed to load sites');
       setSites([]);
+    } finally {
       setIsLoading(false);
-      return;
     }
-    
-    const data = await response.json();
-    console.log('📡 Sites data:', data);
-    
-    // Extract sites from response
-    let allSites = [];
-    if (data.success && Array.isArray(data.data)) {
-      allSites = data.data;
-    } else if (Array.isArray(data)) {
-      allSites = data;
-    } else if (Array.isArray(data.sites)) {
-      allSites = data.sites;
-    } else {
-      console.warn('⚠️ No sites found in response');
-      setSites([]);
-      setIsLoading(false);
-      return;
-    }
-    
-    console.log(`📡 Found ${allSites.length} sites`);
-    
-    // Transform sites to match the Site interface
-    const transformedSites = allSites.map((site: any) => ({
-      _id: site._id || site.id,
-      name: site.name || 'Unnamed Site',
-      clientName: site.clientName || site.client || 'N/A',
-      location: site.location || '',
-      status: site.status || 'active',
-      lastVisited: null,
-      visitCount: 0,
-      managerCount: site.managerCount || 0,
-      supervisorCount: site.supervisorCount || 0
-    }));
-    
-    setSites(transformedSites);
-    console.log(`✅ Loaded ${transformedSites.length} sites for manager`);
-    
-  } catch (error: any) {
-    console.error('❌ Error fetching sites:', error);
-    toast.error(error.message || 'Failed to load sites');
-    setSites([]);
-  } finally {
-    setIsLoading(false);
-  }
-}, []);
-  
+  }, []);
+
   // Fetch manager's reports
   const fetchReports = useCallback(async () => {
     try {
@@ -324,37 +324,37 @@ const fetchAssignedSites = useCallback(async () => {
       console.error("Error fetching reports:", error);
     }
   }, [managerId]);
-  
+
   useEffect(() => {
     if (managerId && isAuthenticated) {
       fetchAssignedSites();
       fetchReports();
     }
   }, [managerId, isAuthenticated, fetchAssignedSites, fetchReports]);
-  
+
   // Filter sites based on search and status
   const filteredSites = sites.filter(site => {
-    const matchesSearch = searchQuery === "" || 
+    const matchesSearch = searchQuery === "" ||
       site.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
       site.clientName.toLowerCase().includes(searchQuery.toLowerCase());
-    
-    const matchesStatus = filterStatus === "all" || 
+
+    const matchesStatus = filterStatus === "all" ||
       (filterStatus === "visited" && site.visitCount > 0) ||
       (filterStatus === "not-visited" && site.visitCount === 0);
-    
+
     return matchesSearch && matchesStatus;
   });
-  
+
   // Handle photo selection from file upload
   const handlePhotoSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
     const files = Array.from(e.target.files || []);
     setPhotos(prev => [...prev, ...files]);
-    
+
     // Create previews
     const newPreviews = files.map(file => URL.createObjectURL(file));
     setPhotoPreviews(prev => [...prev, ...newPreviews]);
   };
-  
+
   // Handle captured photo from camera
   const handleCapturePhoto = (imageData: string) => {
     setCapturedImage(imageData);
@@ -375,55 +375,55 @@ const fetchAssignedSites = useCallback(async () => {
         toast.error("Failed to process captured photo");
       });
   };
-  
+
   // Remove photo
   const removePhoto = (index: number) => {
     setPhotos(prev => prev.filter((_, i) => i !== index));
     URL.revokeObjectURL(photoPreviews[index]);
     setPhotoPreviews(prev => prev.filter((_, i) => i !== index));
   };
-  
+
   // Add work query
   const addWorkQuery = () => {
     if (!currentQuery.title?.trim()) {
       toast.error("Please enter a query title");
       return;
     }
-    
+
     if (!currentQuery.description?.trim()) {
       toast.error("Please enter a query description");
       return;
     }
-    
+
     setWorkQueries(prev => [...prev, {
       title: currentQuery.title!,
       description: currentQuery.description!,
       priority: currentQuery.priority || 'medium',
       status: 'pending'
     }]);
-    
+
     setCurrentQuery({});
   };
-  
+
   // Remove work query
   const removeWorkQuery = (index: number) => {
     setWorkQueries(prev => prev.filter((_, i) => i !== index));
   };
-  
+
   // Submit site visit report
   const submitReport = async () => {
     if (!selectedSite) {
       toast.error("No site selected");
       return;
     }
-    
+
     if (photos.length === 0) {
       toast.error("Please take at least one photo");
       return;
     }
-    
+
     setIsSubmitting(true);
-    
+
     try {
       const reportData = {
         siteId: selectedSite._id,
@@ -435,9 +435,9 @@ const fetchAssignedSites = useCallback(async () => {
         photos: [],
         updates: []
       };
-      
+
       const result = await siteVisitService.createReport(reportData, photos);
-      
+
       toast.success("Site visit report submitted successfully!");
       setReportDialogOpen(false);
       setPhotos([]);
@@ -452,7 +452,7 @@ const fetchAssignedSites = useCallback(async () => {
       setIsSubmitting(false);
     }
   };
-  
+
   // Get status badge
   const getStatusBadge = (status: string) => {
     switch (status) {
@@ -466,7 +466,7 @@ const fetchAssignedSites = useCallback(async () => {
         return <Badge variant="outline">{status}</Badge>;
     }
   };
-  
+
   if (!isAuthenticated) {
     return (
       <div className="flex items-center justify-center min-h-[400px]">
@@ -480,7 +480,7 @@ const fetchAssignedSites = useCallback(async () => {
       </div>
     );
   }
-  
+
   if (isLoading) {
     return (
       <div className="flex items-center justify-center min-h-[400px]">
@@ -489,7 +489,7 @@ const fetchAssignedSites = useCallback(async () => {
       </div>
     );
   }
-  
+
   return (
     <motion.div
       initial={{ opacity: 0, y: 20 }}
@@ -510,7 +510,7 @@ const fetchAssignedSites = useCallback(async () => {
             </div>
           </CardContent>
         </Card>
-        
+
         <Card className="border-l-4 border-l-green-500">
           <CardContent className="p-3 sm:p-4">
             <div className="flex items-center justify-between">
@@ -522,7 +522,7 @@ const fetchAssignedSites = useCallback(async () => {
             </div>
           </CardContent>
         </Card>
-        
+
         <Card className="border-l-4 border-l-purple-500">
           <CardContent className="p-3 sm:p-4">
             <div className="flex items-center justify-between">
@@ -535,7 +535,7 @@ const fetchAssignedSites = useCallback(async () => {
           </CardContent>
         </Card>
       </div>
-      
+
       {/* Search and Filter - Responsive */}
       <div className="flex flex-col sm:flex-row gap-3 sm:gap-4">
         <div className="flex-1">
@@ -561,7 +561,7 @@ const fetchAssignedSites = useCallback(async () => {
           </select>
         </div>
       </div>
-      
+
       {/* Sites Grid - Responsive */}
       {filteredSites.length === 0 ? (
         <Card className="border-dashed">
@@ -569,8 +569,8 @@ const fetchAssignedSites = useCallback(async () => {
             <Building className="h-10 w-10 sm:h-12 sm:w-12 text-muted-foreground mx-auto mb-4" />
             <h3 className="text-base sm:text-lg font-semibold mb-2">No Sites Found</h3>
             <p className="text-xs sm:text-sm text-muted-foreground px-4">
-              {searchQuery || filterStatus !== "all" 
-                ? "No sites match your search criteria." 
+              {searchQuery || filterStatus !== "all"
+                ? "No sites match your search criteria."
                 : "You haven't been assigned to any sites yet. Contact your supervisor for assignments."}
             </p>
           </CardContent>
@@ -595,7 +595,7 @@ const fetchAssignedSites = useCallback(async () => {
                       {site.status}
                     </Badge>
                   </div>
-                  
+
                   <div className="space-y-1.5 sm:space-y-2 mb-3 sm:mb-4">
                     {site.location && (
                       <div className="flex items-center gap-1.5 sm:gap-2 text-xs sm:text-sm">
@@ -619,9 +619,9 @@ const fetchAssignedSites = useCallback(async () => {
                       <span>Total visits: {site.visitCount}</span>
                     </div>
                   </div>
-                  
+
                   <div className="flex gap-2">
-                    <Button 
+                    <Button
                       className="flex-1 h-8 sm:h-9 text-xs sm:text-sm"
                       onClick={() => {
                         setSelectedSite(site);
@@ -631,8 +631,8 @@ const fetchAssignedSites = useCallback(async () => {
                       <Camera className="h-3 w-3 sm:h-4 sm:w-4 mr-1 sm:mr-2" />
                       Start Visit
                     </Button>
-                    <Button 
-                      variant="outline" 
+                    <Button
+                      variant="outline"
                       className="flex-1 h-8 sm:h-9 text-xs sm:text-sm"
                       onClick={() => {
                         const siteReports = reports.filter(r => r.siteId === site._id);
@@ -654,7 +654,7 @@ const fetchAssignedSites = useCallback(async () => {
           ))}
         </div>
       )}
-      
+
       {/* My Reports Section - Responsive */}
       {reports.length > 0 && (
         <Card>
@@ -667,9 +667,9 @@ const fetchAssignedSites = useCallback(async () => {
           <CardContent className="p-3 sm:p-6 pt-0">
             <div className="space-y-2 sm:space-y-3">
               {reports.slice(0, 5).map((report) => (
-                <Card 
-                  key={report._id} 
-                  className="hover:shadow-md transition-shadow cursor-pointer" 
+                <Card
+                  key={report._id}
+                  className="hover:shadow-md transition-shadow cursor-pointer"
                   onClick={() => {
                     setSelectedReport(report);
                     setViewReportDialogOpen(true);
@@ -703,7 +703,7 @@ const fetchAssignedSites = useCallback(async () => {
           </CardContent>
         </Card>
       )}
-      
+
       {/* Start Visit Dialog */}
       <Dialog open={reportDialogOpen} onOpenChange={setReportDialogOpen}>
         <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto p-4 sm:p-6">
@@ -715,7 +715,7 @@ const fetchAssignedSites = useCallback(async () => {
               Document your site visit with photos and work queries. Your report will be reviewed by Super Admin.
             </DialogDescription>
           </DialogHeader>
-          
+
           <Tabs defaultValue="photos" className="mt-4">
             <TabsList className="grid w-full grid-cols-3 h-auto p-1">
               <TabsTrigger value="photos" className="flex items-center gap-1 sm:gap-2 py-1.5 sm:py-2 text-xs sm:text-sm">
@@ -731,11 +731,11 @@ const fetchAssignedSites = useCallback(async () => {
                 Review & Submit
               </TabsTrigger>
             </TabsList>
-            
+
             <TabsContent value="photos" className="space-y-4 mt-4">
               <div className="flex flex-col sm:flex-row gap-2">
-                <Button 
-                  variant="outline" 
+                <Button
+                  variant="outline"
                   className="flex-1 h-9 sm:h-10 text-sm"
                   onClick={() => setShowCameraDialog(true)}
                 >
@@ -758,13 +758,13 @@ const fetchAssignedSites = useCallback(async () => {
                   </Button>
                 </label>
               </div>
-              
+
               {photoPreviews.length > 0 && (
                 <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-2 sm:gap-3 mt-4">
                   {photoPreviews.map((preview, index) => (
                     <div key={index} className="relative group">
-                      <img 
-                        src={preview} 
+                      <img
+                        src={preview}
                         alt={`Site photo ${index + 1}`}
                         className="w-full h-24 sm:h-32 object-cover rounded-lg"
                       />
@@ -778,7 +778,7 @@ const fetchAssignedSites = useCallback(async () => {
                   ))}
                 </div>
               )}
-              
+
               {photos.length === 0 && (
                 <div className="text-center py-4 text-amber-600 bg-amber-50 rounded-lg text-sm">
                   <AlertCircle className="h-4 w-4 inline mr-2" />
@@ -786,7 +786,7 @@ const fetchAssignedSites = useCallback(async () => {
                 </div>
               )}
             </TabsContent>
-            
+
             <TabsContent value="queries" className="space-y-4 mt-4">
               <div className="border rounded-lg p-3 sm:p-4">
                 <h4 className="font-medium text-sm sm:text-base mb-3">Add Work Query</h4>
@@ -821,7 +821,7 @@ const fetchAssignedSites = useCallback(async () => {
                   </div>
                 </div>
               </div>
-              
+
               {workQueries.length > 0 && (
                 <div className="space-y-3">
                   <h4 className="font-medium text-sm sm:text-base">Work Queries ({workQueries.length})</h4>
@@ -833,7 +833,7 @@ const fetchAssignedSites = useCallback(async () => {
                           <div className="text-xs sm:text-sm text-muted-foreground mt-1 break-words">{query.description}</div>
                           <Badge variant={
                             query.priority === 'high' ? 'destructive' :
-                            query.priority === 'medium' ? 'default' : 'secondary'
+                              query.priority === 'medium' ? 'default' : 'secondary'
                           } className="mt-2 text-xs">
                             {query.priority} priority
                           </Badge>
@@ -852,7 +852,7 @@ const fetchAssignedSites = useCallback(async () => {
                 </div>
               )}
             </TabsContent>
-            
+
             <TabsContent value="review" className="space-y-4 mt-4">
               <div className="space-y-3">
                 <div className="flex justify-between p-3 bg-gray-50 rounded-lg text-sm">
@@ -867,7 +867,7 @@ const fetchAssignedSites = useCallback(async () => {
                   <span className="font-medium">Work Queries:</span>
                   <span>{workQueries.length} query(s)</span>
                 </div>
-                
+
                 {photos.length === 0 && (
                   <div className="p-3 bg-red-50 text-red-700 rounded-lg text-sm">
                     <AlertCircle className="h-4 w-4 inline mr-2" />
@@ -875,9 +875,9 @@ const fetchAssignedSites = useCallback(async () => {
                   </div>
                 )}
               </div>
-              
-              <Button 
-                className="w-full h-9 sm:h-10" 
+
+              <Button
+                className="w-full h-9 sm:h-10"
                 onClick={submitReport}
                 disabled={photos.length === 0 || isSubmitting}
               >
@@ -897,7 +897,7 @@ const fetchAssignedSites = useCallback(async () => {
           </Tabs>
         </DialogContent>
       </Dialog>
-      
+
       {/* Camera Dialog */}
       <Dialog open={showCameraDialog} onOpenChange={(open) => {
         if (!open) {
@@ -915,24 +915,24 @@ const fetchAssignedSites = useCallback(async () => {
               Capture a photo of the site condition. Ensure good lighting for clear photos.
             </DialogDescription>
           </DialogHeader>
-          
+
           <div className="px-4 pb-4">
             {!capturedImage ? (
-              <CameraComponent 
+              <CameraComponent
                 onCapture={handleCapturePhoto}
                 onClose={() => setShowCameraDialog(false)}
               />
             ) : (
               <>
                 <div className="bg-gray-100 rounded-lg overflow-hidden">
-                  <img 
-                    src={capturedImage} 
-                    alt="Captured" 
+                  <img
+                    src={capturedImage}
+                    alt="Captured"
                     className="w-full h-64 sm:h-80 object-contain"
                   />
                 </div>
                 <div className="flex gap-2 mt-4">
-                  <Button 
+                  <Button
                     onClick={() => {
                       fetch(capturedImage)
                         .then(res => res.blob())
@@ -951,8 +951,8 @@ const fetchAssignedSites = useCallback(async () => {
                     <CheckCircle className="h-4 w-4 mr-2" />
                     Use This Photo
                   </Button>
-                  <Button 
-                    variant="outline" 
+                  <Button
+                    variant="outline"
                     onClick={() => {
                       setCapturedImage(null);
                     }}
@@ -965,13 +965,13 @@ const fetchAssignedSites = useCallback(async () => {
               </>
             )}
           </div>
-          
+
           <div className="px-4 py-3 bg-gray-50 border-t text-xs text-gray-500">
             <span className="font-semibold">Tip:</span> Ensure good lighting and capture the site condition clearly.
           </div>
         </DialogContent>
       </Dialog>
-      
+
       {/* View Report Dialog */}
       <Dialog open={viewReportDialogOpen} onOpenChange={setViewReportDialogOpen}>
         <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto p-4 sm:p-6">
@@ -980,7 +980,7 @@ const fetchAssignedSites = useCallback(async () => {
               Site Visit Report - {selectedReport?.siteName}
             </DialogTitle>
           </DialogHeader>
-          
+
           {selectedReport && (
             <div className="space-y-4 sm:space-y-6">
               <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2 p-3 bg-gray-50 rounded-lg">
@@ -990,7 +990,7 @@ const fetchAssignedSites = useCallback(async () => {
                 </div>
                 {getStatusBadge(selectedReport.status)}
               </div>
-              
+
               {selectedReport.photos && selectedReport.photos.length > 0 && (
                 <div>
                   <h3 className="font-semibold mb-3 flex items-center gap-2 text-sm sm:text-base">
@@ -1014,7 +1014,7 @@ const fetchAssignedSites = useCallback(async () => {
                   </div>
                 </div>
               )}
-              
+
               {selectedReport.workQueries && selectedReport.workQueries.length > 0 && (
                 <div>
                   <h3 className="font-semibold mb-3 flex items-center gap-2 text-sm sm:text-base">
@@ -1029,7 +1029,7 @@ const fetchAssignedSites = useCallback(async () => {
                             <h4 className="font-medium text-sm">{query.title}</h4>
                             <Badge variant={
                               query.priority === 'high' ? 'destructive' :
-                              query.priority === 'medium' ? 'default' : 'secondary'
+                                query.priority === 'medium' ? 'default' : 'secondary'
                             } className="text-xs whitespace-nowrap">
                               {query.priority}
                             </Badge>
@@ -1038,7 +1038,7 @@ const fetchAssignedSites = useCallback(async () => {
                           <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2 text-sm">
                             <Badge variant={
                               query.status === 'completed' ? 'default' :
-                              query.status === 'in-progress' ? 'secondary' : 'outline'
+                                query.status === 'in-progress' ? 'secondary' : 'outline'
                             } className="text-xs">
                               {query.status}
                             </Badge>
@@ -1059,7 +1059,7 @@ const fetchAssignedSites = useCallback(async () => {
                   </div>
                 </div>
               )}
-              
+
               {selectedReport.updates && selectedReport.updates.length > 0 && (
                 <div>
                   <h3 className="font-semibold mb-3 flex items-center gap-2 text-sm sm:text-base">
@@ -1083,7 +1083,7 @@ const fetchAssignedSites = useCallback(async () => {
                   </div>
                 </div>
               )}
-              
+
               {selectedReport.status === 'rejected' && selectedReport.rejectionReason && (
                 <div className="p-3 bg-red-50 border border-red-200 rounded-lg">
                   <h4 className="font-semibold text-red-800 mb-1 text-sm">Rejection Reason</h4>

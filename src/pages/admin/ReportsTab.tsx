@@ -4,14 +4,14 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { 
-  Download, 
-  Calendar, 
-  FileText, 
-  Users, 
-  IndianRupee, 
-  Loader2, 
-  RefreshCw, 
+import {
+  Download,
+  Calendar,
+  FileText,
+  Users,
+  IndianRupee,
+  Loader2,
+  RefreshCw,
   AlertTriangle,
   TrendingUp,
   BarChart3,
@@ -169,8 +169,8 @@ interface APIAttendance {
   siteName?: string;
 }
 
-const API_URL = import.meta.env.VITE_API_URL || 
-  (import.meta.env.DEV ? 'http://localhost:5001/api' : 'https://sk-backend-btbj.onrender.com/api');
+const API_URL = import.meta.env.VITE_API_URL ||
+  (import.meta.env.DEV ? 'http://localhost:5001/api' : 'https://sk-backend-868y.onrender.com');
 
 // Site Filter Component
 const SiteFilter: React.FC<{
@@ -200,9 +200,9 @@ const SiteFilter: React.FC<{
   );
 };
 
-const ReportsTab = ({ 
-  employees, 
-  attendance, 
+const ReportsTab = ({
+  employees,
+  attendance,
   selectedMonth = new Date().toISOString().slice(0, 7),
   selectedSite: propSelectedSite = 'all',
   sites: propSites = []
@@ -224,7 +224,7 @@ const ReportsTab = ({
   const [attendanceData, setAttendanceData] = useState<APIAttendance[]>([]);
   const [attendanceLoading, setAttendanceLoading] = useState(false);
   const [attendanceError, setAttendanceError] = useState<string | null>(null);
-  
+
   const [employeeCounts, setEmployeeCounts] = useState<EmployeeCounts>({
     total: 0,
     active: 0,
@@ -280,22 +280,22 @@ const ReportsTab = ({
     try {
       setAttendanceLoading(true);
       setAttendanceError(null);
-      
+
       const params = new URLSearchParams();
       if (selectedSite !== 'all') params.append('site', selectedSite);
-      
+
       const response = await axios.get(`${API_URL}/attendance?${params.toString()}`);
-      
+
       if (response.data && response.data.success) {
         const apiData = response.data.data || response.data.attendance || [];
-        
+
         if (!Array.isArray(apiData)) {
           console.error("API data is not an array:", apiData);
           setAttendanceError("Invalid data format received from server");
           setAttendanceData([]);
           return;
         }
-        
+
         const transformedAttendance = apiData.map((att: any) => ({
           id: att._id || att.id || `att_${Date.now()}_${Math.random()}`,
           employeeId: att.employeeId || att.employeeID || "",
@@ -311,7 +311,7 @@ const ReportsTab = ({
           site: att.site || att.siteName || 'unspecified',
           siteName: att.siteName || att.site || 'Unspecified Site'
         }));
-        
+
         setAttendanceData(transformedAttendance);
       } else {
         const errorMsg = response.data?.message || "Failed to fetch attendance data";
@@ -331,13 +331,13 @@ const ReportsTab = ({
   const fetchPayrollData = async () => {
     try {
       setLoading(true);
-      
+
       const params: any = {
         month: selectedMonth,
         limit: 1000
       };
       if (selectedSite !== 'all') params.site = selectedSite;
-      
+
       const response = await payrollApi.getAll(params);
 
       console.log("Payroll API Response:", response);
@@ -345,7 +345,7 @@ const ReportsTab = ({
       if (response.success && response.data) {
         const payrollData = Array.isArray(response.data) ? response.data : [];
         setPayroll(payrollData);
-        
+
         const counts = {
           total: payrollData.length,
           processed: payrollData.filter(p => p.status === "processed").length,
@@ -395,40 +395,40 @@ const ReportsTab = ({
     try {
       setEmployeesLoading(true);
       setEmployeesError(null);
-      
+
       const params = new URLSearchParams();
       if (selectedSite !== 'all') params.append('site', selectedSite);
-      
+
       const response = await axios.get(`${API_URL}/employees?${params.toString()}`);
-      
+
       console.log("Employees API Response for counts:", response.data);
-      
+
       if (response.data && response.data.success) {
         const employeesData = response.data.data || response.data.employees || [];
-        
+
         if (!Array.isArray(employeesData)) {
           console.error("Employees data is not an array:", employeesData);
           setEmployeesError("Invalid employees data format");
           return;
         }
-        
+
         const total = employeesData.length;
         const active = employeesData.filter((emp: any) => emp.status === "active").length;
         const left = employeesData.filter((emp: any) => emp.status === "left").length;
-        
+
         const departments: { [key: string]: number } = {};
         employeesData.forEach((emp: any) => {
           const dept = emp.department || "Unknown";
           departments[dept] = (departments[dept] || 0) + 1;
         });
-        
+
         setEmployeeCounts({
           total,
           active,
           left,
           departments
         });
-        
+
         console.log("Calculated employee counts:", {
           total,
           active,
@@ -439,23 +439,23 @@ const ReportsTab = ({
         const errorMsg = response.data?.message || "Failed to fetch employee data";
         setEmployeesError(errorMsg);
         console.error("Employees API Error:", errorMsg);
-        
+
         // Fallback: calculate from props if available
         if (employees && Array.isArray(employees)) {
-          const siteFiltered = selectedSite !== 'all' 
+          const siteFiltered = selectedSite !== 'all'
             ? employees.filter(emp => emp.site === selectedSite || emp.siteName === selectedSite)
             : employees;
-          
+
           const total = siteFiltered.length;
           const active = siteFiltered.filter(emp => emp.status === "active").length;
           const left = siteFiltered.filter(emp => emp.status === "left").length;
           const departments: { [key: string]: number } = {};
-          
+
           siteFiltered.forEach(emp => {
             const dept = emp.department || "Unknown";
             departments[dept] = (departments[dept] || 0) + 1;
           });
-          
+
           setEmployeeCounts({
             total,
             active,
@@ -468,23 +468,23 @@ const ReportsTab = ({
       console.error("Error fetching employee counts:", err);
       const errorMsg = err.response?.data?.message || err.message || "Network error occurred";
       setEmployeesError(errorMsg);
-      
+
       // Fallback: calculate from props
       if (employees && Array.isArray(employees)) {
-        const siteFiltered = selectedSite !== 'all' 
+        const siteFiltered = selectedSite !== 'all'
           ? employees.filter(emp => emp.site === selectedSite || emp.siteName === selectedSite)
           : employees;
-        
+
         const total = siteFiltered.length;
         const active = siteFiltered.filter(emp => emp.status === "active").length;
         const left = siteFiltered.filter(emp => emp.status === "left").length;
         const departments: { [key: string]: number } = {};
-        
+
         siteFiltered.forEach(emp => {
           const dept = emp.department || "Unknown";
           departments[dept] = (departments[dept] || 0) + 1;
         });
-        
+
         setEmployeeCounts({
           total,
           active,
@@ -550,10 +550,10 @@ const ReportsTab = ({
         headers.join(","),
         ...data.map(row => {
           const values = headers.map(header => {
-            const value = header.includes('.') 
+            const value = header.includes('.')
               ? header.split('.').reduce((obj, key) => obj?.[key], row)
               : row[header] || "";
-            
+
             const stringValue = String(value);
             if (stringValue.includes(",") || stringValue.includes('"') || stringValue.includes("\n")) {
               return `"${stringValue.replace(/"/g, '""')}"`;
@@ -565,9 +565,9 @@ const ReportsTab = ({
       ];
 
       const csvContent = csvRows.join("\n");
-      
-      const blob = new Blob([csvContent], { 
-        type: "text/csv;charset=utf-8;" 
+
+      const blob = new Blob([csvContent], {
+        type: "text/csv;charset=utf-8;"
       });
       const url = URL.createObjectURL(blob);
       const link = document.createElement("a");
@@ -576,9 +576,9 @@ const ReportsTab = ({
       document.body.appendChild(link);
       link.click();
       document.body.removeChild(link);
-      
+
       toast.success(`Exported ${data.length} records to ${fileName}.csv`);
-      
+
     } catch (err: any) {
       console.error(`Error exporting ${fileName}:`, err);
       toast.error(`Failed to export ${fileName}`);
@@ -712,7 +712,7 @@ const ReportsTab = ({
           setTimeout(() => {
             exportToCSV(report.data, report.headers, report.name);
             allExportsCompleted++;
-            
+
             if (allExportsCompleted === totalExports) {
               toast.success("All reports exported successfully!");
             }
@@ -791,7 +791,7 @@ const ReportsTab = ({
   };
 
   const getStatusColor = (status: string) => {
-    switch(status) {
+    switch (status) {
       case "valid": return "default";
       case "expired": return "destructive";
       case "expiring": return "secondary";
@@ -857,8 +857,8 @@ const ReportsTab = ({
               {formatCurrency(payrollSummary.totalAmount)}
             </Badge>
           </div>
-          <Button 
-            variant="outline" 
+          <Button
+            variant="outline"
             onClick={handleRefreshAll}
             disabled={loading || attendanceLoading || employeesLoading}
             className="gap-2"
@@ -882,9 +882,9 @@ const ReportsTab = ({
                     <p className="text-sm text-red-700 dark:text-red-400">{attendanceError}</p>
                   </div>
                 </div>
-                <Button 
-                  size="sm" 
-                  variant="outline" 
+                <Button
+                  size="sm"
+                  variant="outline"
                   onClick={fetchAttendanceData}
                   disabled={attendanceLoading}
                 >
@@ -903,9 +903,9 @@ const ReportsTab = ({
                     <p className="text-sm text-yellow-700 dark:text-yellow-400">{employeesError}</p>
                   </div>
                 </div>
-                <Button 
-                  size="sm" 
-                  variant="outline" 
+                <Button
+                  size="sm"
+                  variant="outline"
                   onClick={fetchEmployeeCounts}
                   disabled={employeesLoading}
                 >
@@ -1084,8 +1084,8 @@ const ReportsTab = ({
                         </div>
                         <span className="font-bold">{item.value}</span>
                       </div>
-                      <Progress 
-                        value={(item.value / payrollSummary.total) * 100} 
+                      <Progress
+                        value={(item.value / payrollSummary.total) * 100}
                         className="h-2"
                       />
                     </div>
@@ -1117,9 +1117,9 @@ const ReportsTab = ({
                     <div className="flex items-center gap-2">
                       <Badge variant="outline" className={
                         payroll.status === "paid" ? "bg-green-50 text-green-700" :
-                        payroll.status === "pending" ? "bg-yellow-50 text-yellow-700" :
-                        payroll.status === "hold" ? "bg-red-50 text-red-700" :
-                        "bg-gray-50 text-gray-700"
+                          payroll.status === "pending" ? "bg-yellow-50 text-yellow-700" :
+                            payroll.status === "hold" ? "bg-red-50 text-red-700" :
+                              "bg-gray-50 text-gray-700"
                       }>
                         {payroll.status}
                       </Badge>
@@ -1164,9 +1164,9 @@ const ReportsTab = ({
                       <div>
                         <Badge variant="outline" className={
                           p.status === "paid" ? "bg-green-50 text-green-700" :
-                          p.status === "pending" ? "bg-yellow-50 text-yellow-700" :
-                          p.status === "hold" ? "bg-red-50 text-red-700" :
-                          "bg-gray-50 text-gray-700"
+                            p.status === "pending" ? "bg-yellow-50 text-yellow-700" :
+                              p.status === "hold" ? "bg-red-50 text-red-700" :
+                                "bg-gray-50 text-gray-700"
                         }>
                           {p.status}
                         </Badge>
@@ -1281,12 +1281,11 @@ const ReportsTab = ({
                   {attendanceData.slice(0, 6).map((record, index) => (
                     <div key={record.id || index} className="flex items-center justify-between p-3 rounded-lg border">
                       <div className="flex items-center gap-3">
-                        <div className={`h-3 w-3 rounded-full ${
-                          record.status === "present" ? "bg-green-500" :
-                          record.status === "absent" ? "bg-red-500" :
-                          record.status === "late" ? "bg-yellow-500" :
-                          "bg-blue-500"
-                        }`}></div>
+                        <div className={`h-3 w-3 rounded-full ${record.status === "present" ? "bg-green-500" :
+                            record.status === "absent" ? "bg-red-500" :
+                              record.status === "late" ? "bg-yellow-500" :
+                                "bg-blue-500"
+                          }`}></div>
                         <div>
                           <p className="font-medium">{record.employeeName || record.employeeId}</p>
                           <p className="text-sm text-muted-foreground">

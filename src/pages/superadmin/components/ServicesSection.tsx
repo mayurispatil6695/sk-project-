@@ -39,7 +39,7 @@ const ServicesSection = () => {
   const [viewServiceDialog, setViewServiceDialog] = useState<string | null>(null);
 
   const API_URL = import.meta.env.VITE_API_URL ||
-    (import.meta.env.DEV ? 'http://localhost:5001/api' : 'https://sk-backend-btbj.onrender.com/api');
+    (import.meta.env.DEV ? 'http://localhost:5001/api' : 'https://sk-backend-868y.onrender.com');
   // Fetch all services
   const fetchServices = async () => {
     try {

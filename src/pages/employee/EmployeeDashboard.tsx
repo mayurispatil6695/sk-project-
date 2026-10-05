@@ -14,8 +14,8 @@ import { startLocationTracking, stopLocationTracking } from "@/utils/locationTra
 import axios from "axios";
 
 // ---------- API URL ----------
-const API_URL = import.meta.env.VITE_API_URL || 
-  (import.meta.env.DEV ? 'http://localhost:5001/api' : 'https://sk-backend-btbj.onrender.com/api');
+const API_URL = import.meta.env.VITE_API_URL ||
+  (import.meta.env.DEV ? 'http://localhost:5001/api' : 'https://sk-backend-868y.onrender.com');
 
 // ---------- Helper functions ----------
 const formatTimeForDisplay = (timestamp: string | null): string => {
@@ -326,16 +326,16 @@ const EmployeeDashboard = () => {
                   hasCheckedOutToday
                     ? "default"
                     : hasCheckedInToday
-                    ? "secondary"
-                    : "outline"
+                      ? "secondary"
+                      : "outline"
                 }
                 className="text-[10px] px-1.5 h-5 ml-auto"
               >
                 {hasCheckedOutToday
                   ? "Done"
                   : hasCheckedInToday
-                  ? "In"
-                  : "Off"}
+                    ? "In"
+                    : "Off"}
               </Badge>
             </div>
             <CardDescription className="text-xs">

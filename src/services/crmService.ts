@@ -2,7 +2,7 @@ import { toast } from "sonner";
 
 // Base URL for your backend
 const API_URL = import.meta.env.VITE_API_URL || 
-  (import.meta.env.DEV ? `http://localhost:5001/api` : 'https://sk-backend-btbj.onrender.com/api');
+  (import.meta.env.DEV ? `http://localhost:5001/api` : 'https://sk-backend-868y.onrender.com');
 
 // Interfaces
 export interface Client {

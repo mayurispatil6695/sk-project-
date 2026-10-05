@@ -29,8 +29,8 @@ import { Progress } from "@/components/ui/progress";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 
-const API_URL = import.meta.env.VITE_API_URL || 
-  (import.meta.env.DEV ? 'http://localhost:5001/api' : 'https://sk-backend-btbj.onrender.com/api');
+const API_URL = import.meta.env.VITE_API_URL ||
+  (import.meta.env.DEV ? 'http://localhost:5001/api' : 'https://sk-backend-868y.onrender.com');
 
 // Interface for real API response
 interface ApiNotification {
@@ -513,7 +513,7 @@ const formatTimeAgoHelper = (dateString: string) => {
   try {
     const date = new Date(dateString);
     if (isNaN(date.getTime())) return "Recently";
-    
+
     const now = new Date();
     const diffMs = now.getTime() - date.getTime();
     const diffMins = Math.floor(diffMs / 60000);
@@ -524,7 +524,7 @@ const formatTimeAgoHelper = (dateString: string) => {
     if (diffMins < 60) return `${diffMins} min${diffMins !== 1 ? 's' : ''} ago`;
     if (diffHours < 24) return `${diffHours} hour${diffHours !== 1 ? 's' : ''} ago`;
     if (diffDays < 7) return `${diffDays} day${diffDays !== 1 ? 's' : ''} ago`;
-    
+
     return date.toLocaleDateString('en-IN', {
       day: '2-digit',
       month: 'short',
@@ -538,14 +538,14 @@ const formatTimeAgoHelper = (dateString: string) => {
 // Fetch all sites from API
 const fetchSites = async (): Promise<Site[]> => {
   try {
-    const token = localStorage.getItem('auth_token') || 
-                  localStorage.getItem('token') ||
-                  sessionStorage.getItem('auth_token');
-    
+    const token = localStorage.getItem('auth_token') ||
+      localStorage.getItem('token') ||
+      sessionStorage.getItem('auth_token');
+
     const headers: Record<string, string> = {
       'Content-Type': 'application/json',
     };
-    
+
     if (token) {
       headers['Authorization'] = `Bearer ${token}`;
     }
@@ -553,7 +553,7 @@ const fetchSites = async (): Promise<Site[]> => {
     const response = await fetch(`${API_URL}/sites`, {
       headers,
     });
-    
+
     if (!response.ok) {
       if (response.status === 401) {
         console.warn('Unauthorized to fetch sites');
@@ -561,11 +561,11 @@ const fetchSites = async (): Promise<Site[]> => {
       }
       throw new Error(`http error! status: ${response.status}`);
     }
-    
+
     const data = await response.json();
-    
+
     let sites: any[] = [];
-    
+
     if (Array.isArray(data)) {
       sites = data;
     } else if (data.data && Array.isArray(data.data)) {
@@ -575,7 +575,7 @@ const fetchSites = async (): Promise<Site[]> => {
     } else if (data.success && data.data) {
       sites = Array.isArray(data.data) ? data.data : [];
     }
-    
+
     return sites.map(site => ({
       _id: site._id || site.id,
       name: site.name || 'Unnamed Site',
@@ -583,10 +583,10 @@ const fetchSites = async (): Promise<Site[]> => {
       location: site.location || 'Unknown Location',
       areaSqft: site.areaSqft || site.area || 0,
       contractValue: site.contractValue || site.value || 0,
-      services: Array.isArray(site.services) ? site.services : 
-                (site.service ? [site.service] : []),
-      staffDeployment: Array.isArray(site.staffDeployment) ? site.staffDeployment : 
-                      (site.staff ? site.staff : []),
+      services: Array.isArray(site.services) ? site.services :
+        (site.service ? [site.service] : []),
+      staffDeployment: Array.isArray(site.staffDeployment) ? site.staffDeployment :
+        (site.staff ? site.staff : []),
       status: (site.status === 'inactive' ? 'inactive' : 'active') as 'active' | 'inactive',
       addedBy: site.addedBy || site.createdBy,
       addedByRole: site.addedByRole || site.createdByRole,
@@ -605,7 +605,7 @@ const fetchApiNotifications = async (): Promise<StoredNotification[]> => {
   try {
     console.log('Fetching notifications from API...');
     const response = await api.getNotifications();
-    
+
     if (response.success && Array.isArray(response.data)) {
       const apiNotifications: StoredNotification[] = response.data.map((notification: ApiNotification) => ({
         id: notification._id,
@@ -620,11 +620,11 @@ const fetchApiNotifications = async (): Promise<StoredNotification[]> => {
         ...notification.metadata,
         isLocal: false
       }));
-      
+
       console.log(`Fetched ${apiNotifications.length} notifications from API`);
       return apiNotifications;
     }
-    
+
     console.log('No notifications found in API response');
     return [];
   } catch (error) {
@@ -638,15 +638,15 @@ const fetchFollowUpNotifications = async (): Promise<StoredNotification[]> => {
   try {
     console.log('Fetching follow-up notifications...');
     const result = await api.getCommunications();
-    
+
     if (!result.success || !Array.isArray(result.data)) {
       return [];
     }
-    
+
     const communications = result.data as Communication[];
     const today = new Date().toISOString().split('T')[0];
     const now = new Date();
-    
+
     const followUpNotifications = communications
       .filter(comm => comm.followUpRequired && comm.followUpDate)
       .map(comm => {
@@ -660,11 +660,11 @@ const fetchFollowUpNotifications = async (): Promise<StoredNotification[]> => {
         } catch {
           followUpDateObj = new Date();
         }
-        
+
         const isToday = followUpDateObj.toDateString() === now.toDateString();
         const isOverdue = followUpDateObj < now && !isToday;
         const isUrgent = followUpDateObj.getTime() - now.getTime() <= 2 * 60 * 60 * 1000 && followUpDateObj.getTime() > now.getTime();
-        
+
         let type: "success" | "warning" | "info" | "urgent" = "info";
         let title = "";
         let priority: "low" | "medium" | "high" = "medium";
@@ -713,7 +713,7 @@ const fetchFollowUpNotifications = async (): Promise<StoredNotification[]> => {
           isLocal: true
         };
       });
-    
+
     console.log(`Generated ${followUpNotifications.length} follow-up notifications`);
     return followUpNotifications;
   } catch (error) {
@@ -727,7 +727,7 @@ const fetchSiteActivityNotifications = async (): Promise<StoredNotification[]> =
   try {
     console.log('Fetching site activity notifications...');
     const response = await api.getRecentSiteActivities();
-    
+
     if (!response.success || !Array.isArray(response.data)) {
       // Fallback to service call
       console.log('Using site service fallback...');
@@ -739,19 +739,19 @@ const fetchSiteActivityNotifications = async (): Promise<StoredNotification[]> =
         return [];
       }
     }
-    
+
     const siteActivities = response.data;
     const siteNotifications: StoredNotification[] = [];
-    
+
     siteActivities.forEach((activity: any) => {
       const notificationId = `site_${activity.type}_${activity.siteId}_${new Date(activity.timestamp).getTime()}`;
       const activityDate = new Date(activity.timestamp);
-      
+
       let title = '';
       let message = '';
       let type: "success" | "warning" | "info" | "urgent" = "info";
       let priority: "low" | "medium" | "high" = "medium";
-      
+
       switch (activity.type) {
         case 'created':
           title = '🚀 New Site Added';
@@ -783,7 +783,7 @@ const fetchSiteActivityNotifications = async (): Promise<StoredNotification[]> =
           type = 'info';
           priority = 'low';
       }
-      
+
       siteNotifications.push({
         id: notificationId,
         title,
@@ -804,7 +804,7 @@ const fetchSiteActivityNotifications = async (): Promise<StoredNotification[]> =
         isLocal: true
       });
     });
-    
+
     console.log(`Generated ${siteNotifications.length} site activity notifications`);
     return siteNotifications;
   } catch (error) {
@@ -825,14 +825,14 @@ const generateSiteNotificationsFromData = (sites: Site[]): StoredNotification[] 
   const siteNotifications: StoredNotification[] = [];
   const now = new Date();
   const oneWeekAgo = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
-  
+
   sites.forEach(site => {
     try {
       const siteCreatedAt = new Date(site.createdAt || site.updatedAt || now);
-      
+
       if (siteCreatedAt > oneWeekAgo) {
         const notificationId = `site_addition_${site._id}`;
-        
+
         siteNotifications.push({
           id: notificationId,
           title: '🚀 New Site Added',
@@ -855,7 +855,7 @@ const generateSiteNotificationsFromData = (sites: Site[]): StoredNotification[] 
       console.warn('Error processing site for notification:', error);
     }
   });
-  
+
   return siteNotifications;
 };
 
@@ -864,7 +864,7 @@ const fetchTaskActivityNotifications = async (): Promise<StoredNotification[]> =
   try {
     console.log('Fetching task activity notifications...');
     const response = await api.getRecentTaskActivities();
-    
+
     if (!response.success || !Array.isArray(response.data)) {
       // Fallback to service call
       console.log('Using task service fallback...');
@@ -876,20 +876,20 @@ const fetchTaskActivityNotifications = async (): Promise<StoredNotification[]> =
         return [];
       }
     }
-    
+
     const taskActivities = response.data;
     const taskNotifications: StoredNotification[] = [];
     const now = new Date();
-    
+
     taskActivities.forEach((activity: any) => {
       const notificationId = `task_${activity.type}_${activity.taskId}_${new Date(activity.timestamp).getTime()}`;
       const activityDate = new Date(activity.timestamp);
-      
+
       let title = '';
       let message = '';
       let type: "success" | "warning" | "info" | "urgent" = "info";
       let priority: "low" | "medium" | "high" = "medium";
-      
+
       switch (activity.type) {
         case 'created':
           title = '📋 New Task Created';
@@ -927,7 +927,7 @@ const fetchTaskActivityNotifications = async (): Promise<StoredNotification[]> =
           type = 'info';
           priority = 'low';
       }
-      
+
       taskNotifications.push({
         id: notificationId,
         title,
@@ -947,7 +947,7 @@ const fetchTaskActivityNotifications = async (): Promise<StoredNotification[]> =
         isLocal: true
       });
     });
-    
+
     console.log(`Generated ${taskNotifications.length} task activity notifications`);
     return taskNotifications;
   } catch (error) {
@@ -968,14 +968,14 @@ const generateTaskNotificationsFromData = (tasks: Task[]): StoredNotification[] 
   const taskNotifications: StoredNotification[] = [];
   const now = new Date();
   const threeDaysAgo = new Date(now.getTime() - 3 * 24 * 60 * 60 * 1000);
-  
+
   tasks.forEach(task => {
     try {
       const taskCreatedAt = new Date(task.createdAt || now);
-      
+
       if (taskCreatedAt > threeDaysAgo) {
         const notificationId = `task_creation_${task._id}`;
-        
+
         taskNotifications.push({
           id: notificationId,
           title: '📋 New Task Created',
@@ -999,7 +999,7 @@ const generateTaskNotificationsFromData = (tasks: Task[]): StoredNotification[] 
       console.warn('Error processing task for notification:', error);
     }
   });
-  
+
   return taskNotifications;
 };
 
@@ -1007,11 +1007,11 @@ const generateTaskNotificationsFromData = (tasks: Task[]): StoredNotification[] 
 const fetchInventoryNotifications = async (): Promise<StoredNotification[]> => {
   try {
     console.log('Fetching inventory notifications...');
-    
+
     let lowStockItems: any[] = [];
     let criticalStockItems: any[] = [];
     let outOfStockItems: any[] = [];
-    
+
     // Try to fetch from APIs with graceful degradation
     try {
       const lowStockResponse = await api.getLowStockItems();
@@ -1021,7 +1021,7 @@ const fetchInventoryNotifications = async (): Promise<StoredNotification[]> => {
     } catch (error) {
       console.log('Low stock API call failed:', error);
     }
-    
+
     try {
       const criticalResponse = await api.getCriticalStockItems();
       if (criticalResponse.success && Array.isArray(criticalResponse.data)) {
@@ -1030,7 +1030,7 @@ const fetchInventoryNotifications = async (): Promise<StoredNotification[]> => {
     } catch (error) {
       console.log('Critical stock API call failed:', error);
     }
-    
+
     try {
       const outOfStockResponse = await api.getOutOfStockItems();
       if (outOfStockResponse.success && Array.isArray(outOfStockResponse.data)) {
@@ -1039,7 +1039,7 @@ const fetchInventoryNotifications = async (): Promise<StoredNotification[]> => {
     } catch (error) {
       console.log('Out of stock API call failed:', error);
     }
-    
+
     // If all APIs returned empty or failed, use service fallback
     if (lowStockItems.length === 0 && criticalStockItems.length === 0 && outOfStockItems.length === 0) {
       console.log('Using inventory service fallback...');
@@ -1051,15 +1051,15 @@ const fetchInventoryNotifications = async (): Promise<StoredNotification[]> => {
         return [];
       }
     }
-    
+
     const inventoryNotifications: StoredNotification[] = [];
     const now = new Date();
-    
+
     // Process low stock items
     lowStockItems.forEach((item: any) => {
       try {
         const notificationId = `inventory_low_stock_${item._id || item.id}_${now.getTime()}`;
-        
+
         inventoryNotifications.push({
           id: notificationId,
           title: '📦 Low Stock Alert',
@@ -1083,12 +1083,12 @@ const fetchInventoryNotifications = async (): Promise<StoredNotification[]> => {
         console.warn('Error processing low stock item:', error);
       }
     });
-    
+
     // Process critical stock items
     criticalStockItems.forEach((item: any) => {
       try {
         const notificationId = `inventory_critical_${item._id || item.id}_${now.getTime()}`;
-        
+
         inventoryNotifications.push({
           id: notificationId,
           title: '⚠️ Critical Stock Level',
@@ -1112,12 +1112,12 @@ const fetchInventoryNotifications = async (): Promise<StoredNotification[]> => {
         console.warn('Error processing critical stock item:', error);
       }
     });
-    
+
     // Process out of stock items
     outOfStockItems.forEach((item: any) => {
       try {
         const notificationId = `inventory_out_of_stock_${item._id || item.id}_${now.getTime()}`;
-        
+
         inventoryNotifications.push({
           id: notificationId,
           title: '🛑 OUT OF STOCK',
@@ -1141,7 +1141,7 @@ const fetchInventoryNotifications = async (): Promise<StoredNotification[]> => {
         console.warn('Error processing out of stock item:', error);
       }
     });
-    
+
     console.log(`Generated ${inventoryNotifications.length} inventory notifications`);
     return inventoryNotifications;
   } catch (error) {
@@ -1154,18 +1154,18 @@ const fetchInventoryNotifications = async (): Promise<StoredNotification[]> => {
 const generateInventoryNotificationsFromData = (items: FrontendInventoryItem[]): StoredNotification[] => {
   const inventoryNotifications: StoredNotification[] = [];
   const now = new Date();
-  
+
   items.forEach((item: FrontendInventoryItem) => {
     try {
       if (item.quantity <= item.reorderLevel) {
         const isCritical = item.quantity <= Math.floor(item.reorderLevel * 0.3);
         const isOutOfStock = item.quantity === 0;
-        
+
         let notificationType: "inventory_low_stock" | "inventory_critical" | "inventory_out_of_stock";
         let title: string;
         let type: "success" | "warning" | "info" | "urgent";
         let priority: "low" | "medium" | "high";
-        
+
         if (isOutOfStock) {
           notificationType = 'inventory_out_of_stock';
           title = '🛑 OUT OF STOCK';
@@ -1182,9 +1182,9 @@ const generateInventoryNotificationsFromData = (items: FrontendInventoryItem[]):
           type = 'warning';
           priority = 'medium';
         }
-        
+
         const notificationId = `inventory_${notificationType}_${item.id}_${now.getTime()}`;
-        
+
         inventoryNotifications.push({
           id: notificationId,
           title: title,
@@ -1209,7 +1209,7 @@ const generateInventoryNotificationsFromData = (items: FrontendInventoryItem[]):
       console.warn('Error processing inventory item for notification:', error);
     }
   });
-  
+
   return inventoryNotifications;
 };
 
@@ -1217,10 +1217,10 @@ const generateInventoryNotificationsFromData = (items: FrontendInventoryItem[]):
 const fetchMachineNotifications = async (): Promise<StoredNotification[]> => {
   try {
     console.log('Fetching machine notifications...');
-    
+
     let maintenanceAlerts: any[] = [];
     let breakdownAlerts: any[] = [];
-    
+
     // Try APIs with graceful degradation
     try {
       const maintenanceResponse = await api.getMachineMaintenanceAlerts();
@@ -1230,7 +1230,7 @@ const fetchMachineNotifications = async (): Promise<StoredNotification[]> => {
     } catch (error) {
       console.log('Machine maintenance alerts API call failed:', error);
     }
-    
+
     try {
       const breakdownResponse = await api.getMachineBreakdownAlerts();
       if (breakdownResponse.success && Array.isArray(breakdownResponse.data)) {
@@ -1239,7 +1239,7 @@ const fetchMachineNotifications = async (): Promise<StoredNotification[]> => {
     } catch (error) {
       console.log('Machine breakdown alerts API call failed:', error);
     }
-    
+
     // If APIs returned empty or failed, use service fallback
     if (maintenanceAlerts.length === 0 && breakdownAlerts.length === 0) {
       console.log('Using machine service fallback...');
@@ -1251,15 +1251,15 @@ const fetchMachineNotifications = async (): Promise<StoredNotification[]> => {
         return [];
       }
     }
-    
+
     const machineNotifications: StoredNotification[] = [];
     const now = new Date();
-    
+
     // Process maintenance alerts
     maintenanceAlerts.forEach((alert: any) => {
       try {
         const notificationId = `machine_maintenance_${alert.machineId}_${now.getTime()}`;
-        
+
         machineNotifications.push({
           id: notificationId,
           title: '🔧 Machine Maintenance Required',
@@ -1280,12 +1280,12 @@ const fetchMachineNotifications = async (): Promise<StoredNotification[]> => {
         console.warn('Error processing maintenance alert:', error);
       }
     });
-    
+
     // Process breakdown alerts
     breakdownAlerts.forEach((alert: any) => {
       try {
         const notificationId = `machine_breakdown_${alert.machineId}_${now.getTime()}`;
-        
+
         machineNotifications.push({
           id: notificationId,
           title: '🛑 Machine Breakdown',
@@ -1305,7 +1305,7 @@ const fetchMachineNotifications = async (): Promise<StoredNotification[]> => {
         console.warn('Error processing breakdown alert:', error);
       }
     });
-    
+
     console.log(`Generated ${machineNotifications.length} machine notifications`);
     return machineNotifications;
   } catch (error) {
@@ -1318,13 +1318,13 @@ const fetchMachineNotifications = async (): Promise<StoredNotification[]> => {
 const generateMachineNotificationsFromData = (machines: FrontendMachine[]): StoredNotification[] => {
   const machineNotifications: StoredNotification[] = [];
   const now = new Date();
-  
+
   machines.forEach((machine: FrontendMachine) => {
     try {
       // Check machine status
       if (machine.status === 'maintenance') {
         const notificationId = `machine_maintenance_${machine.id}`;
-        
+
         machineNotifications.push({
           id: notificationId,
           title: '🔧 Machine Under Maintenance',
@@ -1342,7 +1342,7 @@ const generateMachineNotificationsFromData = (machines: FrontendMachine[]): Stor
         });
       } else if (machine.status === 'out-of-service') {
         const notificationId = `machine_breakdown_${machine.id}`;
-        
+
         machineNotifications.push({
           id: notificationId,
           title: '🛑 Machine Breakdown',
@@ -1363,7 +1363,7 @@ const generateMachineNotificationsFromData = (machines: FrontendMachine[]): Stor
       console.warn('Error processing machine for notification:', error);
     }
   });
-  
+
   return machineNotifications;
 };
 
@@ -1371,10 +1371,10 @@ const generateMachineNotificationsFromData = (machines: FrontendMachine[]): Stor
 const fetchLeaveNotifications = async (): Promise<StoredNotification[]> => {
   try {
     console.log('Fetching leave notifications...');
-    
+
     let leaveRequests: any[] = [];
     let leaveStatusUpdates: any[] = [];
-    
+
     // Try APIs with graceful degradation
     try {
       const requestsResponse = await api.getLeaveRequests();
@@ -1384,7 +1384,7 @@ const fetchLeaveNotifications = async (): Promise<StoredNotification[]> => {
     } catch (error) {
       console.log('Leave requests API call failed:', error);
     }
-    
+
     try {
       const updatesResponse = await api.getLeaveStatusUpdates();
       if (updatesResponse.success && Array.isArray(updatesResponse.data)) {
@@ -1393,16 +1393,16 @@ const fetchLeaveNotifications = async (): Promise<StoredNotification[]> => {
     } catch (error) {
       console.log('Leave status updates API call failed:', error);
     }
-    
+
     const leaveNotifications: StoredNotification[] = [];
     const now = new Date();
-    
+
     // Process leave requests
     leaveRequests.forEach((request: any) => {
       try {
         const notificationId = `leave_request_${request._id}_${now.getTime()}`;
         const requestDate = new Date(request.createdAt || request.appliedDate || now);
-        
+
         leaveNotifications.push({
           id: notificationId,
           title: '📋 New Leave Request',
@@ -1429,17 +1429,17 @@ const fetchLeaveNotifications = async (): Promise<StoredNotification[]> => {
         console.warn('Error processing leave request:', error);
       }
     });
-    
+
     // Process leave status updates
     leaveStatusUpdates.forEach((update: any) => {
       try {
         const notificationId = `leave_${update.status}_${update.leaveId}_${now.getTime()}`;
         const updateDate = new Date(update.updatedAt || update.actionDate || now);
-        
+
         let title = '';
         let type: "success" | "warning" | "info" | "urgent" = "info";
         let notificationType: any = 'leave_updated';
-        
+
         switch (update.status) {
           case 'approved':
             title = '✅ Leave Approved';
@@ -1461,7 +1461,7 @@ const fetchLeaveNotifications = async (): Promise<StoredNotification[]> => {
             type = 'info';
             notificationType = 'leave_pending';
         }
-        
+
         leaveNotifications.push({
           id: notificationId,
           title: title,
@@ -1486,7 +1486,7 @@ const fetchLeaveNotifications = async (): Promise<StoredNotification[]> => {
         console.warn('Error processing leave status update:', error);
       }
     });
-    
+
     console.log(`Generated ${leaveNotifications.length} leave notifications`);
     return leaveNotifications;
   } catch (error) {
@@ -1500,19 +1500,19 @@ const fetchMachineStatisticsNotifications = async (): Promise<StoredNotification
   try {
     console.log('Fetching machine statistics notifications...');
     const response = await api.getMachineStatistics();
-    
+
     if (!response.success || !response.data) {
       return [];
     }
-    
+
     const stats = response.data;
     const machineNotifications: StoredNotification[] = [];
     const now = new Date();
-    
+
     // Check for critical statistics
     if (stats.outOfServiceMachines > 0) {
       const notificationId = `machine_stats_breakdown_${now.getTime()}`;
-      
+
       machineNotifications.push({
         id: notificationId,
         title: '📊 Machine Breakdown Alert',
@@ -1526,10 +1526,10 @@ const fetchMachineStatisticsNotifications = async (): Promise<StoredNotification
         isLocal: true
       });
     }
-    
+
     if (stats.upcomingMaintenanceCount > 0) {
       const notificationId = `machine_stats_maintenance_${now.getTime()}`;
-      
+
       machineNotifications.push({
         id: notificationId,
         title: '📊 Maintenance Due Soon',
@@ -1543,14 +1543,14 @@ const fetchMachineStatisticsNotifications = async (): Promise<StoredNotification
         isLocal: true
       });
     }
-    
+
     // Overall machine health notification
     if (stats.totalMachines > 0) {
       const operationalPercentage = (stats.operationalMachines / stats.totalMachines) * 100;
-      
+
       if (operationalPercentage < 70) {
         const notificationId = `machine_stats_health_${now.getTime()}`;
-        
+
         machineNotifications.push({
           id: notificationId,
           title: '📊 Machine Health Alert',
@@ -1565,7 +1565,7 @@ const fetchMachineStatisticsNotifications = async (): Promise<StoredNotification
         });
       }
     }
-    
+
     console.log(`Generated ${machineNotifications.length} machine statistics notifications`);
     return machineNotifications;
   } catch (error) {
@@ -1579,7 +1579,7 @@ const fetchInventoryStatisticsNotifications = async (): Promise<StoredNotificati
   try {
     console.log('Fetching inventory statistics notifications...');
     const response = await api.getInventoryStatistics();
-    
+
     if (!response.success || !response.data) {
       // Fallback to calculating from service data
       console.log('Using inventory service for statistics...');
@@ -1591,15 +1591,15 @@ const fetchInventoryStatisticsNotifications = async (): Promise<StoredNotificati
         return [];
       }
     }
-    
+
     const stats = response.data;
     const inventoryNotifications: StoredNotification[] = [];
     const now = new Date();
-    
+
     // Check for critical statistics
     if (stats.outOfStockCount > 0) {
       const notificationId = `inventory_stats_out_of_stock_${now.getTime()}`;
-      
+
       inventoryNotifications.push({
         id: notificationId,
         title: '📊 Out of Stock Alert',
@@ -1613,10 +1613,10 @@ const fetchInventoryStatisticsNotifications = async (): Promise<StoredNotificati
         isLocal: true
       });
     }
-    
+
     if (stats.criticalStockCount > 0) {
       const notificationId = `inventory_stats_critical_${now.getTime()}`;
-      
+
       inventoryNotifications.push({
         id: notificationId,
         title: '📊 Critical Stock Alert',
@@ -1630,10 +1630,10 @@ const fetchInventoryStatisticsNotifications = async (): Promise<StoredNotificati
         isLocal: true
       });
     }
-    
+
     if (stats.lowStockCount > 0) {
       const notificationId = `inventory_stats_low_stock_${now.getTime()}`;
-      
+
       inventoryNotifications.push({
         id: notificationId,
         title: '📊 Low Stock Summary',
@@ -1647,7 +1647,7 @@ const fetchInventoryStatisticsNotifications = async (): Promise<StoredNotificati
         isLocal: true
       });
     }
-    
+
     console.log(`Generated ${inventoryNotifications.length} inventory statistics notifications`);
     return inventoryNotifications;
   } catch (error) {
@@ -1667,17 +1667,17 @@ const fetchInventoryStatisticsNotifications = async (): Promise<StoredNotificati
 const generateInventoryStatsFromData = (items: FrontendInventoryItem[]): StoredNotification[] => {
   const inventoryNotifications: StoredNotification[] = [];
   const now = new Date();
-  
+
   try {
     // Calculate statistics
     const lowStockItems = items.filter(item => item.quantity <= item.reorderLevel && item.quantity > 0);
     const criticalItems = items.filter(item => item.quantity <= Math.floor(item.reorderLevel * 0.3) && item.quantity > 0);
     const outOfStockItems = items.filter(item => item.quantity === 0);
-    
+
     // Create summary notifications
     if (outOfStockItems.length > 0) {
       const notificationId = `inventory_stats_out_of_stock_${now.getTime()}`;
-      
+
       inventoryNotifications.push({
         id: notificationId,
         title: '📊 Out of Stock Alert',
@@ -1691,10 +1691,10 @@ const generateInventoryStatsFromData = (items: FrontendInventoryItem[]): StoredN
         isLocal: true
       });
     }
-    
+
     if (criticalItems.length > 0) {
       const notificationId = `inventory_stats_critical_${now.getTime()}`;
-      
+
       inventoryNotifications.push({
         id: notificationId,
         title: '📊 Critical Stock Alert',
@@ -1708,10 +1708,10 @@ const generateInventoryStatsFromData = (items: FrontendInventoryItem[]): StoredN
         isLocal: true
       });
     }
-    
+
     if (lowStockItems.length > 0) {
       const notificationId = `inventory_stats_low_stock_${now.getTime()}`;
-      
+
       inventoryNotifications.push({
         id: notificationId,
         title: '📊 Low Stock Summary',
@@ -1728,7 +1728,7 @@ const generateInventoryStatsFromData = (items: FrontendInventoryItem[]): StoredN
   } catch (error) {
     console.error('Error generating inventory stats from data:', error);
   }
-  
+
   return inventoryNotifications;
 };
 
@@ -1819,36 +1819,36 @@ const NotificationList = ({
               <Bell className="h-12 w-12 md:h-16 md:w-16 mx-auto text-muted-foreground mb-3 md:mb-4 opacity-50" />
               <div className="absolute inset-0 bg-gradient-to-r from-primary/20 to-secondary/20 blur-xl rounded-full" />
             </div>
-            <motion.h3 
+            <motion.h3
               className="text-lg md:text-xl font-semibold bg-gradient-to-r from-primary to-secondary bg-clip-text text-transparent"
-              animate={{ 
+              animate={{
                 backgroundPosition: ['0% 50%', '100% 50%', '0% 50%']
               }}
-              transition={{ 
+              transition={{
                 duration: 3,
                 repeat: Infinity,
                 ease: "linear"
               }}
               style={{ backgroundSize: '200% auto' }}
             >
-              {filter === 'all' ? "No notifications yet" : 
-               filter === 'unread' ? "All caught up!" : 
-               "No read notifications"}
+              {filter === 'all' ? "No notifications yet" :
+                filter === 'unread' ? "All caught up!" :
+                  "No read notifications"}
             </motion.h3>
             <p className="text-xs md:text-sm text-muted-foreground max-w-md mx-auto px-4">
-              {filter === 'all' ? 
+              {filter === 'all' ?
                 "You're all caught up! When you have new notifications, they'll appear here." :
                 filter === 'unread' ?
-                "You don't have any unread notifications right now. Great job staying on top of things!" :
-                "You haven't marked any notifications as read yet."}
+                  "You don't have any unread notifications right now. Great job staying on top of things!" :
+                  "You haven't marked any notifications as read yet."}
             </p>
             {filter !== 'all' && (
               <motion.div
                 whileHover={{ scale: 1.05 }}
                 whileTap={{ scale: 0.95 }}
               >
-                <Button 
-                  variant="outline" 
+                <Button
+                  variant="outline"
                   onClick={() => setFilter('all')}
                   className="mt-2 md:mt-4 text-xs md:text-sm h-8 md:h-10"
                 >
@@ -1874,9 +1874,9 @@ const NotificationList = ({
             whileHover={{ scale: 1.05 }}
             whileTap={{ scale: 0.95 }}
           >
-            <Button 
-              variant="ghost" 
-              size="sm" 
+            <Button
+              variant="ghost"
+              size="sm"
               onClick={handleMarkAllRead}
               className="h-7 md:h-8 px-2 text-xs md:text-sm bg-gradient-to-r from-green-500/10 to-emerald-500/10 hover:from-green-500/20 hover:to-emerald-500/20"
             >
@@ -1886,17 +1886,17 @@ const NotificationList = ({
           </motion.div>
         )}
       </div>
-      
+
       <AnimatePresence>
         {notifications.map((notification, index) => (
           <motion.div
             key={notification.id}
             initial={{ opacity: 0, y: 20, scale: 0.95 }}
-            animate={{ 
-              opacity: 1, 
-              y: 0, 
+            animate={{
+              opacity: 1,
+              y: 0,
               scale: 1,
-              transition: { 
+              transition: {
                 delay: index * 0.03,
                 type: "spring",
                 stiffness: 100
@@ -1904,43 +1904,43 @@ const NotificationList = ({
             }}
             exit={{ opacity: 0, y: -20, scale: 0.95 }}
             layout
-            whileHover={{ 
+            whileHover={{
               y: -2,
               transition: { type: "spring", stiffness: 300 }
             }}
           >
-            <Card 
+            <Card
               className={cn(
                 "cursor-pointer transition-all duration-300 hover:shadow-lg group relative overflow-hidden",
                 !notification.read ? "border-l-4 border-l-primary bg-gradient-to-r from-primary/5 via-primary/5 to-transparent" : "",
                 notification.type === 'urgent' ? "border-red-500/50 bg-gradient-to-r from-red-50/50 to-transparent dark:from-red-950/20" :
-                notification.type === 'warning' ? "border-orange-500/50 bg-gradient-to-r from-orange-50/50 to-transparent dark:from-orange-950/20" :
-                notification.type === 'success' ? "border-green-500/50 bg-gradient-to-r from-green-50/50 to-transparent dark:from-green-950/20" : "",
+                  notification.type === 'warning' ? "border-orange-500/50 bg-gradient-to-r from-orange-50/50 to-transparent dark:from-orange-950/20" :
+                    notification.type === 'success' ? "border-green-500/50 bg-gradient-to-r from-green-50/50 to-transparent dark:from-green-950/20" : "",
                 notification.notificationType === 'site_addition' ? "border-blue-500/50 bg-gradient-to-r from-blue-50/50 to-transparent dark:from-blue-950/20" :
-                notification.notificationType === 'site_status' ? "border-purple-500/50 bg-gradient-to-r from-purple-50/50 to-transparent dark:from-purple-950/20" :
-                notification.notificationType === 'site_deletion' ? "border-red-500/50 bg-gradient-to-r from-red-50/50 to-transparent dark:from-red-950/20" :
-                notification.notificationType === 'site_update' ? "border-amber-500/50 bg-gradient-to-r from-amber-50/50 to-transparent dark:from-amber-950/20" :
-                notification.notificationType === 'task_creation' ? "border-indigo-500/50 bg-gradient-to-r from-indigo-50/50 to-transparent dark:from-indigo-950/20" :
-                notification.notificationType === 'task_assignment' ? "border-teal-500/50 bg-gradient-to-r from-teal-50/50 to-transparent dark:from-teal-950/20" :
-                notification.notificationType === 'task_completion' ? "border-emerald-500/50 bg-gradient-to-r from-emerald-50/50 to-transparent dark:from-emerald-950/20" :
-                notification.notificationType === 'task_update' ? "border-cyan-500/50 bg-gradient-to-r from-cyan-50/50 to-transparent dark:from-cyan-950/20" :
-                notification.notificationType === 'task_overdue' ? "border-rose-500/50 bg-gradient-to-r from-rose-50/50 to-transparent dark:from-rose-950/20" :
-                notification.notificationType === 'inventory_low_stock' ? "border-yellow-500/50 bg-gradient-to-r from-yellow-50/50 to-transparent dark:from-yellow-950/20" :
-                notification.notificationType === 'inventory_critical' ? "border-orange-500/50 bg-gradient-to-r from-orange-50/50 to-transparent dark:from-orange-950/20" :
-                notification.notificationType === 'inventory_out_of_stock' ? "border-red-500/50 bg-gradient-to-r from-red-50/50 to-transparent dark:from-red-950/20" :
-                notification.notificationType === 'machine_maintenance' ? "border-blue-500/50 bg-gradient-to-r from-blue-50/50 to-transparent dark:from-blue-950/20" :
-                notification.notificationType === 'machine_breakdown' ? "border-red-500/50 bg-gradient-to-r from-red-50/50 to-transparent dark:from-red-950/20" :
-                notification.notificationType === 'leave_request' ? "border-indigo-500/50 bg-gradient-to-r from-indigo-50/50 to-transparent dark:from-indigo-950/20" :
-                notification.notificationType === 'leave_approved' ? "border-green-500/50 bg-gradient-to-r from-green-50/50 to-transparent dark:from-green-950/20" :
-                notification.notificationType === 'leave_rejected' ? "border-red-500/50 bg-gradient-to-r from-red-50/50 to-transparent dark:from-red-950/20" :
-                notification.notificationType === 'leave_pending' ? "border-yellow-500/50 bg-gradient-to-r from-yellow-50/50 to-transparent dark:from-yellow-950/20" :
-                notification.notificationType === 'leave_cancelled' ? "border-gray-500/50 bg-gradient-to-r from-gray-50/50 to-transparent dark:from-gray-950/20" : ""
+                  notification.notificationType === 'site_status' ? "border-purple-500/50 bg-gradient-to-r from-purple-50/50 to-transparent dark:from-purple-950/20" :
+                    notification.notificationType === 'site_deletion' ? "border-red-500/50 bg-gradient-to-r from-red-50/50 to-transparent dark:from-red-950/20" :
+                      notification.notificationType === 'site_update' ? "border-amber-500/50 bg-gradient-to-r from-amber-50/50 to-transparent dark:from-amber-950/20" :
+                        notification.notificationType === 'task_creation' ? "border-indigo-500/50 bg-gradient-to-r from-indigo-50/50 to-transparent dark:from-indigo-950/20" :
+                          notification.notificationType === 'task_assignment' ? "border-teal-500/50 bg-gradient-to-r from-teal-50/50 to-transparent dark:from-teal-950/20" :
+                            notification.notificationType === 'task_completion' ? "border-emerald-500/50 bg-gradient-to-r from-emerald-50/50 to-transparent dark:from-emerald-950/20" :
+                              notification.notificationType === 'task_update' ? "border-cyan-500/50 bg-gradient-to-r from-cyan-50/50 to-transparent dark:from-cyan-950/20" :
+                                notification.notificationType === 'task_overdue' ? "border-rose-500/50 bg-gradient-to-r from-rose-50/50 to-transparent dark:from-rose-950/20" :
+                                  notification.notificationType === 'inventory_low_stock' ? "border-yellow-500/50 bg-gradient-to-r from-yellow-50/50 to-transparent dark:from-yellow-950/20" :
+                                    notification.notificationType === 'inventory_critical' ? "border-orange-500/50 bg-gradient-to-r from-orange-50/50 to-transparent dark:from-orange-950/20" :
+                                      notification.notificationType === 'inventory_out_of_stock' ? "border-red-500/50 bg-gradient-to-r from-red-50/50 to-transparent dark:from-red-950/20" :
+                                        notification.notificationType === 'machine_maintenance' ? "border-blue-500/50 bg-gradient-to-r from-blue-50/50 to-transparent dark:from-blue-950/20" :
+                                          notification.notificationType === 'machine_breakdown' ? "border-red-500/50 bg-gradient-to-r from-red-50/50 to-transparent dark:from-red-950/20" :
+                                            notification.notificationType === 'leave_request' ? "border-indigo-500/50 bg-gradient-to-r from-indigo-50/50 to-transparent dark:from-indigo-950/20" :
+                                              notification.notificationType === 'leave_approved' ? "border-green-500/50 bg-gradient-to-r from-green-50/50 to-transparent dark:from-green-950/20" :
+                                                notification.notificationType === 'leave_rejected' ? "border-red-500/50 bg-gradient-to-r from-red-50/50 to-transparent dark:from-red-950/20" :
+                                                  notification.notificationType === 'leave_pending' ? "border-yellow-500/50 bg-gradient-to-r from-yellow-50/50 to-transparent dark:from-yellow-950/20" :
+                                                    notification.notificationType === 'leave_cancelled' ? "border-gray-500/50 bg-gradient-to-r from-gray-50/50 to-transparent dark:from-gray-950/20" : ""
               )}
               onClick={() => handleViewDetails(notification)}
             >
               {/* Animated background effect */}
               <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/5 to-transparent -translate-x-full group-hover:translate-x-full transition-transform duration-1000" />
-              
+
               <CardContent className="p-3 md:p-4 relative">
                 <div className="flex items-start justify-between gap-2">
                   <div className="flex-1 min-w-0">
@@ -1953,13 +1953,13 @@ const NotificationList = ({
                         {getCommunicationIcon(notification.communicationType, notification.notificationType)}
                       </motion.div>
                       <h4 className="font-semibold text-sm md:text-lg truncate">{notification.title}</h4>
-                      
+
                       <motion.div
                         whileHover={{ scale: 1.1 }}
                         whileTap={{ scale: 0.9 }}
                         className="flex-shrink-0"
                       >
-                        <Badge 
+                        <Badge
                           variant={getTypeColor(notification.type)}
                           className={cn(
                             "transition-all duration-300 text-[10px] md:text-xs px-1.5 md:px-2 py-0 md:py-0.5",
@@ -1972,7 +1972,7 @@ const NotificationList = ({
                           {notification.type}
                         </Badge>
                       </motion.div>
-                      
+
                       {notification.notificationType && (
                         <motion.div
                           whileHover={{ scale: 1.05 }}
@@ -1990,11 +1990,11 @@ const NotificationList = ({
                           </Badge>
                         </motion.div>
                       )}
-                      
+
                       <TooltipProvider>
                         <Tooltip>
                           <TooltipTrigger asChild>
-                            <motion.div 
+                            <motion.div
                               className={cn(
                                 "w-2 h-2 md:w-3 md:h-3 rounded-full ring-1 md:ring-2 ring-white dark:ring-gray-800 flex-shrink-0",
                                 getPriorityColor(notification.priority)
@@ -2011,7 +2011,7 @@ const NotificationList = ({
                           </TooltipContent>
                         </Tooltip>
                       </TooltipProvider>
-                      
+
                       {!notification.read && (
                         <motion.div
                           initial={{ scale: 0 }}
@@ -2019,18 +2019,18 @@ const NotificationList = ({
                           transition={{ type: "spring", stiffness: 200 }}
                           className="flex-shrink-0"
                         >
-                          <Badge 
-                            variant="default" 
+                          <Badge
+                            variant="default"
                             className="animate-pulse bg-gradient-to-r from-primary to-secondary text-[8px] md:text-xs px-1.5 md:px-2 py-0 md:py-0.5"
                           >
                             New
                           </Badge>
                         </motion.div>
                       )}
-                      
-                      {notification.notificationType?.includes('leave_') && 
-                       getLeaveRequestTypeBadge(notification.notificationType)}
-                      
+
+                      {notification.notificationType?.includes('leave_') &&
+                        getLeaveRequestTypeBadge(notification.notificationType)}
+
                       {notification.read && (
                         <Badge variant="outline" className="text-[8px] md:text-xs px-1.5 md:px-2 py-0 md:py-0.5">
                           <CheckCheck className="h-2 w-2 md:h-3 md:w-3 mr-0.5 md:mr-1" />
@@ -2038,11 +2038,11 @@ const NotificationList = ({
                         </Badge>
                       )}
                     </div>
-                    
+
                     <p className="text-xs md:text-sm text-muted-foreground mb-2 line-clamp-2">
                       {notification.message}
                     </p>
-                    
+
                     <div className="flex flex-wrap items-center gap-1 md:gap-4 text-[10px] md:text-xs text-muted-foreground">
                       <span className="flex items-center gap-0.5 md:gap-1 bg-muted/30 px-1.5 md:px-2 py-0.5 md:py-1 rounded-md">
                         {notification.notificationType?.includes('site') ? (
@@ -2062,13 +2062,13 @@ const NotificationList = ({
                           {notification.followUpDate || new Date(notification.createdAt).toLocaleDateString('en-IN') || "Just now"}
                         </span>
                       </span>
-                      
+
                       <span className="text-primary hidden md:inline">•</span>
-                      
+
                       <span className="font-medium bg-muted/30 px-1.5 md:px-2 py-0.5 md:py-1 rounded-md">
                         {notification.time}
                       </span>
-                      
+
                       {notification.clientName && (
                         <>
                           <span className="text-primary hidden md:inline">•</span>
@@ -2078,7 +2078,7 @@ const NotificationList = ({
                           </span>
                         </>
                       )}
-                      
+
                       {notification.siteName && (
                         <>
                           <span className="text-primary hidden md:inline">•</span>
@@ -2088,7 +2088,7 @@ const NotificationList = ({
                           </span>
                         </>
                       )}
-                      
+
                       {notification.itemName && (
                         <>
                           <span className="text-primary hidden md:inline">•</span>
@@ -2098,7 +2098,7 @@ const NotificationList = ({
                           </span>
                         </>
                       )}
-                      
+
                       {notification.machineName && (
                         <>
                           <span className="text-primary hidden md:inline">•</span>
@@ -2108,7 +2108,7 @@ const NotificationList = ({
                           </span>
                         </>
                       )}
-                      
+
                       {notification.employeeName && (
                         <>
                           <span className="text-primary hidden md:inline">•</span>
@@ -2118,7 +2118,7 @@ const NotificationList = ({
                           </span>
                         </>
                       )}
-                      
+
                       {notification.leaveRequestType && (
                         <>
                           <span className="text-primary hidden md:inline">•</span>
@@ -2129,15 +2129,15 @@ const NotificationList = ({
                       )}
                     </div>
                   </div>
-                  
+
                   <div className="flex flex-col items-center gap-1 md:gap-2 ml-1 md:ml-4 flex-shrink-0">
                     {!notification.read ? (
                       <motion.div
                         whileHover={{ scale: 1.1, rotate: 5 }}
                         whileTap={{ scale: 0.9 }}
                       >
-                        <Button 
-                          variant="ghost" 
+                        <Button
+                          variant="ghost"
                           size="icon"
                           onClick={(e) => {
                             e.stopPropagation();
@@ -2154,8 +2154,8 @@ const NotificationList = ({
                         whileHover={{ scale: 1.1, rotate: -5 }}
                         whileTap={{ scale: 0.9 }}
                       >
-                        <Button 
-                          variant="ghost" 
+                        <Button
+                          variant="ghost"
                           size="icon"
                           onClick={(e) => {
                             e.stopPropagation();
@@ -2172,8 +2172,8 @@ const NotificationList = ({
                       whileHover={{ scale: 1.1 }}
                       whileTap={{ scale: 0.9 }}
                     >
-                      <Button 
-                        variant="ghost" 
+                      <Button
+                        variant="ghost"
                         size="icon"
                         onClick={(e) => {
                           e.stopPropagation();
@@ -2262,8 +2262,8 @@ const Notifications = () => {
             <div className="flex items-center gap-2">
               <Building className="h-3 w-3 md:h-4 md:w-4" />
               <span className="truncate">
-                {selectedSite === "all" 
-                  ? "All Sites" 
+                {selectedSite === "all"
+                  ? "All Sites"
                   : allSites.find(s => s._id === selectedSite)?.name || "Select site"}
               </span>
             </div>
@@ -2296,7 +2296,7 @@ const Notifications = () => {
           ))}
         </SelectContent>
       </Select>
-      
+
       {(selectedSite !== "all" || filter !== "all") && (
         <Button
           variant="ghost"
@@ -2320,7 +2320,7 @@ const Notifications = () => {
   // Function to extract unique sites from notifications
   const extractUniqueSites = (notifications: StoredNotification[]): SiteFilter[] => {
     const siteMap = new Map<string, SiteFilter>();
-    
+
     notifications.forEach(notification => {
       if (notification.siteName && notification.siteId) {
         if (!siteMap.has(notification.siteId)) {
@@ -2340,14 +2340,14 @@ const Notifications = () => {
         }
       }
     });
-    
+
     return Array.from(siteMap.values()).sort((a, b) => a.name.localeCompare(b.name));
   };
 
   // Function to filter notifications based on current filters
   const getFilteredNotifications = () => {
     let filtered = notifications;
-    
+
     // Apply site filter
     if (selectedSite !== 'all') {
       filtered = filtered.filter(n => {
@@ -2355,28 +2355,28 @@ const Notifications = () => {
         if (n.siteId === selectedSite) {
           return true;
         }
-        
+
         // Check if notification has a site name that matches any site
         if (n.siteName) {
           const selectedSiteData = allSites.find(s => s._id === selectedSite);
           if (selectedSiteData) {
             const siteName = selectedSiteData.name.toLowerCase();
             const notificationSiteName = (n.siteName || '').toLowerCase();
-            
+
             if (notificationSiteName.includes(siteName) || siteName.includes(notificationSiteName)) {
               return true;
             }
-            
+
             // Check client name match
             const clientName = selectedSiteData.clientName.toLowerCase();
             const notificationClientName = (n.clientName || '').toLowerCase();
-            
+
             if (notificationClientName.includes(clientName) || clientName.includes(notificationClientName)) {
               return true;
             }
           }
         }
-        
+
         // For inventory items, check if site matches
         if (n.notificationType?.includes('inventory') && n.siteName) {
           const selectedSiteData = allSites.find(s => s._id === selectedSite);
@@ -2384,18 +2384,18 @@ const Notifications = () => {
             return true;
           }
         }
-        
+
         return false;
       });
     }
-    
+
     // Apply read/unread filter
     if (filter === 'unread') {
       filtered = filtered.filter(n => !n.read);
     } else if (filter === 'read') {
       filtered = filtered.filter(n => n.read);
     }
-    
+
     return filtered;
   };
 
@@ -2410,7 +2410,7 @@ const Notifications = () => {
       const notifDate = new Date(n.createdAt);
       return notifDate.toDateString() === today.toDateString();
     }).length;
-    
+
     return { total, unread, urgent, highPriority, todayNotifications };
   };
 
@@ -2430,9 +2430,9 @@ const Notifications = () => {
 
     // Listen for real-time notifications
     const cleanup = notificationService.setupBroadcastListener((data) => {
-      if (data.type === 'SITE_ADDED' || data.type === 'NEW_NOTIFICATION' || 
-          data.type === 'INVENTORY_UPDATE' || data.type === 'MACHINE_UPDATE' ||
-          data.type === 'LEAVE_REQUEST' || data.type === 'LEAVE_STATUS_UPDATE') {
+      if (data.type === 'SITE_ADDED' || data.type === 'NEW_NOTIFICATION' ||
+        data.type === 'INVENTORY_UPDATE' || data.type === 'MACHINE_UPDATE' ||
+        data.type === 'LEAVE_REQUEST' || data.type === 'LEAVE_STATUS_UPDATE') {
         fetchNotifications(true);
       }
     });
@@ -2466,13 +2466,13 @@ const Notifications = () => {
     if (autoRefreshRef.current) {
       clearInterval(autoRefreshRef.current);
     }
-    
+
     if (autoRefresh) {
       autoRefreshRef.current = setInterval(() => {
         fetchNotifications();
       }, 300000);
     }
-    
+
     return () => {
       if (autoRefreshRef.current) {
         clearInterval(autoRefreshRef.current);
@@ -2502,7 +2502,7 @@ const Notifications = () => {
     try {
       const date = new Date(dateString);
       if (isNaN(date.getTime())) return "Recently";
-      
+
       const now = new Date();
       const diffMs = now.getTime() - date.getTime();
       const diffMins = Math.floor(diffMs / 60000);
@@ -2513,7 +2513,7 @@ const Notifications = () => {
       if (diffMins < 60) return `${diffMins} min${diffMins !== 1 ? 's' : ''} ago`;
       if (diffHours < 24) return `${diffHours} hour${diffHours !== 1 ? 's' : ''} ago`;
       if (diffDays < 7) return `${diffDays} day${diffDays !== 1 ? 's' : ''} ago`;
-      
+
       return date.toLocaleDateString('en-IN', {
         day: '2-digit',
         month: 'short',
@@ -2546,7 +2546,7 @@ const Notifications = () => {
 
     try {
       setLoading(true);
-      
+
       // Load all sites first
       try {
         const sites = await fetchSites();
@@ -2554,7 +2554,7 @@ const Notifications = () => {
       } catch (error) {
         console.error('Error fetching sites:', error);
       }
-      
+
       // Wrap all fetches in try-catch to prevent one failure from breaking everything
       const fetchPromises = [
         fetchApiNotifications().catch(() => []),
@@ -2567,9 +2567,9 @@ const Notifications = () => {
         fetchMachineStatisticsNotifications().catch(() => []),
         fetchInventoryStatisticsNotifications().catch(() => [])
       ];
-      
+
       const results = await Promise.all(fetchPromises);
-      
+
       // Combine all results
       let allNotifications: StoredNotification[] = [];
       results.forEach(result => {
@@ -2577,20 +2577,20 @@ const Notifications = () => {
           allNotifications = [...allNotifications, ...result];
         }
       });
-      
+
       // =========== APPLY PERSISTENT READ STATUS ===========
       const readStatus = getReadStatusFromStorage();
-      
+
       // Apply read status to notifications
       allNotifications = allNotifications.map(notification => ({
         ...notification,
         read: readStatus[notification.id] || false
       }));
-      
+
       // Apply settings filters
       const filteredNotifications = allNotifications.filter(notification => {
         if (!notification.notificationType) return true;
-        
+
         // Filter based on notification type
         switch (notification.notificationType) {
           case 'site_addition':
@@ -2641,19 +2641,19 @@ const Notifications = () => {
             return true;
         }
       });
-      
+
       // Remove duplicates based on id
       const uniqueNotifications = Array.from(
         new Map(filteredNotifications.map(n => [n.id, n])).values()
       );
-      
+
       // Sort by priority and date (newest first for same priority)
       uniqueNotifications.sort((a, b) => {
         const priorityOrder = { 'high': 0, 'medium': 1, 'low': 2 };
         if (a.priority !== b.priority) {
           return priorityOrder[a.priority] - priorityOrder[b.priority];
         }
-        
+
         try {
           const dateA = new Date(a.createdAt);
           const dateB = new Date(b.createdAt);
@@ -2663,34 +2663,34 @@ const Notifications = () => {
           return 0;
         }
       });
-      
+
       const oldIds = new Set(notifications.map(n => n.id));
       const trulyNew = uniqueNotifications.filter(n => !oldIds.has(n.id));
-      
+
       setNotifications(uniqueNotifications);
-      
+
       // Extract unique sites from notifications
       const sites = extractUniqueSites(uniqueNotifications);
       setAvailableSites(sites);
-      
+
       if (showNewIndicator && trulyNew.length > 0 && settings.desktopNotifications) {
         showSystemNotificationForNew(trulyNew);
         setNewNotificationsCount(trulyNew.length);
-        
+
         // Show celebration effect for new notifications
         if (trulyNew.length > 0) {
           toast.success(`🎉 ${trulyNew.length} new notification${trulyNew.length > 1 ? 's' : ''}!`, {
             duration: 3000,
           });
         }
-        
+
         if (settings.soundNotifications && trulyNew.some(n => n.priority === 'high' || n.type === 'urgent')) {
           notificationService.showSystemNotification("New High Priority Notifications", {
             body: `You have ${trulyNew.length} new notifications`
           });
         }
       }
-      
+
       setLastChecked(new Date());
       console.log(`Total notifications loaded: ${uniqueNotifications.length}`);
       console.log(`Unique sites found: ${sites.length}`);
@@ -2709,23 +2709,23 @@ const Notifications = () => {
       if (!apiResult.success) {
         console.warn('Failed to mark all API notifications as read:', apiResult.error);
       }
-      
+
       // Mark site notifications as read in cache
       notificationService.markAllAsRead();
-      
+
       // Mark all local notifications as read in localStorage
       const currentStatus = getReadStatusFromStorage();
       const allNotificationIds = notifications.map(n => n.id);
-      
+
       allNotificationIds.forEach(id => {
         currentStatus[id] = true;
       });
-      
+
       saveReadStatusToStorage(currentStatus);
-      
+
       // Mark all local notifications as read
       setNotifications(notifications.map(n => ({ ...n, read: true })));
-      
+
       setNewNotificationsCount(0);
       toast.success("All notifications marked as read! 🎉", {
         duration: 3000,
@@ -2747,12 +2747,12 @@ const Notifications = () => {
           // Continue with local deletion anyway
         }
       }
-      
+
       // Remove from local state AND localStorage
       const status = getReadStatusFromStorage();
       delete status[id];
       saveReadStatusToStorage(status);
-      
+
       setNotifications(notifications.filter(n => n.id !== id));
       toast.success("Notification removed!", {
         icon: "🗑️",
@@ -2766,7 +2766,7 @@ const Notifications = () => {
   const handleViewDetails = (notification: StoredNotification) => {
     setViewNotification(notification);
     setDialogOpen(true);
-    
+
     if (!notification.read) {
       handleMarkAsRead(notification.id);
     }
@@ -2776,7 +2776,7 @@ const Notifications = () => {
     try {
       // Save to localStorage first
       markNotificationAsReadInStorage(id);
-      
+
       // Check if it's an API notification
       if (/^[a-fA-F0-9]{24}$/.test(id) || !id.includes('_')) {
         // For API notifications
@@ -2785,17 +2785,17 @@ const Notifications = () => {
           console.warn('Failed to mark API notification as read:', result.error);
         }
       }
-      
+
       // Update local state with animation
-      setNotifications(notifications.map(n => 
+      setNotifications(notifications.map(n =>
         n.id === id ? { ...n, read: true } : n
       ));
-      
+
       toast.success("✅ Marked as read!");
     } catch (error: any) {
       console.error("Failed to mark notification as read:", error);
       // Still update local state even if API call fails
-      setNotifications(notifications.map(n => 
+      setNotifications(notifications.map(n =>
         n.id === id ? { ...n, read: true } : n
       ));
     }
@@ -2805,12 +2805,12 @@ const Notifications = () => {
     try {
       // Save to localStorage
       markNotificationAsUnreadInStorage(id);
-      
+
       // Update local state
-      setNotifications(notifications.map(n => 
+      setNotifications(notifications.map(n =>
         n.id === id ? { ...n, read: false } : n
       ));
-      
+
       toast.success("👁️ Marked as unread!");
     } catch (error: any) {
       console.error("Failed to mark notification as unread:", error);
@@ -2819,7 +2819,7 @@ const Notifications = () => {
   };
 
   const getTypeColor = (type: string) => {
-    switch(type) {
+    switch (type) {
       case "success": return "default";
       case "warning": return "destructive";
       case "urgent": return "destructive";
@@ -2835,7 +2835,7 @@ const Notifications = () => {
       if (notificationType === 'site_deletion') return <Trash2 className="h-4 w-4 md:h-5 md:w-5 mr-1 md:mr-2 text-red-500" />;
       if (notificationType === 'site_update') return <Building className="h-4 w-4 md:h-5 md:w-5 mr-1 md:mr-2 text-amber-500" />;
     }
-    
+
     if (notificationType?.includes('task_')) {
       if (notificationType === 'task_creation') return <Bell className="h-4 w-4 md:h-5 md:w-5 mr-1 md:mr-2 text-indigo-500" />;
       if (notificationType === 'task_assignment') return <Users className="h-4 w-4 md:h-5 md:w-5 mr-1 md:mr-2 text-teal-500" />;
@@ -2843,20 +2843,20 @@ const Notifications = () => {
       if (notificationType === 'task_update') return <Clock className="h-4 w-4 md:h-5 md:w-5 mr-1 md:mr-2 text-cyan-500" />;
       if (notificationType === 'task_overdue') return <AlertCircle className="h-4 w-4 md:h-5 md:w-5 mr-1 md:mr-2 text-rose-500" />;
     }
-    
+
     if (notificationType?.includes('inventory_')) {
       if (notificationType === 'inventory_out_of_stock') return <AlertOctagon className="h-4 w-4 md:h-5 md:w-5 mr-1 md:mr-2 text-red-500" />;
       if (notificationType === 'inventory_critical') return <AlertCircle className="h-4 w-4 md:h-5 md:w-5 mr-1 md:mr-2 text-orange-500" />;
       if (notificationType === 'inventory_low_stock') return <Package className="h-4 w-4 md:h-5 md:w-5 mr-1 md:mr-2 text-yellow-500" />;
       return <ShoppingBag className="h-4 w-4 md:h-5 md:w-5 mr-1 md:mr-2" />;
     }
-    
+
     if (notificationType?.includes('machine_')) {
       if (notificationType === 'machine_breakdown') return <AlertTriangle className="h-4 w-4 md:h-5 md:w-5 mr-1 md:mr-2 text-red-500" />;
       if (notificationType === 'machine_maintenance') return <Cpu className="h-4 w-4 md:h-5 md:w-5 mr-1 md:mr-2 text-blue-500" />;
       return <Cpu className="h-4 w-4 md:h-5 md:w-5 mr-1 md:mr-2" />;
     }
-    
+
     if (notificationType?.includes('leave_')) {
       if (notificationType === 'leave_approved') return <CheckCircle className="h-4 w-4 md:h-5 md:w-5 mr-1 md:mr-2 text-green-500" />;
       if (notificationType === 'leave_rejected') return <AlertCircle className="h-4 w-4 md:h-5 md:w-5 mr-1 md:mr-2 text-red-500" />;
@@ -2865,8 +2865,8 @@ const Notifications = () => {
       if (notificationType === 'leave_pending') return <Clock className="h-4 w-4 md:h-5 md:w-5 mr-1 md:mr-2 text-yellow-500" />;
       return <CalendarDays className="h-4 w-4 md:h-5 md:w-5 mr-1 md:mr-2" />;
     }
-    
-    switch(type) {
+
+    switch (type) {
       case "call": return <Phone className="h-4 w-4 md:h-5 md:w-5 mr-1 md:mr-2 text-green-500" />;
       case "email": return <Mail className="h-4 w-4 md:h-5 md:w-5 mr-1 md:mr-2 text-blue-500" />;
       case "meeting": return <Calendar className="h-4 w-4 md:h-5 md:w-5 mr-1 md:mr-2 text-purple-500" />;
@@ -2876,7 +2876,7 @@ const Notifications = () => {
   };
 
   const getPriorityColor = (priority: string) => {
-    switch(priority) {
+    switch (priority) {
       case "high": return "bg-red-500 animate-pulse";
       case "medium": return "bg-yellow-500";
       case "low": return "bg-green-500";
@@ -2885,7 +2885,7 @@ const Notifications = () => {
   };
 
   const getLeaveRequestTypeBadge = (notificationType?: string) => {
-    switch(notificationType) {
+    switch (notificationType) {
       case 'leave_request':
         return <Badge variant="secondary" className="text-[8px] md:text-xs bg-gradient-to-r from-indigo-500 to-purple-500 px-1.5 md:px-2 py-0 md:py-0.5">New Request</Badge>;
       case 'leave_approved':
@@ -2919,17 +2919,17 @@ const Notifications = () => {
   const clearAllNotifications = () => {
     if (confirm("Are you sure you want to clear all notifications?")) {
       notificationService.clearAllNotifications();
-      
+
       // Clear all read status from localStorage
       clearAllReadStatusFromStorage();
-      
+
       // Filter out only API notifications to keep (these will be refetched)
-      const apiNotifications = notifications.filter(n => 
+      const apiNotifications = notifications.filter(n =>
         /^[a-fA-F0-9]{24}$/.test(n.id) || !n.id.includes('_')
       );
-      
+
       setNotifications(apiNotifications);
-      
+
       toast.success("All local notifications cleared! 🧹", {
         duration: 3000,
       });
@@ -3019,16 +3019,16 @@ const Notifications = () => {
   return (
     <div className="min-h-screen bg-gradient-to-b from-background to-muted/20">
       <DashboardHeader title="Notifications" onMenuClick={handleMenuClick} />
-      
+
       {/* Main App Sidebar - Only shown on mobile when open */}
       {mobileSidebarOpen && (
-        <DashboardSidebar 
+        <DashboardSidebar
           mobileOpen={mobileSidebarOpen}
           onMobileClose={handleMobileClose}
         />
       )}
-      
-      <motion.div 
+
+      <motion.div
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.5 }}
@@ -3050,8 +3050,8 @@ const Notifications = () => {
                     animate={{ scale: 1 }}
                     transition={{ type: "spring", stiffness: 200 }}
                   >
-                    <Badge 
-                      variant="destructive" 
+                    <Badge
+                      variant="destructive"
                       className="animate-pulse bg-gradient-to-r from-red-500 to-pink-500 text-[10px] md:text-xs px-1.5 md:px-2 py-0 md:py-0.5"
                     >
                       <Sparkles className="h-2 w-2 md:h-3 md:w-3 mr-0.5 md:mr-1" />
@@ -3061,7 +3061,7 @@ const Notifications = () => {
                 )}
               </div>
             </div>
-            
+
             <div className="flex items-center gap-1 md:gap-2 text-[10px] md:text-sm text-muted-foreground">
               {!isOnline && (
                 <Badge variant="outline" className="text-destructive animate-pulse text-[10px] md:text-xs px-1.5 md:px-2 py-0 md:py-0.5">
@@ -3074,7 +3074,7 @@ const Notifications = () => {
                   <TooltipTrigger asChild>
                     <span className="flex items-center gap-0.5 md:gap-1 bg-muted/50 px-1.5 md:px-2 py-0.5 md:py-1 rounded-md cursor-help">
                       <Clock className="h-2 w-2 md:h-3 md:w-3" />
-                      <span className="hidden xs:inline">Last:</span> {lastChecked.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}
+                      <span className="hidden xs:inline">Last:</span> {lastChecked.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
                     </span>
                   </TooltipTrigger>
                   <TooltipContent>
@@ -3084,14 +3084,14 @@ const Notifications = () => {
               </TooltipProvider>
             </div>
           </div>
-          
+
           <div className="flex gap-1 md:gap-2">
             <motion.div
               whileHover={{ scale: 1.05 }}
               whileTap={{ scale: 0.95 }}
             >
-              <Button 
-                variant="outline" 
+              <Button
+                variant="outline"
                 size="sm"
                 onClick={handleRefresh}
                 className="gap-1 md:gap-2 h-7 md:h-10 text-xs md:text-sm px-2 md:px-4"
@@ -3104,9 +3104,9 @@ const Notifications = () => {
               whileHover={{ scale: 1.05 }}
               whileTap={{ scale: 0.95 }}
             >
-              <Button 
+              <Button
                 size="sm"
-                onClick={handleMarkAllRead} 
+                onClick={handleMarkAllRead}
                 disabled={unreadCount === 0}
                 className="bg-gradient-to-r from-primary to-secondary gap-1 md:gap-2 h-7 md:h-10 text-xs md:text-sm px-2 md:px-4"
               >
@@ -3118,7 +3118,7 @@ const Notifications = () => {
         </div>
 
         {loading ? (
-          <motion.div 
+          <motion.div
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             className="flex justify-center items-center py-8 md:py-12"
@@ -3146,8 +3146,8 @@ const Notifications = () => {
                   </TabsTrigger>
                   <TabsTrigger value="unread" className="text-xs md:text-sm px-1 md:px-2">
                     Unread
-                    <Badge 
-                      variant="default" 
+                    <Badge
+                      variant="default"
                       className="ml-1 md:ml-2 px-1 py-0 text-[8px] md:text-xs bg-gradient-to-r from-primary to-secondary"
                     >
                       {notifications.filter(n => !n.read).length}
@@ -3160,14 +3160,14 @@ const Notifications = () => {
                     </Badge>
                   </TabsTrigger>
                 </TabsList>
-                
+
                 {/* Site Filter */}
                 <SiteSelector />
               </div>
-              
+
               {/* Filter Stats */}
               {selectedSite !== 'all' && (
-                <motion.div 
+                <motion.div
                   initial={{ opacity: 0, height: 0 }}
                   animate={{ opacity: 1, height: 'auto' }}
                   className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 text-[10px] md:text-sm text-muted-foreground bg-gradient-to-r from-primary/5 to-secondary/5 p-2 md:p-3 rounded-md mb-3 md:mb-4 border"
@@ -3180,9 +3180,9 @@ const Notifications = () => {
                       </span>
                     </span>
                   </div>
-                  <Button 
-                    variant="ghost" 
-                    size="sm" 
+                  <Button
+                    variant="ghost"
+                    size="sm"
                     onClick={() => setSelectedSite('all')}
                     className="h-6 md:h-8 px-2 text-[10px] md:text-xs"
                   >
@@ -3190,10 +3190,10 @@ const Notifications = () => {
                   </Button>
                 </motion.div>
               )}
-              
+
               {/* All Tab Content */}
               <TabsContent value="all" className="mt-0">
-                <NotificationList 
+                <NotificationList
                   notifications={filteredNotifications}
                   filter={filter}
                   handleViewDetails={handleViewDetails}
@@ -3208,10 +3208,10 @@ const Notifications = () => {
                   handleMarkAllRead={handleMarkAllRead}
                 />
               </TabsContent>
-              
+
               {/* Unread Tab Content */}
               <TabsContent value="unread" className="mt-0">
-                <NotificationList 
+                <NotificationList
                   notifications={filteredNotifications.filter(n => !n.read)}
                   filter={filter}
                   handleViewDetails={handleViewDetails}
@@ -3226,10 +3226,10 @@ const Notifications = () => {
                   handleMarkAllRead={handleMarkAllRead}
                 />
               </TabsContent>
-              
+
               {/* Read Tab Content */}
               <TabsContent value="read" className="mt-0">
-                <NotificationList 
+                <NotificationList
                   notifications={filteredNotifications.filter(n => n.read)}
                   filter={filter}
                   handleViewDetails={handleViewDetails}
@@ -3248,7 +3248,7 @@ const Notifications = () => {
           </div>
         )}
 
-        <motion.div 
+        <motion.div
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           transition={{ delay: 0.3 }}
@@ -3289,7 +3289,7 @@ const Notifications = () => {
             <DialogTitle className="text-base md:text-lg">Notification Details</DialogTitle>
           </DialogHeader>
           {viewNotification && (
-            <motion.div 
+            <motion.div
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               className="space-y-3 md:space-y-4"
@@ -3302,16 +3302,16 @@ const Notifications = () => {
                 </Badge>
                 <div className={`w-2 h-2 md:w-3 md:h-3 rounded-full ${getPriorityColor(viewNotification.priority)}`} />
               </div>
-              
+
               {viewNotification.notificationType?.includes('site_') ? (
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 md:gap-4">
                   {viewNotification.siteName && (
                     <div>
                       <h4 className="font-medium text-[10px] md:text-xs text-muted-foreground mb-0.5 md:mb-1">Site Name</h4>
                       <p className="text-xs md:text-sm font-medium">{viewNotification.siteName}</p>
-                      <Button 
-                        variant="link" 
-                        size="sm" 
+                      <Button
+                        variant="link"
+                        size="sm"
                         className="p-0 h-auto text-[10px] md:text-xs"
                         onClick={() => openSiteInNewTab(viewNotification.siteName)}
                       >
@@ -3354,9 +3354,9 @@ const Notifications = () => {
                     <div>
                       <h4 className="font-medium text-[10px] md:text-xs text-muted-foreground mb-0.5 md:mb-1">Task Title</h4>
                       <p className="text-xs md:text-sm font-medium">{viewNotification.taskTitle}</p>
-                      <Button 
-                        variant="link" 
-                        size="sm" 
+                      <Button
+                        variant="link"
+                        size="sm"
                         className="p-0 h-auto text-[10px] md:text-xs"
                         onClick={() => openTaskInNewTab(viewNotification.taskTitle)}
                       >
@@ -3405,9 +3405,9 @@ const Notifications = () => {
                     <div>
                       <h4 className="font-medium text-[10px] md:text-xs text-muted-foreground mb-0.5 md:mb-1">Item Name</h4>
                       <p className="text-xs md:text-sm font-medium">{viewNotification.itemName}</p>
-                      <Button 
-                        variant="link" 
-                        size="sm" 
+                      <Button
+                        variant="link"
+                        size="sm"
                         className="p-0 h-auto text-[10px] md:text-xs"
                         onClick={() => openInventoryInNewTab(viewNotification.itemSku)}
                       >
@@ -3431,13 +3431,12 @@ const Notifications = () => {
                             <span>Reorder: {viewNotification.reorderLevel}</span>
                           </div>
                           <div className="w-full bg-gray-200 rounded-full h-1.5 md:h-2">
-                            <div 
-                              className={`h-1.5 md:h-2 rounded-full ${
-                                viewNotification.currentQuantity === 0 ? 'bg-red-500' :
-                                viewNotification.currentQuantity <= Math.floor(viewNotification.reorderLevel * 0.3) ? 'bg-orange-500' :
-                                viewNotification.currentQuantity <= viewNotification.reorderLevel ? 'bg-yellow-500' :
-                                'bg-green-500'
-                              }`}
+                            <div
+                              className={`h-1.5 md:h-2 rounded-full ${viewNotification.currentQuantity === 0 ? 'bg-red-500' :
+                                  viewNotification.currentQuantity <= Math.floor(viewNotification.reorderLevel * 0.3) ? 'bg-orange-500' :
+                                    viewNotification.currentQuantity <= viewNotification.reorderLevel ? 'bg-yellow-500' :
+                                      'bg-green-500'
+                                }`}
                               style={{
                                 width: `${Math.min(100, (viewNotification.currentQuantity / (viewNotification.reorderLevel * 2)) * 100)}%`
                               }}
@@ -3478,9 +3477,9 @@ const Notifications = () => {
                     <div>
                       <h4 className="font-medium text-[10px] md:text-xs text-muted-foreground mb-0.5 md:mb-1">Machine Name</h4>
                       <p className="text-xs md:text-sm font-medium">{viewNotification.machineName}</p>
-                      <Button 
-                        variant="link" 
-                        size="sm" 
+                      <Button
+                        variant="link"
+                        size="sm"
                         className="p-0 h-auto text-[10px] md:text-xs"
                         onClick={() => openMachinesInNewTab(viewNotification.machineName)}
                       >
@@ -3499,9 +3498,9 @@ const Notifications = () => {
                       <h4 className="font-medium text-[10px] md:text-xs text-muted-foreground mb-0.5 md:mb-1">Status</h4>
                       <Badge className={`
                         text-[8px] md:text-xs px-1.5 md:px-2 py-0 md:py-0.5
-                        ${viewNotification.machineStatus === 'operational' ? 'bg-green-100 text-green-800' : 
-                          viewNotification.machineStatus === 'maintenance' ? 'bg-yellow-100 text-yellow-800' : 
-                          'bg-red-100 text-red-800'} border-0`}
+                        ${viewNotification.machineStatus === 'operational' ? 'bg-green-100 text-green-800' :
+                          viewNotification.machineStatus === 'maintenance' ? 'bg-yellow-100 text-yellow-800' :
+                            'bg-red-100 text-red-800'} border-0`}
                       >
                         {viewNotification.machineStatus}
                       </Badge>
@@ -3526,9 +3525,9 @@ const Notifications = () => {
                     <div>
                       <h4 className="font-medium text-[10px] md:text-xs text-muted-foreground mb-0.5 md:mb-1">Employee Name</h4>
                       <p className="text-xs md:text-sm font-medium">{viewNotification.employeeName}</p>
-                      <Button 
-                        variant="link" 
-                        size="sm" 
+                      <Button
+                        variant="link"
+                        size="sm"
                         className="p-0 h-auto text-[10px] md:text-xs"
                         onClick={() => openLeavesInNewTab(viewNotification.employeeName)}
                       >
@@ -3588,9 +3587,9 @@ const Notifications = () => {
                       <h4 className="font-medium text-[10px] md:text-xs text-muted-foreground mb-0.5 md:mb-1">Status</h4>
                       <Badge variant={
                         viewNotification.leaveStatus === 'approved' ? 'default' :
-                        viewNotification.leaveStatus === 'rejected' ? 'destructive' :
-                        viewNotification.leaveStatus === 'pending' ? 'secondary' :
-                        'outline'
+                          viewNotification.leaveStatus === 'rejected' ? 'destructive' :
+                            viewNotification.leaveStatus === 'pending' ? 'secondary' :
+                              'outline'
                       } className="text-[8px] md:text-xs capitalize">
                         {viewNotification.leaveStatus}
                       </Badge>
@@ -3644,14 +3643,14 @@ const Notifications = () => {
                   </div>
                 </div>
               )}
-              
+
               <div>
                 <h4 className="font-medium text-[10px] md:text-xs text-muted-foreground mb-0.5 md:mb-1">Message</h4>
                 <div className="p-2 md:p-3 border rounded-md bg-muted/50">
                   <p className="text-xs md:text-sm">{viewNotification.message}</p>
                 </div>
               </div>
-              
+
               {viewNotification.notes && (
                 <div>
                   <h4 className="font-medium text-[10px] md:text-xs text-muted-foreground mb-0.5 md:mb-1">Notes</h4>
@@ -3660,7 +3659,7 @@ const Notifications = () => {
                   </div>
                 </div>
               )}
-              
+
               {viewNotification.leaveReason && (
                 <div>
                   <h4 className="font-medium text-[10px] md:text-xs text-muted-foreground mb-0.5 md:mb-1">Leave Reason</h4>
@@ -3669,11 +3668,11 @@ const Notifications = () => {
                   </div>
                 </div>
               )}
-              
+
               <div className="flex flex-col sm:flex-row gap-2 pt-2 md:pt-4">
                 {!viewNotification.read ? (
-                  <Button 
-                    variant="outline" 
+                  <Button
+                    variant="outline"
                     onClick={() => {
                       handleMarkAsRead(viewNotification.id);
                       setDialogOpen(false);
@@ -3683,8 +3682,8 @@ const Notifications = () => {
                     Mark as Read
                   </Button>
                 ) : (
-                  <Button 
-                    variant="outline" 
+                  <Button
+                    variant="outline"
                     onClick={() => {
                       handleMarkAsUnread(viewNotification.id);
                       setDialogOpen(false);
@@ -3695,8 +3694,8 @@ const Notifications = () => {
                   </Button>
                 )}
                 {viewNotification.notificationType?.includes('site_') && (
-                  <Button 
-                    variant="outline" 
+                  <Button
+                    variant="outline"
                     onClick={() => {
                       openSiteInNewTab(viewNotification.siteName);
                       setDialogOpen(false);
@@ -3707,8 +3706,8 @@ const Notifications = () => {
                   </Button>
                 )}
                 {viewNotification.notificationType?.includes('task_') && (
-                  <Button 
-                    variant="outline" 
+                  <Button
+                    variant="outline"
                     onClick={() => {
                       openTaskInNewTab(viewNotification.taskTitle);
                       setDialogOpen(false);
@@ -3719,8 +3718,8 @@ const Notifications = () => {
                   </Button>
                 )}
                 {viewNotification.notificationType?.includes('inventory_') && (
-                  <Button 
-                    variant="outline" 
+                  <Button
+                    variant="outline"
                     onClick={() => {
                       openInventoryInNewTab(viewNotification.itemSku);
                       setDialogOpen(false);
@@ -3731,8 +3730,8 @@ const Notifications = () => {
                   </Button>
                 )}
                 {viewNotification.notificationType?.includes('machine_') && (
-                  <Button 
-                    variant="outline" 
+                  <Button
+                    variant="outline"
                     onClick={() => {
                       openMachinesInNewTab(viewNotification.machineName);
                       setDialogOpen(false);
@@ -3743,8 +3742,8 @@ const Notifications = () => {
                   </Button>
                 )}
                 {viewNotification.notificationType?.includes('leave_') && (
-                  <Button 
-                    variant="outline" 
+                  <Button
+                    variant="outline"
                     onClick={() => {
                       openLeavesInNewTab(viewNotification.employeeName);
                       setDialogOpen(false);
@@ -3754,8 +3753,8 @@ const Notifications = () => {
                     View Leaves
                   </Button>
                 )}
-                <Button 
-                  variant="destructive" 
+                <Button
+                  variant="destructive"
                   onClick={() => {
                     handleDelete(viewNotification.id);
                     setDialogOpen(false);

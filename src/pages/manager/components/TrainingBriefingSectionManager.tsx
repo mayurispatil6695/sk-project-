@@ -88,7 +88,7 @@ import axios from "axios";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 
 const API_URL = import.meta.env.VITE_API_URL ||
-  (import.meta.env.DEV ? 'http://localhost:5001/api' : 'https://sk-backend-btbj.onrender.com/api');
+  (import.meta.env.DEV ? 'http://localhost:5001/api' : 'https://sk-backend-868y.onrender.com');
 // Types
 interface TrainingSession {
   _id: string;
@@ -2396,9 +2396,10 @@ const TrainingBriefingSectionManager: React.FC = () => {
   };
 
   const fetchEmployees = async () => {
-    try {const response = await axios.get(`${API_URL}/employees`, {
-  params: { limit: 10000 }
-});
+    try {
+      const response = await axios.get(`${API_URL}/employees`, {
+        params: { limit: 10000 }
+      });
       if (response.data.success) {
         const employeesData = response.data.data || [];
         // ✅ No site filtering - show ALL active employees

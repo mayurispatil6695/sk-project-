@@ -2,11 +2,11 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { 
-  Plus, 
-  FileText, 
-  Calendar, 
-  Eye, 
+import {
+  Plus,
+  FileText,
+  Calendar,
+  Eye,
   Loader2,
   Building,
   User,
@@ -85,8 +85,8 @@ interface AssignTaskWithPersonal extends AssignTask {
   derivedStatus?: 'pending' | 'in-progress' | 'completed' | 'cancelled';
 }
 
-const API_URL = import.meta.env.VITE_API_URL || 
-  (import.meta.env.DEV ? 'http://localhost:5001/api' : 'https://sk-backend-btbj.onrender.com/api');
+const API_URL = import.meta.env.VITE_API_URL ||
+  (import.meta.env.DEV ? 'http://localhost:5001/api' : 'https://sk-backend-868y.onrender.com');
 // ==================== CAMERA COMPONENT ====================
 
 interface CameraComponentProps {
@@ -117,18 +117,18 @@ const CameraComponent: React.FC<CameraComponentProps> = ({ onCapture, onClose })
       const devices = await navigator.mediaDevices.enumerateDevices();
       const videoDevices = devices.filter(device => device.kind === 'videoinput');
       setDevices(videoDevices);
-      
+
       if (videoDevices.length === 0) {
         setError('No camera found on this device');
         setHasPermission(false);
         return;
       }
-      
+
       const stream = await navigator.mediaDevices.getUserMedia({ video: true });
       stream.getTracks().forEach(track => track.stop());
       setHasPermission(true);
       setError(null);
-      
+
       if (videoDevices.length > 0 && !selectedDeviceId) {
         setSelectedDeviceId(videoDevices[0].deviceId);
       }
@@ -151,14 +151,14 @@ const CameraComponent: React.FC<CameraComponentProps> = ({ onCapture, onClose })
     try {
       setIsLoading(true);
       stopCamera();
-      
+
       const constraints: MediaStreamConstraints = {
         video: selectedDeviceId ? { deviceId: { exact: selectedDeviceId } } : true
       };
-      
+
       const stream = await navigator.mediaDevices.getUserMedia(constraints);
       streamRef.current = stream;
-      
+
       if (videoRef.current) {
         videoRef.current.srcObject = stream;
         videoRef.current.onloadedmetadata = () => {
@@ -188,7 +188,7 @@ const CameraComponent: React.FC<CameraComponentProps> = ({ onCapture, onClose })
       const video = videoRef.current;
       const canvas = canvasRef.current;
       const context = canvas.getContext('2d');
-      
+
       if (context && video.videoWidth > 0 && video.videoHeight > 0) {
         canvas.width = video.videoWidth;
         canvas.height = video.videoHeight;
@@ -249,7 +249,7 @@ const CameraComponent: React.FC<CameraComponentProps> = ({ onCapture, onClose })
           </Select>
         </div>
       )}
-      
+
       <div className="relative bg-gray-100 rounded-lg overflow-hidden" style={{ minHeight: '320px' }}>
         <video
           ref={videoRef}
@@ -264,7 +264,7 @@ const CameraComponent: React.FC<CameraComponentProps> = ({ onCapture, onClose })
           </div>
         )}
       </div>
-      
+
       <div className="flex gap-2">
         <Button onClick={capturePhoto} className="flex-1 bg-blue-600 hover:bg-blue-700">
           <Camera className="h-4 w-4 mr-2" />
@@ -274,7 +274,7 @@ const CameraComponent: React.FC<CameraComponentProps> = ({ onCapture, onClose })
           Cancel
         </Button>
       </div>
-      
+
       <canvas ref={canvasRef} className="hidden" />
     </div>
   );
@@ -300,22 +300,22 @@ const ManagerAssignTask: React.FC = () => {
   const [sites, setSites] = useState<any[]>([]);
   const [activeTab, setActiveTab] = useState('all');
   const [showAssignPopup, setShowAssignPopup] = useState(false);
-  
+
   // Camera states
   const [capturedImage, setCapturedImage] = useState<string | null>(null);
   const [selectedAttachmentTask, setSelectedAttachmentTask] = useState<AssignTaskWithPersonal | null>(null);
   const [uploadingPhoto, setUploadingPhoto] = useState(false);
-  
+
   // State for site staff counts
   const [siteStaffCounts, setSiteStaffCounts] = useState<SiteStaffCounts>({});
   const [isLoadingStaffCounts, setIsLoadingStaffCounts] = useState(false);
-  
+
   // State for site staff data (for view dialog)
-  const [siteStaffData, setSiteStaffData] = useState<{ 
+  const [siteStaffData, setSiteStaffData] = useState<{
     managers: Array<{ userId: string; name: string; taskCount: number }>,
     supervisors: Array<{ userId: string; name: string; taskCount: number }>
   }>({ managers: [], supervisors: [] });
-  
+
   const [isLoadingStaff, setIsLoadingStaff] = useState(false);
 
   // Fetch tasks on mount - only tasks relevant to this manager
@@ -334,34 +334,34 @@ const ManagerAssignTask: React.FC = () => {
 
   const fetchManagerTasks = async () => {
     if (!user) return;
-    
+
     try {
       setIsLoading(true);
       const managerId = user._id || user.id;
-      
+
       // Fetch tasks created by this manager AND tasks where this manager is assigned
       const [createdTasks, assignedTasks] = await Promise.all([
         assignTaskService.getTasksByManager(managerId),
         assignTaskService.getTasksWithManager(managerId)
       ]);
-      
+
       console.log('📊 Created tasks:', createdTasks.map(t => ({
         id: t._id,
         title: t.taskTitle,
         attachments: t.attachments?.length || 0,
         attachmentsData: t.attachments
       })));
-      
+
       console.log('📊 Assigned tasks:', assignedTasks.map(t => ({
         id: t._id,
         title: t.taskTitle,
         attachments: t.attachments?.length || 0,
         attachmentsData: t.attachments
       })));
-      
+
       // Combine and deduplicate tasks with personal flags
       const allTasksMap = new Map<string, AssignTaskWithPersonal>();
-      
+
       [...createdTasks, ...assignedTasks].forEach(task => {
         // Ensure arrays exist
         if (!task.attachments) {
@@ -370,10 +370,10 @@ const ManagerAssignTask: React.FC = () => {
         if (!task.hourlyUpdates) {
           task.hourlyUpdates = [];
         }
-        
+
         // Calculate derived status based on supervisors
         const derivedStatus = calculateTaskStatusFromSupervisors(task);
-        
+
         const taskWithPersonal: AssignTaskWithPersonal = {
           ...task,
           isCreatedByMe: task.createdBy === managerId,
@@ -382,9 +382,9 @@ const ManagerAssignTask: React.FC = () => {
         };
         allTasksMap.set(task._id, taskWithPersonal);
       });
-      
+
       const allTasks = Array.from(allTasksMap.values());
-      
+
       console.log('✅ Final tasks with attachments:', allTasks.map(t => ({
         id: t._id,
         title: t.taskTitle,
@@ -392,9 +392,9 @@ const ManagerAssignTask: React.FC = () => {
         attachments: t.attachments,
         derivedStatus: t.derivedStatus
       })));
-      
+
       setTasks(allTasks);
-      
+
     } catch (error) {
       console.error('Error fetching manager tasks:', error);
       toast.error('Failed to load tasks');
@@ -408,29 +408,29 @@ const ManagerAssignTask: React.FC = () => {
     if (!task.assignedSupervisors || task.assignedSupervisors.length === 0) {
       return task.status; // Fallback to task status if no supervisors
     }
-    
+
     const supervisorStatuses = task.assignedSupervisors.map(s => s.status);
-    
+
     // If any supervisor has 'in-progress', task is in-progress
     if (supervisorStatuses.includes('in-progress')) {
       return 'in-progress';
     }
-    
+
     // If all supervisors have 'completed', task is completed
     if (supervisorStatuses.every(status => status === 'completed')) {
       return 'completed';
     }
-    
+
     // If any supervisor has 'cancelled', task is cancelled
     if (supervisorStatuses.includes('cancelled')) {
       return 'cancelled';
     }
-    
+
     // If all supervisors have 'pending', task is pending
     if (supervisorStatuses.every(status => status === 'pending')) {
       return 'pending';
     }
-    
+
     // Default case - mix of pending and completed, show as in-progress
     return 'in-progress';
   };
@@ -438,13 +438,13 @@ const ManagerAssignTask: React.FC = () => {
   // Function to get supervisor status summary with counts
   const getSupervisorStatusSummary = (task: AssignTaskWithPersonal) => {
     if (!task.assignedSupervisors || task.assignedSupervisors.length === 0) {
-      return { 
+      return {
         status: task.status,
         counts: { pending: 0, inProgress: 0, completed: 0, cancelled: 0, total: 0 },
         message: 'No supervisors assigned'
       };
     }
-    
+
     const counts = {
       pending: task.assignedSupervisors.filter(s => s.status === 'pending').length,
       inProgress: task.assignedSupervisors.filter(s => s.status === 'in-progress').length,
@@ -452,7 +452,7 @@ const ManagerAssignTask: React.FC = () => {
       cancelled: task.assignedSupervisors.filter(s => s.status === 'cancelled').length,
       total: task.assignedSupervisors.length
     };
-    
+
     // Determine status message
     let message = '';
     if (counts.inProgress > 0) {
@@ -464,7 +464,7 @@ const ManagerAssignTask: React.FC = () => {
     } else {
       message = `${counts.pending} supervisor(s) pending`;
     }
-    
+
     return {
       status: task.derivedStatus || task.status,
       counts,
@@ -475,15 +475,15 @@ const ManagerAssignTask: React.FC = () => {
   const calculateSiteStaffCounts = async () => {
     try {
       setIsLoadingStaffCounts(true);
-      
+
       // Get all tasks to calculate staff counts
       const allTasks = await taskService.getAllTasks();
-      
+
       const counts: SiteStaffCounts = {};
-      
+
       allTasks.forEach(task => {
         if (!task.siteId) return;
-        
+
         if (!counts[task.siteId]) {
           counts[task.siteId] = {
             managers: 0,
@@ -492,11 +492,11 @@ const ManagerAssignTask: React.FC = () => {
             totalSupervisors: 0
           };
         }
-        
+
         // Count unique managers and supervisors for this site
         const uniqueManagers = new Set();
         const uniqueSupervisors = new Set();
-        
+
         task.assignedUsers?.forEach(user => {
           if (user.role === 'manager') {
             uniqueManagers.add(user.userId);
@@ -504,15 +504,15 @@ const ManagerAssignTask: React.FC = () => {
             uniqueSupervisors.add(user.userId);
           }
         });
-        
+
         counts[task.siteId].managers = uniqueManagers.size;
         counts[task.siteId].supervisors = uniqueSupervisors.size;
-        
+
         // Also get total counts including duplicates across tasks
         counts[task.siteId].totalManagers += task.assignedUsers?.filter(u => u.role === 'manager').length || 0;
         counts[task.siteId].totalSupervisors += task.assignedUsers?.filter(u => u.role === 'supervisor').length || 0;
       });
-      
+
       setSiteStaffCounts(counts);
     } catch (error) {
       console.error('Error calculating site staff counts:', error);
@@ -557,7 +557,7 @@ const ManagerAssignTask: React.FC = () => {
       }
       setShowViewDialog(true);
       await fetchSiteStaff(task.siteId);
-      
+
       console.log('📋 Viewing task with attachments:', {
         taskId: task._id,
         attachments: selectedTask?.attachments
@@ -578,7 +578,7 @@ const ManagerAssignTask: React.FC = () => {
     try {
       const task = tasks.find(t => t._id === taskId);
       if (!task) return;
-      
+
       const managerId = user?._id || user?.id;
       if (!managerId) {
         toast.error('Manager ID not found');
@@ -586,7 +586,7 @@ const ManagerAssignTask: React.FC = () => {
       }
 
       // Find the index of the current manager in the assignedManagers array
-      const managerIndex = task.assignedManagers?.findIndex(manager => 
+      const managerIndex = task.assignedManagers?.findIndex(manager =>
         manager.userId === managerId
       );
 
@@ -616,37 +616,37 @@ const ManagerAssignTask: React.FC = () => {
         if (!response.ok) {
           throw new Error('Failed to update personal status');
         }
- // ✅ NEW: Dispatch event
-    const task = tasks.find(t => t._id === taskId);
-    if (task) {
-      window.dispatchEvent(new CustomEvent('task-updated', {
-        detail: {
-          taskId: task._id,
-          taskTitle: task.taskTitle,
-          siteName: task.siteName,
-          newStatus,
-          updatedBy: user?.name || 'Manager',
-          notificationType: 'task_status_update'
-        }
-      }));
-      
-      // If completed, also dispatch task-completed
-      if (newStatus === 'completed') {
-        window.dispatchEvent(new CustomEvent('task-completed', {
-          detail: {
-            taskId: task._id,
-            taskTitle: task.taskTitle,
-            siteName: task.siteName,
-            completedBy: user?.name || 'Manager'
+        // ✅ NEW: Dispatch event
+        const task = tasks.find(t => t._id === taskId);
+        if (task) {
+          window.dispatchEvent(new CustomEvent('task-updated', {
+            detail: {
+              taskId: task._id,
+              taskTitle: task.taskTitle,
+              siteName: task.siteName,
+              newStatus,
+              updatedBy: user?.name || 'Manager',
+              notificationType: 'task_status_update'
+            }
+          }));
+
+          // If completed, also dispatch task-completed
+          if (newStatus === 'completed') {
+            window.dispatchEvent(new CustomEvent('task-completed', {
+              detail: {
+                taskId: task._id,
+                taskTitle: task.taskTitle,
+                siteName: task.siteName,
+                completedBy: user?.name || 'Manager'
+              }
+            }));
           }
-        }));
-      }
-    }
+        }
         toast.success(`Your status updated to ${newStatus}`);
       }
-      
+
       fetchManagerTasks(); // Refresh tasks
-      
+
       // Update selected task if it's being viewed
       if (selectedTask && selectedTask._id === taskId) {
         const updatedTask = await assignTaskService.getAssignTaskById(taskId);
@@ -699,7 +699,7 @@ const ManagerAssignTask: React.FC = () => {
 
       toast.success('Hourly update added');
       setHourlyUpdateText('');
-      
+
       // Refresh the selected task if it's open
       if (selectedTask && selectedTask._id === taskId) {
         const updatedTask = await assignTaskService.getAssignTaskById(taskId);
@@ -713,7 +713,7 @@ const ManagerAssignTask: React.FC = () => {
           });
         }
       }
-      
+
       fetchManagerTasks();
     } catch (error: any) {
       console.error('Error adding hourly update:', error);
@@ -742,14 +742,14 @@ const ManagerAssignTask: React.FC = () => {
 
     try {
       setUploadingPhoto(true);
-      
+
       // Convert data URL to blob
       const response = await fetch(capturedImage);
       const blob = await response.blob();
-      
+
       // Create a file from the blob
-      const file = new File([blob], `task-photo-${Date.now()}.jpg`, { 
-        type: 'image/jpeg' 
+      const file = new File([blob], `task-photo-${Date.now()}.jpg`, {
+        type: 'image/jpeg'
       });
 
       // Upload to server
@@ -780,11 +780,11 @@ const ManagerAssignTask: React.FC = () => {
       }
 
       toast.success('Photo uploaded successfully!');
-      
+
       // Close camera dialog
       setShowCameraDialog(false);
       setCapturedImage(null);
-      
+
       // Refresh the selected task if it's open
       if (selectedTask && selectedTask._id === selectedAttachmentTask._id) {
         const updatedTask = await assignTaskService.getAssignTaskById(selectedAttachmentTask._id);
@@ -798,9 +798,9 @@ const ManagerAssignTask: React.FC = () => {
           });
         }
       }
-      
+
       await fetchManagerTasks();
-      
+
     } catch (error: any) {
       console.error('Error uploading photo:', error);
       toast.error(error.message || 'Failed to upload photo');
@@ -820,7 +820,7 @@ const ManagerAssignTask: React.FC = () => {
       toast.error('User information not found');
       return;
     }
-    
+
     const uploadPromises = Array.from(files).map(async (file) => {
       try {
         const formData = new FormData();
@@ -850,10 +850,10 @@ const ManagerAssignTask: React.FC = () => {
         }
 
         const result = JSON.parse(responseText);
-        return { 
-          success: true, 
-          fileName: file.name, 
-          attachment: result.attachment || result 
+        return {
+          success: true,
+          fileName: file.name,
+          attachment: result.attachment || result
         };
       } catch (error) {
         console.error(`Error uploading ${file.name}:`, error);
@@ -865,7 +865,7 @@ const ManagerAssignTask: React.FC = () => {
 
     try {
       const results = await Promise.all(uploadPromises);
-      
+
       const successful = results.filter(r => r.success).length;
       const failed = results.filter(r => !r.success).length;
 
@@ -873,7 +873,7 @@ const ManagerAssignTask: React.FC = () => {
 
       if (successful > 0) {
         toast.success(`${successful} file(s) uploaded successfully to Cloudinary`);
-        
+
         // Refresh the selected task if it's open
         if (selectedTask && selectedTask._id === taskId) {
           const updatedTask = await assignTaskService.getAssignTaskById(taskId);
@@ -882,7 +882,7 @@ const ManagerAssignTask: React.FC = () => {
               taskId: updatedTask._id,
               attachments: updatedTask.attachments
             });
-            
+
             const derivedStatus = calculateTaskStatusFromSupervisors(updatedTask);
             setSelectedTask({
               ...updatedTask,
@@ -892,10 +892,10 @@ const ManagerAssignTask: React.FC = () => {
             });
           }
         }
-        
+
         await fetchManagerTasks();
       }
-      
+
       if (failed > 0) {
         toast.error(`${failed} file(s) failed to upload to Cloudinary`);
       }
@@ -942,7 +942,7 @@ const ManagerAssignTask: React.FC = () => {
       }
 
       toast.success('Attachment deleted');
-      
+
       // Refresh the selected task if it's open
       if (selectedTask && selectedTask._id === taskId) {
         const updatedTask = await assignTaskService.getAssignTaskById(taskId);
@@ -956,7 +956,7 @@ const ManagerAssignTask: React.FC = () => {
           });
         }
       }
-      
+
       fetchManagerTasks();
     } catch (error: any) {
       console.error('Error deleting attachment:', error);
@@ -1033,26 +1033,26 @@ const ManagerAssignTask: React.FC = () => {
   const filteredTasks = tasks.filter(task => {
     // Use derived status for filtering if available, otherwise use task.status
     const displayStatus = task.derivedStatus || task.status;
-    
+
     // Tab filter
     if (activeTab === 'pending' && displayStatus !== 'pending') return false;
     if (activeTab === 'in-progress' && displayStatus !== 'in-progress') return false;
     if (activeTab === 'completed' && displayStatus !== 'completed') return false;
-    
+
     // Assignment filter
     if (assignmentFilter === 'created-by-me' && !task.isCreatedByMe) return false;
     if (assignmentFilter === 'assigned-to-me' && !task.isAssignedToMe) return false;
-    
+
     // Search filter
     if (searchQuery) {
       const query = searchQuery.toLowerCase();
-      const matchesSearch = 
+      const matchesSearch =
         task.taskTitle.toLowerCase().includes(query) ||
         task.description.toLowerCase().includes(query) ||
         task.siteName.toLowerCase().includes(query) ||
         task.clientName.toLowerCase().includes(query) ||
         (task.createdByName && task.createdByName.toLowerCase().includes(query));
-      
+
       if (!matchesSearch) return false;
     }
 
@@ -1101,22 +1101,22 @@ const ManagerAssignTask: React.FC = () => {
   };
 
   return (
-    <motion.div 
+    <motion.div
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
       transition={{ duration: 0.3 }}
       className="min-h-screen bg-gradient-to-b from-background to-background/80"
     >
       {/* Header with Hamburger Menu - Mobile Responsive */}
-    <DashboardHeader 
-  title="Manager Tasks" 
-  subtitle="View and manage tasks assigned to you or created by you"
-  onMenuClick={onMenuClick}
-/>
+      <DashboardHeader
+        title="Manager Tasks"
+        subtitle="View and manage tasks assigned to you or created by you"
+        onMenuClick={onMenuClick}
+      />
 
       <div className="container mx-auto p-4 md:p-6 space-y-4 md:space-y-6">
         {/* Info Card */}
-       
+
 
         {/* Search and Filters */}
         <Card>
@@ -1225,7 +1225,7 @@ const ManagerAssignTask: React.FC = () => {
                 <FileText className="h-12 w-12 mx-auto mb-4 opacity-50" />
                 <p className="text-lg">No tasks found</p>
                 <p className="text-sm">
-                  {tasks.length === 0 
+                  {tasks.length === 0
                     ? 'No tasks have been assigned to you yet'
                     : 'Try adjusting your search or filters'}
                 </p>
@@ -1254,12 +1254,12 @@ const ManagerAssignTask: React.FC = () => {
                       const staffCounts = getStaffCountsForSite(task.siteId);
                       const supervisorSummary = getSupervisorStatusSummary(task);
                       const displayStatus = task.derivedStatus || task.status;
-                      
+
                       // Find current manager's status if they are assigned to this task
-                      const myManagerInfo = task.isAssignedToMe 
+                      const myManagerInfo = task.isAssignedToMe
                         ? task.assignedManagers?.find(m => m.userId === (user?._id || user?.id))
                         : null;
-                      
+
                       return (
                         <TableRow key={task._id}>
                           <TableCell>
@@ -1523,11 +1523,11 @@ const ManagerAssignTask: React.FC = () => {
                         <div className="col-span-2">
                           <p className="text-xs text-muted-foreground">Your Role</p>
                           <Badge variant="outline" className="mt-1">
-                            {selectedTask.isCreatedByMe 
-                              ? 'You created this task' 
+                            {selectedTask.isCreatedByMe
+                              ? 'You created this task'
                               : selectedTask.isAssignedToMe
-                              ? 'You are assigned as manager'
-                              : 'You are viewing this task'}
+                                ? 'You are assigned as manager'
+                                : 'You are viewing this task'}
                           </Badge>
                         </div>
                       </div>
@@ -1600,9 +1600,8 @@ const ManagerAssignTask: React.FC = () => {
                           {selectedTask.assignedManagers.map((manager, idx) => {
                             const isMe = manager.userId === (user?._id || user?.id);
                             return (
-                              <div key={idx} className={`flex items-center justify-between p-2 border rounded ${
-                                isMe ? 'bg-blue-100 border-blue-300' : 'bg-blue-50/50'
-                              }`}>
+                              <div key={idx} className={`flex items-center justify-between p-2 border rounded ${isMe ? 'bg-blue-100 border-blue-300' : 'bg-blue-50/50'
+                                }`}>
                                 <div className="flex items-center gap-2">
                                   <User className="h-4 w-4 text-blue-600" />
                                   <div>
@@ -1644,15 +1643,15 @@ const ManagerAssignTask: React.FC = () => {
                                 completed: selectedTask.assignedSupervisors!.filter(s => s.status === 'completed').length,
                                 cancelled: selectedTask.assignedSupervisors!.filter(s => s.status === 'cancelled').length
                               };
-                              
+
                               return (
                                 <>
                                   {counts.inProgress > 0 && (
                                     <div className="flex items-center gap-2">
                                       <span className="text-xs w-20">In Progress:</span>
                                       <div className="flex-1 h-2 bg-gray-100 rounded-full overflow-hidden">
-                                        <div 
-                                          className="h-full bg-blue-500 rounded-full" 
+                                        <div
+                                          className="h-full bg-blue-500 rounded-full"
                                           style={{ width: `${(counts.inProgress / selectedTask.assignedSupervisors!.length) * 100}%` }}
                                         />
                                       </div>
@@ -1663,8 +1662,8 @@ const ManagerAssignTask: React.FC = () => {
                                     <div className="flex items-center gap-2">
                                       <span className="text-xs w-20">Completed:</span>
                                       <div className="flex-1 h-2 bg-gray-100 rounded-full overflow-hidden">
-                                        <div 
-                                          className="h-full bg-green-500 rounded-full" 
+                                        <div
+                                          className="h-full bg-green-500 rounded-full"
                                           style={{ width: `${(counts.completed / selectedTask.assignedSupervisors!.length) * 100}%` }}
                                         />
                                       </div>
@@ -1675,8 +1674,8 @@ const ManagerAssignTask: React.FC = () => {
                                     <div className="flex items-center gap-2">
                                       <span className="text-xs w-20">Pending:</span>
                                       <div className="flex-1 h-2 bg-gray-100 rounded-full overflow-hidden">
-                                        <div 
-                                          className="h-full bg-yellow-500 rounded-full" 
+                                        <div
+                                          className="h-full bg-yellow-500 rounded-full"
                                           style={{ width: `${(counts.pending / selectedTask.assignedSupervisors!.length) * 100}%` }}
                                         />
                                       </div>
@@ -1757,7 +1756,7 @@ const ManagerAssignTask: React.FC = () => {
                               <Building className="h-4 w-4" />
                               All Staff at {selectedTask.siteName}
                             </p>
-                            
+
                             {/* All managers at site */}
                             {siteStaffData.managers.length > 0 && (
                               <div className="mb-4">
@@ -1769,14 +1768,13 @@ const ManagerAssignTask: React.FC = () => {
                                   {siteStaffData.managers.map(manager => {
                                     const isInThisTask = selectedTask.assignedManagers?.some(m => m.userId === manager.userId);
                                     return (
-                                      <Badge 
-                                        key={manager.userId} 
-                                        variant="outline" 
-                                        className={`flex items-center gap-1 py-1 px-2 ${
-                                          isInThisTask 
-                                            ? 'bg-blue-100 border-blue-300 text-blue-700' 
+                                      <Badge
+                                        key={manager.userId}
+                                        variant="outline"
+                                        className={`flex items-center gap-1 py-1 px-2 ${isInThisTask
+                                            ? 'bg-blue-100 border-blue-300 text-blue-700'
                                             : 'bg-gray-50'
-                                        }`}
+                                          }`}
                                       >
                                         <User className={`h-3 w-3 ${isInThisTask ? 'text-blue-600' : 'text-gray-500'}`} />
                                         {manager.name}
@@ -1792,7 +1790,7 @@ const ManagerAssignTask: React.FC = () => {
                                 </div>
                               </div>
                             )}
-                            
+
                             {/* All supervisors at site */}
                             {siteStaffData.supervisors.length > 0 && (
                               <div>
@@ -1804,14 +1802,13 @@ const ManagerAssignTask: React.FC = () => {
                                   {siteStaffData.supervisors.map(supervisor => {
                                     const isInThisTask = selectedTask.assignedSupervisors?.some(s => s.userId === supervisor.userId);
                                     return (
-                                      <Badge 
-                                        key={supervisor.userId} 
-                                        variant="outline" 
-                                        className={`flex items-center gap-1 py-1 px-2 ${
-                                          isInThisTask 
-                                            ? 'bg-emerald-100 border-emerald-300 text-emerald-700' 
+                                      <Badge
+                                        key={supervisor.userId}
+                                        variant="outline"
+                                        className={`flex items-center gap-1 py-1 px-2 ${isInThisTask
+                                            ? 'bg-emerald-100 border-emerald-300 text-emerald-700'
                                             : 'bg-gray-50'
-                                        }`}
+                                          }`}
                                       >
                                         <Briefcase className={`h-3 w-3 ${isInThisTask ? 'text-emerald-600' : 'text-gray-500'}`} />
                                         {supervisor.name}
@@ -1976,8 +1973,8 @@ const ManagerAssignTask: React.FC = () => {
                       rows={2}
                       className="mb-2"
                     />
-                    <Button 
-                      size="sm" 
+                    <Button
+                      size="sm"
                       onClick={() => {
                         handleAddHourlyUpdate(selectedTask._id);
                         setHourlyUpdateText('');
@@ -1999,8 +1996,8 @@ const ManagerAssignTask: React.FC = () => {
                   </CardHeader>
                   <CardContent>
                     <div className="flex gap-2">
-                      <Button 
-                        variant="outline" 
+                      <Button
+                        variant="outline"
                         size="sm"
                         onClick={() => {
                           setSelectedAttachmentTask(selectedTask);
@@ -2038,9 +2035,9 @@ const ManagerAssignTask: React.FC = () => {
                         const myManagerInfo = selectedTask.assignedManagers?.find(
                           m => m.userId === (user?._id || user?.id)
                         );
-                        
+
                         if (!myManagerInfo) return null;
-                        
+
                         return (
                           <>
                             {myManagerInfo.status === 'pending' && (
@@ -2052,7 +2049,7 @@ const ManagerAssignTask: React.FC = () => {
                                 Start Task
                               </Button>
                             )}
-                            
+
                             {myManagerInfo.status === 'in-progress' && (
                               <Button
                                 className="flex-1 bg-green-600 hover:bg-green-700"
@@ -2062,7 +2059,7 @@ const ManagerAssignTask: React.FC = () => {
                                 Mark Complete
                               </Button>
                             )}
-                            
+
                             {myManagerInfo.status !== 'completed' && myManagerInfo.status !== 'cancelled' && (
                               <Button
                                 variant="destructive"
@@ -2076,7 +2073,7 @@ const ManagerAssignTask: React.FC = () => {
                           </>
                         );
                       })()}
-                      
+
                       <Button
                         variant="outline"
                         className="flex-1"
@@ -2102,7 +2099,7 @@ const ManagerAssignTask: React.FC = () => {
                           Start Progress
                         </Button>
                       )}
-                      
+
                       {(selectedTask.derivedStatus || selectedTask.status) === 'in-progress' && (
                         <Button
                           className="flex-1 bg-green-600 hover:bg-green-700"
@@ -2112,7 +2109,7 @@ const ManagerAssignTask: React.FC = () => {
                           Mark Complete
                         </Button>
                       )}
-                      
+
                       {(selectedTask.derivedStatus || selectedTask.status) !== 'completed' && (selectedTask.derivedStatus || selectedTask.status) !== 'cancelled' && (
                         <Button
                           variant="destructive"
@@ -2123,7 +2120,7 @@ const ManagerAssignTask: React.FC = () => {
                           Cancel Task
                         </Button>
                       )}
-                      
+
                       <Button
                         variant="outline"
                         className="flex-1"
@@ -2283,24 +2280,24 @@ const ManagerAssignTask: React.FC = () => {
                 Capture a photo to attach to this task. Ensure good lighting for clear photos.
               </DialogDescription>
             </DialogHeader>
-            
+
             <div className="px-4 pb-4">
               {!capturedImage ? (
-                <CameraComponent 
+                <CameraComponent
                   onCapture={handleCapturePhoto}
                   onClose={() => setShowCameraDialog(false)}
                 />
               ) : (
                 <>
                   <div className="bg-gray-100 rounded-lg overflow-hidden">
-                    <img 
-                      src={capturedImage} 
-                      alt="Captured" 
+                    <img
+                      src={capturedImage}
+                      alt="Captured"
                       className="w-full h-80 object-contain"
                     />
                   </div>
                   <div className="flex gap-2 mt-4">
-                    <Button 
+                    <Button
                       onClick={uploadCapturedPhoto}
                       className="flex-1 bg-green-600 hover:bg-green-700"
                       disabled={uploadingPhoto}
@@ -2312,8 +2309,8 @@ const ManagerAssignTask: React.FC = () => {
                       )}
                       {uploadingPhoto ? "Uploading..." : "Upload Photo"}
                     </Button>
-                    <Button 
-                      variant="outline" 
+                    <Button
+                      variant="outline"
                       onClick={() => {
                         setCapturedImage(null);
                       }}
@@ -2326,7 +2323,7 @@ const ManagerAssignTask: React.FC = () => {
                 </>
               )}
             </div>
-            
+
             <div className="px-4 py-3 bg-gray-50 border-t text-xs text-gray-500">
               <span className="font-semibold">Tip:</span> Ensure good lighting and capture the task progress clearly.
             </div>
@@ -2345,7 +2342,7 @@ const ManagerAssignTask: React.FC = () => {
                 View, upload, or capture photos for this task.
               </DialogDescription>
             </DialogHeader>
-            
+
             {selectedAttachmentTask && (
               <div className="space-y-4">
                 <div className="flex justify-between items-center flex-wrap gap-2">
@@ -2353,8 +2350,8 @@ const ManagerAssignTask: React.FC = () => {
                     {(selectedAttachmentTask.attachments || []).length} file(s) attached
                   </span>
                   <div className="flex gap-2">
-                    <Button 
-                      variant="outline" 
+                    <Button
+                      variant="outline"
                       size="sm"
                       onClick={() => {
                         setShowCameraDialog(true);
@@ -2380,7 +2377,7 @@ const ManagerAssignTask: React.FC = () => {
                     </label>
                   </div>
                 </div>
-                
+
                 <div className="space-y-3">
                   {!selectedAttachmentTask.attachments || selectedAttachmentTask.attachments.length === 0 ? (
                     <div className="text-center py-8 text-muted-foreground">

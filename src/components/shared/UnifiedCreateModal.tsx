@@ -21,7 +21,7 @@ import { siteService, Client, CreateSiteRequest, ShiftDefinition } from "@/servi
 import { crmService } from "@/services/crmService";
 
 const API_URL = import.meta.env.VITE_API_URL ||
-  (import.meta.env.DEV ? 'http://localhost:5001/api' : 'https://sk-backend-btbj.onrender.com/api');
+  (import.meta.env.DEV ? 'http://localhost:5001/api' : 'https://sk-backend-868y.onrender.com');
 
 interface UnifiedCreateModalProps {
   open: boolean;
@@ -533,7 +533,7 @@ const SiteForm = ({ onSuccess, onCancel }: { onSuccess: () => void; onCancel: ()
       }
     }
 
-       // ✅ Convert geofence inputs to numbers — only send if actually provided
+    // ✅ Convert geofence inputs to numbers — only send if actually provided
     const latNum = siteLatitude.trim() !== "" ? Number(siteLatitude) : undefined;
     const lngNum = siteLongitude.trim() !== "" ? Number(siteLongitude) : undefined;
     const radiusNum = geofenceRadius.trim() !== "" ? Number(geofenceRadius) : undefined;
@@ -555,7 +555,7 @@ const SiteForm = ({ onSuccess, onCancel }: { onSuccess: () => void; onCancel: ()
       longitude: lngNum,
       geofenceRadius: radiusNum,
     };
-    
+
     const validationErrors = siteService.validateSiteData(siteData);
     if (validationErrors.length > 0) {
       validationErrors.forEach(err => toast.error(err));

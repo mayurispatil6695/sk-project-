@@ -22,7 +22,7 @@ import { useOutletContext } from 'react-router-dom';
 import * as XLSX from "xlsx";
 
 const API_URL = import.meta.env.VITE_API_URL ||
-  (import.meta.env.DEV ? 'http://localhost:5001/api' : 'https://sk-backend-btbj.onrender.com/api');
+  (import.meta.env.DEV ? 'http://localhost:5001/api' : 'https://sk-backend-868y.onrender.com');
 
 interface RosterEntry {
   _id: string;
@@ -62,25 +62,25 @@ const normalize = (s?: string) => (s || "").trim().toLowerCase();
 const SupervisorRosterSection = () => {
   const { user: authUser, isAuthenticated } = useRole();
   const { onMenuClick } = useOutletContext<{ onMenuClick: () => void }>();
-  
+
   const [selectedRoster, setSelectedRoster] = useState<"daily" | "weekly" | "fortnightly" | "monthly">("monthly");
   const [roster, setRoster] = useState<RosterEntry[]>([]);
   const [selectedDate, setSelectedDate] = useState<Date>(new Date());
   const [searchTerm, setSearchTerm] = useState("");
   const [loadingRoster, setLoadingRoster] = useState(false);
   const [savingCell, setSavingCell] = useState<string | null>(null);
-  
+
   const [employees, setEmployees] = useState<Employee[]>([]);
   const [sites, setSites] = useState<Site[]>([]);
   const [selectedSiteId, setSelectedSiteId] = useState<string>("");
   const [loadingSites, setLoadingSites] = useState(true);
   const [loadingEmployees, setLoadingEmployees] = useState(false);
-  
+
   const [supervisorAssignedSites, setSupervisorAssignedSites] = useState<string[]>([]);
   const [supervisorAssignedSiteNames, setSupervisorAssignedSiteNames] = useState<string[]>([]);
 
   const supervisorId = authUser?._id || authUser?.id || "";
-  
+
   // ✅ Helper to get days in current view – defined as a function, not a computed value
   const getDaysInView = useCallback(() => {
     if (selectedRoster === "daily") return [selectedDate];
@@ -131,7 +131,7 @@ const SupervisorRosterSection = () => {
         const filtered = data.filter(site => supervisorAssignedSites.includes(site._id));
         setSites(filtered);
         if (filtered.length > 0 && !selectedSiteId) setSelectedSiteId(filtered[0]._id);
-      } catch (err) { console.error(err); toast.error("Failed to load sites"); } 
+      } catch (err) { console.error(err); toast.error("Failed to load sites"); }
       finally { setLoadingSites(false); }
     })();
   }, [supervisorId, supervisorAssignedSites, selectedSiteId]);
@@ -146,7 +146,7 @@ const SupervisorRosterSection = () => {
         const all: Employee[] = response.data.data || [];
         const forSite = all.filter(emp => emp.status === "active" && (normalize(emp.siteName) === normalize(selectedSite.name) || emp.assignedSites?.some(id => String(id) === String(selectedSite._id))));
         setEmployees(forSite);
-      } catch (err) { console.error(err); toast.error("Failed to load employees"); } 
+      } catch (err) { console.error(err); toast.error("Failed to load employees"); }
       finally { setLoadingEmployees(false); }
     })();
   }, [selectedSite]);
@@ -166,7 +166,7 @@ const SupervisorRosterSection = () => {
         const filtered = (response.roster || []).filter((e: RosterEntry) => e.siteId === selectedSite._id);
         setRoster(filtered);
       } else throw new Error(response.message);
-    } catch (err: any) { console.error(err); toast.error(err.message || "Failed to load roster"); } 
+    } catch (err: any) { console.error(err); toast.error(err.message || "Failed to load roster"); }
     finally { setLoadingRoster(false); }
   }, [selectedSite, getDaysInView]); // getDaysInView is stable because it's a useCallback with dependencies
 

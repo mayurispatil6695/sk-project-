@@ -70,7 +70,7 @@ export interface UsersResponse {
 export type UserRole = 'superadmin' | 'admin' | 'manager' | 'supervisor' | 'employee';
 
 const API_URL = import.meta.env.VITE_API_URL || 
-  (import.meta.env.DEV ? `http://localhost:5001/api` : 'https://sk-backend-btbj.onrender.com/api');
+  (import.meta.env.DEV ? `http://localhost:5001/api` : 'https://sk-backend-868y.onrender.com');
 
 // Create axios instance with auth interceptor
 const api: AxiosInstance = axios.create({

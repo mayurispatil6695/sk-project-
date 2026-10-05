@@ -11,14 +11,14 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Textarea } from '@/components/ui/textarea';
 import NotificationService from '@/lib/notificationService';
 import { createNotificationForSuperadmin } from '@/lib/notificationHelper';
-import { 
-  Search, 
-  Clock, 
-  AlertCircle, 
-  CheckCircle, 
+import {
+  Search,
+  Clock,
+  AlertCircle,
+  CheckCircle,
   ChevronDown,
   ChevronUp,
-  Paperclip, 
+  Paperclip,
   Download,
   Eye,
   Upload,
@@ -110,8 +110,8 @@ interface TaskWithPersonalStatus extends AssignTask {
   myAssignedAt?: string;
 }
 
-const API_URL = import.meta.env.VITE_API_URL || 
-  (import.meta.env.DEV ? 'http://localhost:5001/api' : 'https://sk-backend-btbj.onrender.com/api');
+const API_URL = import.meta.env.VITE_API_URL ||
+  (import.meta.env.DEV ? 'http://localhost:5001/api' : 'https://sk-backend-868y.onrender.com');
 // ==================== HEADER COMPONENT ====================
 
 interface DashboardHeaderProps {
@@ -255,18 +255,18 @@ const CameraComponent: React.FC<CameraComponentProps> = ({ onCapture, onClose })
       const devices = await navigator.mediaDevices.enumerateDevices();
       const videoDevices = devices.filter(device => device.kind === 'videoinput');
       setDevices(videoDevices);
-      
+
       if (videoDevices.length === 0) {
         setError('No camera found on this device');
         setHasPermission(false);
         return;
       }
-      
+
       const stream = await navigator.mediaDevices.getUserMedia({ video: true });
       stream.getTracks().forEach(track => track.stop());
       setHasPermission(true);
       setError(null);
-      
+
       if (videoDevices.length > 0 && !selectedDeviceId) {
         setSelectedDeviceId(videoDevices[0].deviceId);
       }
@@ -289,14 +289,14 @@ const CameraComponent: React.FC<CameraComponentProps> = ({ onCapture, onClose })
     try {
       setIsLoading(true);
       stopCamera();
-      
+
       const constraints: MediaStreamConstraints = {
         video: selectedDeviceId ? { deviceId: { exact: selectedDeviceId } } : true
       };
-      
+
       const stream = await navigator.mediaDevices.getUserMedia(constraints);
       streamRef.current = stream;
-      
+
       if (videoRef.current) {
         videoRef.current.srcObject = stream;
         videoRef.current.onloadedmetadata = () => {
@@ -326,7 +326,7 @@ const CameraComponent: React.FC<CameraComponentProps> = ({ onCapture, onClose })
       const video = videoRef.current;
       const canvas = canvasRef.current;
       const context = canvas.getContext('2d');
-      
+
       if (context && video.videoWidth > 0 && video.videoHeight > 0) {
         canvas.width = video.videoWidth;
         canvas.height = video.videoHeight;
@@ -387,7 +387,7 @@ const CameraComponent: React.FC<CameraComponentProps> = ({ onCapture, onClose })
           </Select>
         </div>
       )}
-      
+
       <div className="relative bg-gray-100 rounded-lg overflow-hidden" style={{ minHeight: '320px' }}>
         <video
           ref={videoRef}
@@ -402,7 +402,7 @@ const CameraComponent: React.FC<CameraComponentProps> = ({ onCapture, onClose })
           </div>
         )}
       </div>
-      
+
       <div className="flex gap-2">
         <Button onClick={capturePhoto} className="flex-1 bg-blue-600 hover:bg-blue-700">
           <Camera className="h-4 w-4 mr-2" />
@@ -412,7 +412,7 @@ const CameraComponent: React.FC<CameraComponentProps> = ({ onCapture, onClose })
           Cancel
         </Button>
       </div>
-      
+
       <canvas ref={canvasRef} className="hidden" />
     </div>
   );
@@ -424,41 +424,41 @@ const SupervisorAssignTask: React.FC = () => {
   const navigate = useNavigate();
   const outletContext = useOutletContext<{ onMenuClick?: () => void }>();
   const { user, isAuthenticated } = useRole();
-  
+
   // Refs
   const fileInputRef = useRef<HTMLInputElement>(null);
-  
+
   // State
   const [loading, setLoading] = useState(true);
   const [tasks, setTasks] = useState<TaskWithPersonalStatus[]>([]);
   const [filteredTasks, setFilteredTasks] = useState<TaskWithPersonalStatus[]>([]);
   const [selectedTask, setSelectedTask] = useState<TaskWithPersonalStatus | null>(null);
   const [uniqueSites, setUniqueSites] = useState<Array<{ id: string; name: string }>>([]);
-  
+
   // Filter states
   const [searchQuery, setSearchQuery] = useState('');
   const [statusFilter, setStatusFilter] = useState<string>('all');
   const [priorityFilter, setPriorityFilter] = useState<string>('all');
   const [siteFilter, setSiteFilter] = useState<string>('all');
   const [showFilters, setShowFilters] = useState(false);
-  
+
   // Dialog states
   const [showViewDialog, setShowViewDialog] = useState(false);
   const [showUpdatesDialog, setShowUpdatesDialog] = useState(false);
   const [showAttachmentsDialog, setShowAttachmentsDialog] = useState(false);
   const [showCameraDialog, setShowCameraDialog] = useState(false);
   const [hourlyUpdateText, setHourlyUpdateText] = useState('');
-  
+
   // Camera states
   const [capturedImage, setCapturedImage] = useState<string | null>(null);
   const [selectedAttachmentTask, setSelectedAttachmentTask] = useState<TaskWithPersonalStatus | null>(null);
   const [uploadingPhoto, setUploadingPhoto] = useState(false);
-  
+
   // UI states
   const [updatingStatus, setUpdatingStatus] = useState<string | null>(null);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [isMobileView, setIsMobileView] = useState(false);
-  
+
   // Stats
   const [stats, setStats] = useState({
     totalTasks: 0,
@@ -473,10 +473,10 @@ const SupervisorAssignTask: React.FC = () => {
     const checkMobile = () => {
       setIsMobileView(window.innerWidth < 768);
     };
-    
+
     checkMobile();
     window.addEventListener('resize', checkMobile);
-    
+
     return () => window.removeEventListener('resize', checkMobile);
   }, []);
 
@@ -499,10 +499,10 @@ const SupervisorAssignTask: React.FC = () => {
   const fetchTasks = async () => {
     try {
       setLoading(true);
-      
+
       const supervisorId = user?._id || user?.id;
       const supervisorName = user?.name;
-      
+
       if (!supervisorId) {
         console.error('No supervisor ID found');
         toast.error('Supervisor ID not found');
@@ -513,17 +513,17 @@ const SupervisorAssignTask: React.FC = () => {
       console.log('👤 Fetching tasks for supervisor:', { supervisorId, supervisorName });
 
       const response = await fetch(`${API_URL}/assigntasks`);
-      
+
       if (!response.ok) {
         throw new Error(`Failed to fetch tasks: ${response.status}`);
       }
-      
+
       const responseData = await response.json();
-      
+
       console.log('📊 Raw response data:', responseData);
 
       let allTasks: AssignTask[] = [];
-      
+
       if (Array.isArray(responseData)) {
         allTasks = responseData;
       } else if (responseData.tasks && Array.isArray(responseData.tasks)) {
@@ -539,26 +539,26 @@ const SupervisorAssignTask: React.FC = () => {
           throw new Error('Invalid response format from server');
         }
       }
-      
+
       console.log(`📊 Total tasks in database: ${allTasks.length}`);
 
       const myTasks = allTasks.filter(task => {
         if (!task.assignedSupervisors || !Array.isArray(task.assignedSupervisors)) {
           return false;
         }
-        
+
         if (task.assignedSupervisors.length === 0) {
           return false;
         }
-        
+
         return task.assignedSupervisors.some(supervisor => {
           const supervisorUserId = supervisor.userId;
-          
+
           const matchById = String(supervisorUserId) === String(supervisorId);
           const matchByIdFull = String(supervisorUserId) === String(user?._id);
           const matchByIdShort = String(supervisorUserId) === String(user?.id);
           const matchByName = supervisor.name?.toLowerCase().trim() === supervisorName?.toLowerCase().trim();
-          
+
           return matchById || matchByIdFull || matchByIdShort || matchByName;
         });
       });
@@ -572,10 +572,10 @@ const SupervisorAssignTask: React.FC = () => {
           const matchByIdFull = String(supervisorUserId) === String(user?._id);
           const matchByIdShort = String(supervisorUserId) === String(user?.id);
           const matchByName = supervisor.name?.toLowerCase().trim() === supervisorName?.toLowerCase().trim();
-          
+
           return matchById || matchByIdFull || matchByIdShort || matchByName;
         });
-        
+
         return {
           ...task,
           personalStatus: myInfo?.status || 'pending',
@@ -618,9 +618,9 @@ const SupervisorAssignTask: React.FC = () => {
       completedTasks: taskList.filter(t => t.personalStatus === 'completed').length,
       pendingTasks: taskList.filter(t => t.personalStatus === 'pending').length,
       inProgressTasks: taskList.filter(t => t.personalStatus === 'in-progress').length,
-      overdueTasks: taskList.filter(t => 
-        t.personalStatus !== 'completed' && 
-        t.personalStatus !== 'cancelled' && 
+      overdueTasks: taskList.filter(t =>
+        t.personalStatus !== 'completed' &&
+        t.personalStatus !== 'cancelled' &&
         new Date(t.dueDateTime) < now
       ).length
     };
@@ -634,7 +634,7 @@ const SupervisorAssignTask: React.FC = () => {
 
     if (searchQuery) {
       const query = searchQuery.toLowerCase();
-      filtered = filtered.filter(task => 
+      filtered = filtered.filter(task =>
         task.taskTitle.toLowerCase().includes(query) ||
         task.description.toLowerCase().includes(query) ||
         task.siteName.toLowerCase().includes(query) ||
@@ -658,93 +658,93 @@ const SupervisorAssignTask: React.FC = () => {
   };
 
   // ==================== ACTIONS ====================
-const handleUpdatePersonalStatus = async (taskId: string, newStatus: string) => {
-  try {
-    setUpdatingStatus(taskId);
-    
-    const task = tasks.find(t => t._id === taskId);
-    if (!task) {
-      toast.error('Task not found');
-      return;
+  const handleUpdatePersonalStatus = async (taskId: string, newStatus: string) => {
+    try {
+      setUpdatingStatus(taskId);
+
+      const task = tasks.find(t => t._id === taskId);
+      if (!task) {
+        toast.error('Task not found');
+        return;
+      }
+
+      const supervisorId = user?._id || user?.id;
+      if (!supervisorId) {
+        toast.error('Supervisor ID not found');
+        return;
+      }
+
+      const supervisorIndex = task.assignedSupervisors?.findIndex(supervisor => {
+        const supervisorUserId = supervisor.userId;
+        const matchById = String(supervisorUserId) === String(supervisorId);
+        const matchByIdFull = String(supervisorUserId) === String(user?._id);
+        const matchByIdShort = String(supervisorUserId) === String(user?.id);
+
+        return matchById || matchByIdFull || matchByIdShort;
+      });
+
+      if (supervisorIndex === -1 || supervisorIndex === undefined) {
+        toast.error('Could not find your assignment in this task');
+        return;
+      }
+
+      const updatedSupervisors = [...(task.assignedSupervisors || [])];
+
+      updatedSupervisors[supervisorIndex] = {
+        ...updatedSupervisors[supervisorIndex],
+        status: newStatus as any
+      };
+
+      const response = await fetch(`${API_URL}/assigntasks/${taskId}`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          assignedSupervisors: updatedSupervisors
+        }),
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to update status');
+      }
+
+      // ✅ When task is marked as completed - notify Superadmin
+      if (newStatus === 'completed') {
+        const taskTitle = task.taskTitle;
+        const employeeName = user?.name || 'Supervisor';
+
+        // ✅ Create notification for Superadmin
+        await createNotificationForSuperadmin(
+          `✅ Task Completed: ${taskTitle}`,
+          `${employeeName} completed "${taskTitle}" at ${task.siteName}`,
+          'success',
+          'medium',
+          {
+            taskId: task._id,
+            siteName: task.siteName,
+            taskTitle: taskTitle,
+            completedBy: employeeName,
+            notificationType: 'task_completed'
+          }
+        );
+
+        // ✅ Also notify via NotificationService (for sound)
+        NotificationService.completeTaskNotification(taskId);
+
+        console.log(`✅ Task ${taskId} marked as completed and Superadmin notified`);
+      }
+
+      toast.success(`Your status updated to ${newStatus}`);
+      await fetchTasks();
+
+    } catch (error: any) {
+      console.error('Error updating status:', error);
+      toast.error(error.message || 'Failed to update status');
+    } finally {
+      setUpdatingStatus(null);
     }
-    
-    const supervisorId = user?._id || user?.id;
-    if (!supervisorId) {
-      toast.error('Supervisor ID not found');
-      return;
-    }
-    
-    const supervisorIndex = task.assignedSupervisors?.findIndex(supervisor => {
-      const supervisorUserId = supervisor.userId;
-      const matchById = String(supervisorUserId) === String(supervisorId);
-      const matchByIdFull = String(supervisorUserId) === String(user?._id);
-      const matchByIdShort = String(supervisorUserId) === String(user?.id);
-      
-      return matchById || matchByIdFull || matchByIdShort;
-    });
-    
-    if (supervisorIndex === -1 || supervisorIndex === undefined) {
-      toast.error('Could not find your assignment in this task');
-      return;
-    }
-    
-    const updatedSupervisors = [...(task.assignedSupervisors || [])];
-    
-    updatedSupervisors[supervisorIndex] = {
-      ...updatedSupervisors[supervisorIndex],
-      status: newStatus as any
-    };
-    
-    const response = await fetch(`${API_URL}/assigntasks/${taskId}`, {
-      method: 'PUT',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({
-        assignedSupervisors: updatedSupervisors
-      }),
-    });
-    
-    if (!response.ok) {
-      throw new Error('Failed to update status');
-    }
-    
-    // ✅ When task is marked as completed - notify Superadmin
-    if (newStatus === 'completed') {
-      const taskTitle = task.taskTitle;
-      const employeeName = user?.name || 'Supervisor';
-      
-      // ✅ Create notification for Superadmin
-      await createNotificationForSuperadmin(
-        `✅ Task Completed: ${taskTitle}`,
-        `${employeeName} completed "${taskTitle}" at ${task.siteName}`,
-        'success',
-        'medium',
-        {
-          taskId: task._id,
-          siteName: task.siteName,
-          taskTitle: taskTitle,
-          completedBy: employeeName,
-          notificationType: 'task_completed'
-        }
-      );
-      
-      // ✅ Also notify via NotificationService (for sound)
-      NotificationService.completeTaskNotification(taskId);
-      
-      console.log(`✅ Task ${taskId} marked as completed and Superadmin notified`);
-    }
-    
-    toast.success(`Your status updated to ${newStatus}`);
-    await fetchTasks();
-    
-  } catch (error: any) {
-    console.error('Error updating status:', error);
-    toast.error(error.message || 'Failed to update status');
-  } finally {
-    setUpdatingStatus(null);
-  }
-};
+  };
   const handleAddHourlyUpdate = async (taskId: string) => {
     if (!hourlyUpdateText.trim()) {
       toast.error('Please enter an update');
@@ -828,7 +828,7 @@ const handleUpdatePersonalStatus = async (taskId: string, newStatus: string) => 
 
         const result = JSON.parse(responseText);
         console.log('✅ Upload successful, attachment:', result.attachment);
-        
+
         return { success: true, fileName: file.name, attachment: result.attachment };
       } catch (error) {
         console.error(`Error uploading ${file.name}:`, error);
@@ -840,7 +840,7 @@ const handleUpdatePersonalStatus = async (taskId: string, newStatus: string) => 
 
     try {
       const results = await Promise.all(uploadPromises);
-      
+
       const successful = results.filter(r => r.success).length;
       const failed = results.filter(r => !r.success).length;
 
@@ -850,7 +850,7 @@ const handleUpdatePersonalStatus = async (taskId: string, newStatus: string) => 
         toast.success(`${successful} file(s) uploaded successfully`);
         await fetchTasks();
       }
-      
+
       if (failed > 0) {
         toast.error(`${failed} file(s) failed to upload`);
       }
@@ -920,12 +920,12 @@ const handleUpdatePersonalStatus = async (taskId: string, newStatus: string) => 
 
     try {
       setUploadingPhoto(true);
-      
+
       const response = await fetch(capturedImage);
       const blob = await response.blob();
-      
-      const file = new File([blob], `task-photo-${Date.now()}.jpg`, { 
-        type: 'image/jpeg' 
+
+      const file = new File([blob], `task-photo-${Date.now()}.jpg`, {
+        type: 'image/jpeg'
       });
 
       const formData = new FormData();
@@ -955,12 +955,12 @@ const handleUpdatePersonalStatus = async (taskId: string, newStatus: string) => 
       }
 
       toast.success('Photo uploaded successfully!');
-      
+
       setShowCameraDialog(false);
       setCapturedImage(null);
-      
+
       await fetchTasks();
-      
+
     } catch (error: any) {
       console.error('Error uploading photo:', error);
       toast.error(error.message || 'Failed to upload photo');
@@ -1044,8 +1044,8 @@ const handleUpdatePersonalStatus = async (taskId: string, newStatus: string) => 
   if (!isAuthenticated && !loading) {
     return (
       <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
-        <DashboardHeader 
-          title="My Tasks" 
+        <DashboardHeader
+          title="My Tasks"
           subtitle="Tasks assigned to you"
           onMenuClick={handleMenuClick}
         />
@@ -1077,8 +1077,8 @@ const handleUpdatePersonalStatus = async (taskId: string, newStatus: string) => 
   if (loading) {
     return (
       <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
-        <DashboardHeader 
-          title="My Tasks" 
+        <DashboardHeader
+          title="My Tasks"
           subtitle="Loading your assigned tasks..."
           onMenuClick={handleMenuClick}
         />
@@ -1101,8 +1101,8 @@ const handleUpdatePersonalStatus = async (taskId: string, newStatus: string) => 
 
   return (
     <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
-      <DashboardHeader 
-        title="My Assigned Tasks" 
+      <DashboardHeader
+        title="My Assigned Tasks"
         subtitle="Tasks assigned to you by Super Admin"
         onMenuClick={handleMenuClick}
       />
@@ -1129,7 +1129,7 @@ const handleUpdatePersonalStatus = async (taskId: string, newStatus: string) => 
               </div>
             </CardContent>
           </Card>
-          
+
           <Card className="bg-green-50 border-green-200">
             <CardContent className="p-3 md:p-4">
               <div className="flex items-center justify-between">
@@ -1141,7 +1141,7 @@ const handleUpdatePersonalStatus = async (taskId: string, newStatus: string) => 
               </div>
             </CardContent>
           </Card>
-          
+
           <Card className="bg-yellow-50 border-yellow-200">
             <CardContent className="p-3 md:p-4">
               <div className="flex items-center justify-between">
@@ -1153,7 +1153,7 @@ const handleUpdatePersonalStatus = async (taskId: string, newStatus: string) => 
               </div>
             </CardContent>
           </Card>
-          
+
           <Card className="bg-purple-50 border-purple-200">
             <CardContent className="p-3 md:p-4">
               <div className="flex items-center justify-between">
@@ -1165,7 +1165,7 @@ const handleUpdatePersonalStatus = async (taskId: string, newStatus: string) => 
               </div>
             </CardContent>
           </Card>
-          
+
           <Card className="bg-red-50 border-red-200 col-span-2 md:col-span-1">
             <CardContent className="p-3 md:p-4">
               <div className="flex items-center justify-between">
@@ -1287,14 +1287,14 @@ const handleUpdatePersonalStatus = async (taskId: string, newStatus: string) => 
                 <FileText className="h-12 w-12 mx-auto mb-4 opacity-50" />
                 <p className="text-lg">No tasks found</p>
                 <p className="text-sm">
-                  {tasks.length === 0 
+                  {tasks.length === 0
                     ? 'You have no tasks assigned to you yet'
                     : 'Try adjusting your search or filters'}
                 </p>
                 {tasks.length > 0 && (
-                  <Button 
-                    variant="outline" 
-                    size="sm" 
+                  <Button
+                    variant="outline"
+                    size="sm"
                     onClick={() => {
                       setSearchQuery('');
                       setStatusFilter('all');
@@ -1314,7 +1314,7 @@ const handleUpdatePersonalStatus = async (taskId: string, newStatus: string) => 
                   <div className="space-y-3">
                     {filteredTasks.map((task) => {
                       const overdue = isOverdue(task);
-                      
+
                       return (
                         <Card key={task._id} className={`overflow-hidden ${overdue ? 'border-red-200 bg-red-50/50' : ''}`}>
                           <CardContent className="p-4">
@@ -1345,7 +1345,7 @@ const handleUpdatePersonalStatus = async (taskId: string, newStatus: string) => 
                                   <span className="text-gray-400">•</span>
                                   <span className="text-gray-600">{task.clientName}</span>
                                 </div>
-                                
+
                                 <div className="flex items-center gap-2 text-xs">
                                   <Calendar className="h-3 w-3 text-gray-500" />
                                   <span>Due: {formatDate(task.dueDateTime)}</span>
@@ -1363,7 +1363,7 @@ const handleUpdatePersonalStatus = async (taskId: string, newStatus: string) => 
                                       {task.personalStatus}
                                     </span>
                                   </Badge>
-                                  
+
                                   <div className="flex items-center gap-2">
                                     <Button
                                       variant="ghost"
@@ -1406,9 +1406,9 @@ const handleUpdatePersonalStatus = async (taskId: string, newStatus: string) => 
                                   <Eye className="h-3 w-3 mr-1" />
                                   View
                                 </Button>
-                                
+
                                 {task.personalStatus === 'pending' && (
-                                  <Button 
+                                  <Button
                                     variant="outline"
                                     size="sm"
                                     onClick={() => handleUpdatePersonalStatus(task._id, 'in-progress')}
@@ -1423,9 +1423,9 @@ const handleUpdatePersonalStatus = async (taskId: string, newStatus: string) => 
                                     Start
                                   </Button>
                                 )}
-                                
+
                                 {task.personalStatus === 'in-progress' && (
-                                  <Button 
+                                  <Button
                                     size="sm"
                                     onClick={() => handleUpdatePersonalStatus(task._id, 'completed')}
                                     disabled={updatingStatus === task._id}
@@ -1465,7 +1465,7 @@ const handleUpdatePersonalStatus = async (taskId: string, newStatus: string) => 
                       <TableBody>
                         {filteredTasks.map((task) => {
                           const overdue = isOverdue(task);
-                          
+
                           return (
                             <TableRow key={task._id} className={overdue ? 'bg-red-50/50' : ''}>
                               <TableCell>
@@ -1564,7 +1564,7 @@ const handleUpdatePersonalStatus = async (taskId: string, newStatus: string) => 
                                   >
                                     <Eye className="h-4 w-4" />
                                   </Button>
-                                  
+
                                   {task.personalStatus === 'pending' && (
                                     <Button
                                       variant="outline"
@@ -1581,7 +1581,7 @@ const handleUpdatePersonalStatus = async (taskId: string, newStatus: string) => 
                                       Start
                                     </Button>
                                   )}
-                                  
+
                                   {task.personalStatus === 'in-progress' && (
                                     <Button
                                       size="sm"
@@ -1707,9 +1707,8 @@ const handleUpdatePersonalStatus = async (taskId: string, newStatus: string) => 
                       {selectedTask.assignedSupervisors.map((supervisor, idx) => {
                         const isMe = String(supervisor.userId) === String(user?._id || user?.id);
                         return (
-                          <div key={idx} className={`flex items-center justify-between p-2 border rounded ${
-                            isMe ? 'bg-blue-50 border-blue-200' : ''
-                          }`}>
+                          <div key={idx} className={`flex items-center justify-between p-2 border rounded ${isMe ? 'bg-blue-50 border-blue-200' : ''
+                            }`}>
                             <div className="flex items-center gap-2">
                               <Briefcase className={`h-4 w-4 ${isMe ? 'text-blue-600' : 'text-gray-500'}`} />
                               <div>
@@ -1807,7 +1806,7 @@ const handleUpdatePersonalStatus = async (taskId: string, newStatus: string) => 
               View and add hourly updates for this task to track progress.
             </DialogDescription>
           </DialogHeader>
-          
+
           {selectedTask && (
             <div className="space-y-4">
               <div className="space-y-3">
@@ -1861,24 +1860,24 @@ const handleUpdatePersonalStatus = async (taskId: string, newStatus: string) => 
               Capture a photo to attach to this task. Ensure good lighting for clear photos.
             </DialogDescription>
           </DialogHeader>
-          
+
           <div className="px-4 pb-4">
             {!capturedImage ? (
-              <CameraComponent 
+              <CameraComponent
                 onCapture={handleCapturePhoto}
                 onClose={() => setShowCameraDialog(false)}
               />
             ) : (
               <>
                 <div className="bg-gray-100 rounded-lg overflow-hidden">
-                  <img 
-                    src={capturedImage} 
-                    alt="Captured" 
+                  <img
+                    src={capturedImage}
+                    alt="Captured"
                     className="w-full h-80 object-contain"
                   />
                 </div>
                 <div className="flex gap-2 mt-4">
-                  <Button 
+                  <Button
                     onClick={uploadCapturedPhoto}
                     className="flex-1 bg-green-600 hover:bg-green-700"
                     disabled={uploadingPhoto}
@@ -1890,8 +1889,8 @@ const handleUpdatePersonalStatus = async (taskId: string, newStatus: string) => 
                     )}
                     {uploadingPhoto ? "Uploading..." : "Upload Photo"}
                   </Button>
-                  <Button 
-                    variant="outline" 
+                  <Button
+                    variant="outline"
                     onClick={() => {
                       setCapturedImage(null);
                     }}
@@ -1904,7 +1903,7 @@ const handleUpdatePersonalStatus = async (taskId: string, newStatus: string) => 
               </>
             )}
           </div>
-          
+
           <div className="px-4 py-3 bg-gray-50 border-t text-xs text-gray-500">
             <span className="font-semibold">Tip:</span> Ensure good lighting and capture the task progress clearly.
           </div>
@@ -1923,7 +1922,7 @@ const handleUpdatePersonalStatus = async (taskId: string, newStatus: string) => 
               View, upload, or capture photos for this task.
             </DialogDescription>
           </DialogHeader>
-          
+
           {selectedAttachmentTask && (
             <div className="space-y-4">
               <div className="flex justify-between items-center flex-wrap gap-2">
@@ -1931,8 +1930,8 @@ const handleUpdatePersonalStatus = async (taskId: string, newStatus: string) => 
                   {(selectedAttachmentTask.attachments || []).length} file(s) attached
                 </span>
                 <div className="flex gap-2">
-                  <Button 
-                    variant="outline" 
+                  <Button
+                    variant="outline"
                     size="sm"
                     onClick={() => {
                       setShowCameraDialog(true);
@@ -1958,7 +1957,7 @@ const handleUpdatePersonalStatus = async (taskId: string, newStatus: string) => 
                   </label>
                 </div>
               </div>
-              
+
               <div className="space-y-3">
                 {!selectedAttachmentTask.attachments || selectedAttachmentTask.attachments.length === 0 ? (
                   <div className="text-center py-8 text-muted-foreground">

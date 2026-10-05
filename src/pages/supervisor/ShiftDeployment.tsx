@@ -9,8 +9,8 @@ import axios from "axios";
 import { useRole } from "@/context/RoleContext";
 import { DashboardHeader } from "@/components/shared/DashboardHeader";
 
-const API_URL = import.meta.env.VITE_API_URL || 
-  (import.meta.env.DEV ? 'http://localhost:5001/api' : 'https://sk-backend-btbj.onrender.com/api');
+const API_URL = import.meta.env.VITE_API_URL ||
+  (import.meta.env.DEV ? 'http://localhost:5001/api' : 'https://sk-backend-868y.onrender.com');
 
 const apiClient = axios.create({ baseURL: API_URL });
 apiClient.interceptors.request.use((config) => {
@@ -100,10 +100,10 @@ export default function ShiftDeployment() {
 
   return (
     <div className="p-4 space-y-4">
-      <DashboardHeader 
-        title="Shift-wise Deployment" 
+      <DashboardHeader
+        title="Shift-wise Deployment"
         subtitle={siteName ? `Site: ${siteName}` : "Loading..."}
-        onMenuClick={() => {}}
+        onMenuClick={() => { }}
       />
       <Card>
         <CardContent className="pt-4 space-y-4">

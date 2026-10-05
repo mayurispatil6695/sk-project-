@@ -17,8 +17,8 @@ import {
 import axios from "axios";
 import { DashboardHeader } from "@/components/shared/DashboardHeader";
 
-const API_URL = import.meta.env.VITE_API_URL || 
-  (import.meta.env.DEV ? 'http://localhost:5001/api' : 'https://sk-backend-btbj.onrender.com/api');
+const API_URL = import.meta.env.VITE_API_URL ||
+  (import.meta.env.DEV ? 'http://localhost:5001/api' : 'https://sk-backend-868y.onrender.com');
 
 const apiClient = axios.create({ baseURL: API_URL });
 apiClient.interceptors.request.use((config) => {
@@ -41,30 +41,30 @@ export default function MachineStatus() {
   const [searchTerm, setSearchTerm] = useState("");
   const [editingRemark, setEditingRemark] = useState<{ [key: string]: string }>({});
 
-  
- const getSupervisorSiteIds = useCallback(async (): Promise<string[]> => {
-   if (!currentUser || role !== "supervisor") return [];
-   try {
-     const supervisorId = currentUser._id || currentUser.id;
-     const supervisorName = currentUser.name;
-     const res = await apiClient.get('/tasks', { params: { limit: 1000 } });
-     let tasks = res.data?.data || res.data || [];
-     if (!Array.isArray(tasks)) tasks = [];
-    const siteIdSet = new Set<string>();
-    tasks.forEach((task: any) => {
-      const assigned =
-        task.assignedUsers?.some((u: any) =>
-          u.userId === supervisorId ||
-          (u.name && supervisorName && u.name.toLowerCase() === supervisorName.toLowerCase())
-        ) || task.assignedTo === supervisorId;
-      if (assigned && task.siteId) siteIdSet.add(task.siteId);
-     });
-     return Array.from(siteIdSet);
-   } catch (error) {
-     console.error("Error fetching sites for machines:", error);
-     return [];
-   }
- }, [currentUser, role]);
+
+  const getSupervisorSiteIds = useCallback(async (): Promise<string[]> => {
+    if (!currentUser || role !== "supervisor") return [];
+    try {
+      const supervisorId = currentUser._id || currentUser.id;
+      const supervisorName = currentUser.name;
+      const res = await apiClient.get('/tasks', { params: { limit: 1000 } });
+      let tasks = res.data?.data || res.data || [];
+      if (!Array.isArray(tasks)) tasks = [];
+      const siteIdSet = new Set<string>();
+      tasks.forEach((task: any) => {
+        const assigned =
+          task.assignedUsers?.some((u: any) =>
+            u.userId === supervisorId ||
+            (u.name && supervisorName && u.name.toLowerCase() === supervisorName.toLowerCase())
+          ) || task.assignedTo === supervisorId;
+        if (assigned && task.siteId) siteIdSet.add(task.siteId);
+      });
+      return Array.from(siteIdSet);
+    } catch (error) {
+      console.error("Error fetching sites for machines:", error);
+      return [];
+    }
+  }, [currentUser, role]);
 
   // ✅ CHANGED: Use siteId for filtering
   const fetchMachines = async () => {

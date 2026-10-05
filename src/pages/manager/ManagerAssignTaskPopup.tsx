@@ -35,8 +35,8 @@ interface ManagerAssignTaskPopupProps {
 interface SiteStaff {
   supervisors: StaffWithTaskCount[];
 }
-const API_URL = import.meta.env.VITE_API_URL || 
-  (import.meta.env.DEV ? 'http://localhost:5001/api' : 'https://sk-backend-btbj.onrender.com/api');
+const API_URL = import.meta.env.VITE_API_URL ||
+  (import.meta.env.DEV ? 'http://localhost:5001/api' : 'https://sk-backend-868y.onrender.com');
 
 const ManagerAssignTaskPopup: React.FC<ManagerAssignTaskPopupProps> = ({
   open,
@@ -44,7 +44,7 @@ const ManagerAssignTaskPopup: React.FC<ManagerAssignTaskPopupProps> = ({
   onTaskCreated
 }) => {
   const { user } = useRole();
-  
+
   // Form state
   const [assignedSites, setAssignedSites] = useState<ExtendedSite[]>([]);
   const [selectedSiteId, setSelectedSiteId] = useState<string>('');
@@ -55,11 +55,11 @@ const ManagerAssignTaskPopup: React.FC<ManagerAssignTaskPopupProps> = ({
   const [dueDateTime, setDueDateTime] = useState('');
   const [priority, setPriority] = useState<'high' | 'medium' | 'low'>('medium');
   const [taskType, setTaskType] = useState('routine');
-  
+
   // Staff state
   const [siteSupervisors, setSiteSupervisors] = useState<StaffWithTaskCount[]>([]);
   const [selectedSupervisors, setSelectedSupervisors] = useState<string[]>([]);
-  
+
   // Loading states
   const [isLoadingSites, setIsLoadingSites] = useState(false);
   const [isLoadingStaff, setIsLoadingStaff] = useState(false);
@@ -85,49 +85,49 @@ const ManagerAssignTaskPopup: React.FC<ManagerAssignTaskPopupProps> = ({
 
   const fetchManagerAssignedSites = async () => {
     if (!user) return;
-    
+
     try {
       setIsLoadingSites(true);
       const managerId = user._id || user.id;
-      
+
       if (!managerId) {
         toast.error('Manager ID not found');
         return;
       }
-      
+
       console.log('🔍 Fetching sites assigned to manager:', managerId);
-      
+
       // Try to get sites from taskService
       let sites = await taskService.getManagerAssignedSites(managerId);
-      
+
       // If no sites found, try to get from assignTaskService
       if (sites.length === 0) {
         console.log('⚠️ No sites found from taskService, trying assignTaskService...');
-        
+
         // Get tasks where this manager is assigned
         const tasksWithManager = await assignTaskService.getTasksWithManager(managerId);
-        
+
         // Extract unique site IDs
         const siteIds = [...new Set(tasksWithManager.map(task => task.siteId))];
-        
+
         // Get all sites and filter
         const allSites = await taskService.getAllSites();
         sites = allSites.filter(site => siteIds.includes(site._id));
       }
-      
+
       // If still no sites, try to get from tasks created by manager
       if (sites.length === 0) {
         console.log('⚠️ No sites found from assignments, trying created tasks...');
-        
+
         const createdTasks = await assignTaskService.getTasksByManager(managerId);
         const siteIds = [...new Set(createdTasks.map(task => task.siteId))];
-        
+
         const allSites = await taskService.getAllSites();
         sites = allSites.filter(site => siteIds.includes(site._id));
       }
-      
+
       setAssignedSites(sites);
-      
+
       if (sites.length === 0) {
         toast.warning('No sites assigned to you yet');
       } else {
@@ -136,7 +136,7 @@ const ManagerAssignTaskPopup: React.FC<ManagerAssignTaskPopupProps> = ({
     } catch (error) {
       console.error('Error fetching manager sites:', error);
       toast.error('Failed to load your assigned sites');
-      
+
       // Fallback: show all sites for testing
       try {
         const allSites = await taskService.getAllSites();
@@ -152,27 +152,27 @@ const ManagerAssignTaskPopup: React.FC<ManagerAssignTaskPopupProps> = ({
       setIsLoadingSites(false);
     }
   };
-  
+
   const fetchSiteSupervisors = async (siteId: string) => {
     try {
       setIsLoadingStaff(true);
-      
+
       console.log('🔍 Fetching supervisors for site:', siteId);
-      
+
       // Get supervisors for this site
       const supervisors = await taskService.getSupervisorsBySite(siteId);
-      
+
       console.log('📊 Site supervisors fetched:', {
         supervisors: supervisors.length,
         supervisorDetails: supervisors
       });
-      
+
       setSiteSupervisors(supervisors);
-      
+
       if (supervisors.length === 0) {
         toast.warning('No supervisors found for this site');
       }
-      
+
     } catch (error) {
       console.error('❌ Error fetching site supervisors:', error);
       toast.error('Failed to load supervisors for this site');
@@ -184,66 +184,66 @@ const ManagerAssignTaskPopup: React.FC<ManagerAssignTaskPopupProps> = ({
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    
+
     // Validation
     if (!selectedSiteId) {
       toast.error('Please select a site');
       return;
     }
-    
+
     if (!taskTitle.trim()) {
       toast.error('Please enter task title');
       return;
     }
-    
+
     if (!description.trim()) {
       toast.error('Please enter description');
       return;
     }
-    
+
     if (!startDate || !endDate || !dueDateTime) {
       toast.error('Please fill in all date fields');
       return;
     }
-    
+
     // Validate dates
     const start = new Date(startDate);
     const end = new Date(endDate);
     const due = new Date(dueDateTime);
-    
+
     if (start > end) {
       toast.error('End date must be after start date');
       return;
     }
-    
+
     if (end > due) {
       toast.error('Due date must be after end date');
       return;
     }
-    
+
     // Validate that at least one supervisor is selected
     if (selectedSupervisors.length === 0) {
       toast.error('Please select at least one supervisor');
       return;
     }
-    
+
     setIsSubmitting(true);
-    
+
     try {
       const selectedSite = assignedSites.find(s => s._id === selectedSiteId);
       if (!selectedSite) throw new Error('Site not found');
-      
+
       // Prepare assigned supervisors
       const assignedSupervisors = siteSupervisors
         .filter(s => selectedSupervisors.includes(s.userId))
-        .map(s => ({ 
+        .map(s => ({
           userId: s.userId,
-          name: s.name, 
+          name: s.name,
           role: 'supervisor' as const
         }));
-      
+
       console.log('Final assigned supervisors:', assignedSupervisors);
-      
+
       // Create task data - managers array is empty since this is manager assigning to supervisors
       const taskData: CreateAssignTaskRequest = {
         taskTitle,
@@ -262,43 +262,43 @@ const ManagerAssignTaskPopup: React.FC<ManagerAssignTaskPopupProps> = ({
         createdBy: user?._id || user?.id || 'system',
         createdByName: user?.name || 'Manager'
       };
-      
+
       console.log('Submitting new task data:', JSON.stringify(taskData, null, 2));
-      
-     
+
+
       // Inside ManagerAssignTaskPopup.tsx, handleSubmit function
-const result = await assignTaskService.createAssignTask(taskData);
-console.log('Task created result:', result);
+      const result = await assignTaskService.createAssignTask(taskData);
+      console.log('Task created result:', result);
 
 
 
-// Dispatch notification for each assigned supervisor
-if (result && result.assignedSupervisors) {
-  result.assignedSupervisors.forEach((supervisor: any) => {
-    window.dispatchEvent(new CustomEvent('task-assigned', {
-      detail: {
-        taskId: result._id,
-        taskTitle: result.taskTitle,
-        assignedToName: supervisor.name,
-        assignedToId: supervisor.userId,
-        siteName: result.siteName,
-        priority: result.priority,
+      // Dispatch notification for each assigned supervisor
+      if (result && result.assignedSupervisors) {
+        result.assignedSupervisors.forEach((supervisor: any) => {
+          window.dispatchEvent(new CustomEvent('task-assigned', {
+            detail: {
+              taskId: result._id,
+              taskTitle: result.taskTitle,
+              assignedToName: supervisor.name,
+              assignedToId: supervisor.userId,
+              siteName: result.siteName,
+              priority: result.priority,
+            }
+          }));
+        });
       }
-    }));
-  });
-}
-     
+
       toast.success('Task assigned to supervisor(s) successfully!');
-      
+
       // Reset form and close
       resetForm();
       onOpenChange(false);
-      
+
       // Notify parent
       if (onTaskCreated) {
         onTaskCreated();
       }
-      
+
     } catch (error: any) {
       console.error('Error creating task:', error);
       toast.error(error.message || 'Failed to create task');
@@ -350,7 +350,7 @@ if (result && result.assignedSupervisors) {
               <div className="text-sm text-blue-800">
                 <p className="font-medium">Manager Task Assignment</p>
                 <p className="text-xs text-blue-600">
-                  Showing only sites where you are assigned as manager. 
+                  Showing only sites where you are assigned as manager.
                   Select supervisors to assign this task.
                 </p>
               </div>
@@ -362,8 +362,8 @@ if (result && result.assignedSupervisors) {
             <Label htmlFor="site" className="text-base font-semibold">
               Select Your Site <span className="text-destructive">*</span>
             </Label>
-            <Select 
-              value={selectedSiteId} 
+            <Select
+              value={selectedSiteId}
               onValueChange={setSelectedSiteId}
               disabled={isLoadingSites}
             >
@@ -426,7 +426,7 @@ if (result && result.assignedSupervisors) {
           {/* Task Details */}
           <div className="space-y-4">
             <h3 className="text-base font-semibold">Task Details</h3>
-            
+
             <div className="space-y-2">
               <Label htmlFor="taskTitle">
                 Task Title <span className="text-destructive">*</span>
@@ -506,7 +506,7 @@ if (result && result.assignedSupervisors) {
                   required
                 />
               </div>
-              
+
               <div className="space-y-2">
                 <Label htmlFor="endDate">
                   End Date <span className="text-destructive">*</span>
@@ -520,7 +520,7 @@ if (result && result.assignedSupervisors) {
                   required
                 />
               </div>
-              
+
               <div className="space-y-2">
                 <Label htmlFor="dueDateTime">
                   Due Date & Time <span className="text-destructive">*</span>
@@ -541,7 +541,7 @@ if (result && result.assignedSupervisors) {
           {selectedSiteId && (
             <div className="space-y-4">
               <h3 className="text-base font-semibold">Select Supervisors</h3>
-              
+
               {isLoadingStaff ? (
                 <div className="flex items-center justify-center py-8">
                   <Loader2 className="h-8 w-8 animate-spin" />
@@ -558,17 +558,16 @@ if (result && result.assignedSupervisors) {
                         {selectedSupervisors.length} selected
                       </Badge>
                     </Label>
-                    
+
                     {siteSupervisors.length > 0 ? (
                       <div className="grid grid-cols-1 gap-2 max-h-60 overflow-y-auto border rounded-lg p-2">
                         {siteSupervisors.map(supervisor => (
                           <div
                             key={supervisor.userId}
-                            className={`flex items-center justify-between p-3 border rounded-lg cursor-pointer transition-colors ${
-                              selectedSupervisors.includes(supervisor.userId)
+                            className={`flex items-center justify-between p-3 border rounded-lg cursor-pointer transition-colors ${selectedSupervisors.includes(supervisor.userId)
                                 ? 'bg-primary/10 border-primary'
                                 : 'hover:bg-primary/5'
-                            }`}
+                              }`}
                             onClick={() => {
                               setSelectedSupervisors(prev => {
                                 if (prev.includes(supervisor.userId)) {
@@ -636,8 +635,8 @@ if (result && result.assignedSupervisors) {
             >
               Cancel
             </Button>
-            <Button 
-              type="submit" 
+            <Button
+              type="submit"
               className="flex-1"
               disabled={!selectedSiteId || isSubmitting || selectedSupervisors.length === 0}
             >

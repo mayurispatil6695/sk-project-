@@ -3,18 +3,18 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { 
-  CheckCircle, 
-  XCircle, 
-  Paperclip, 
-  Download, 
-  Eye, 
-  Building, 
-  User, 
-  Calendar, 
-  Clock, 
-  Filter, 
-  Loader2, 
+import {
+  CheckCircle,
+  XCircle,
+  Paperclip,
+  Download,
+  Eye,
+  Building,
+  User,
+  Calendar,
+  Clock,
+  Filter,
+  Loader2,
   AlertCircle,
   Search,
   RefreshCw,
@@ -188,19 +188,19 @@ interface SuperAdminInfo {
   superAdminContact: string;
 }
 
-const API_URL = import.meta.env.VITE_API_URL || 
-  (import.meta.env.DEV ? 'http://localhost:5001/api' : 'https://sk-backend-btbj.onrender.com/api');
+const API_URL = import.meta.env.VITE_API_URL ||
+  (import.meta.env.DEV ? 'http://localhost:5001/api' : 'https://sk-backend-868y.onrender.com');
 
 // ✅ UPDATED: Destructure new props
-const LeaveManagementTab = ({ 
-  leaveRequests, 
+const LeaveManagementTab = ({
+  leaveRequests,
   setLeaveRequests,
   selectedSite = 'all',
   sites = []
 }: LeaveManagementTabProps) => {
   const { user } = useRole();
   const [activeTab, setActiveTab] = useState<string>("supervisor-employee");
-  
+
   // SuperAdmin info
   const [superAdminInfo, setSuperAdminInfo] = useState<SuperAdminInfo>({
     superAdminId: '',
@@ -210,7 +210,7 @@ const LeaveManagementTab = ({
     superAdminEmail: '',
     superAdminContact: ''
   });
-  
+
   // For supervisor/employee leaves
   const [supervisorEmployeeLeaves, setSupervisorEmployeeLeaves] = useState<ApiLeaveRequest[]>([]);
   const [supervisorEmployeeStats, setSupervisorEmployeeStats] = useState({
@@ -220,7 +220,7 @@ const LeaveManagementTab = ({
     rejected: 0,
     cancelled: 0
   });
-  
+
   // For manager leaves
   const [managerLeaves, setManagerLeaves] = useState<ApiManagerLeaveRequest[]>([]);
   const [managerStats, setManagerStats] = useState({
@@ -230,7 +230,7 @@ const LeaveManagementTab = ({
     rejected: 0,
     cancelled: 0
   });
-  
+
   // For admin leaves
   const [adminLeaves, setAdminLeaves] = useState<ApiAdminLeaveRequest[]>([]);
   const [adminStats, setAdminStats] = useState({
@@ -303,14 +303,14 @@ const LeaveManagementTab = ({
     // Check by explicit flags first
     if (leave.isManagerLeave === true) return true;
     if (leave.requestType === 'manager-leave') return true;
-    
+
     // Check by presence of manager-specific fields
     if (leave.managerId) return true;
     if (leave.managerName) return true;
-    
+
     // Check if it's from manager collection (has manager-specific fields)
     if (leave.managerDepartment && leave.managerPosition) return true;
-    
+
     return false;
   };
 
@@ -318,28 +318,28 @@ const LeaveManagementTab = ({
     // Check by explicit flags first
     if (leave.isAdminLeave === true) return true;
     if (leave.requestType === 'admin-leave') return true;
-    
+
     // Check by presence of admin-specific fields
     if (leave.adminId) return true;
     if (leave.adminName) return true;
-    
+
     // Check if it's from admin collection
     if (leave.adminDepartment && leave.adminPosition) return true;
-    
+
     return false;
   };
 
   const isSupervisorLeave = (leave: any): boolean => {
     // Check by explicit flags
     if (leave.isSupervisorLeave === true) return true;
-    
+
     // Check if applied by supervisor
     if (leave.appliedBy && leave.appliedBy.toLowerCase().includes('supervisor')) return true;
     if (leave.employeeName && leave.employeeName.toLowerCase().includes('supervisor')) return true;
-    
+
     // Check by supervisor field
     if (leave.supervisorId) return true;
-    
+
     return false;
   };
 
@@ -351,54 +351,54 @@ const LeaveManagementTab = ({
   const fetchSupervisorEmployeeLeaves = async (page = 1) => {
     try {
       setIsLoading(true);
-      
+
       // Build URL with site filter
       let url = `${API_URL}/leaves?limit=1000`;
       if (selectedSite && selectedSite !== 'all') {
         url += `&siteId=${selectedSite}`;
       }
-      
+
       const response = await fetch(url);
-      
+
       if (!response.ok) {
         throw new Error('Failed to fetch leave requests');
       }
-      
+
       const data = await response.json();
       console.log('Supervisor/Employee API response:', data);
-      
+
       // Extract array from response
       const allLeaves = extractArrayFromResponse(data);
-      
+
       // Filter for supervisor/employee leaves (not manager, not admin)
       const filteredLeaves = allLeaves.filter((leave: any) => {
         // Skip manager and admin leaves
         if (isManagerLeave(leave)) return false;
         if (isAdminLeave(leave)) return false;
-        
+
         // Apply status filter
         if (statusFilter !== 'all' && leave.status !== statusFilter) return false;
-        
+
         // Apply department filter
         if (departmentFilter !== 'all' && leave.department !== departmentFilter) return false;
-        
+
         // Apply search filter
         if (searchQuery) {
           const matchesId = leave.employeeId?.toLowerCase().includes(searchQuery.toLowerCase());
           const matchesName = leave.employeeName?.toLowerCase().includes(searchQuery.toLowerCase());
           if (!matchesId && !matchesName) return false;
         }
-        
+
         return true;
       });
-      
+
       // Apply pagination client-side
       const startIndex = (page - 1) * itemsPerPage;
       const endIndex = startIndex + itemsPerPage;
       const paginatedLeaves = filteredLeaves.slice(startIndex, endIndex);
-      
+
       setSupervisorEmployeeLeaves(paginatedLeaves);
-      
+
       // Calculate stats
       const stats = {
         total: allLeaves.length,
@@ -407,12 +407,12 @@ const LeaveManagementTab = ({
         rejected: allLeaves.filter(l => l.status === 'rejected').length,
         cancelled: allLeaves.filter(l => l.status === 'cancelled').length,
       };
-      
+
       setSupervisorEmployeeStats(stats);
       setTotalItems(filteredLeaves.length);
       setTotalPages(Math.ceil(filteredLeaves.length / itemsPerPage));
       setCurrentPage(page);
-      
+
     } catch (error) {
       console.error("Error fetching supervisor/employee leaves:", error);
       toast.error("Failed to load leave requests");
@@ -426,36 +426,35 @@ const LeaveManagementTab = ({
   const fetchManagerLeaves = async (page = 1) => {
     try {
       setIsLoading(true);
-      
+
       // Try the admin endpoint first (since superadmin is viewing)
-      let url = `${API_URL}/manager-leaves/admin/all?status=${
-        statusFilter === 'all' ? '' : statusFilter
-      }&page=${page}&limit=${itemsPerPage}`;
-      
+      let url = `${API_URL}/manager-leaves/admin/all?status=${statusFilter === 'all' ? '' : statusFilter
+        }&page=${page}&limit=${itemsPerPage}`;
+
       if (selectedSite && selectedSite !== 'all') {
         url += `&siteId=${selectedSite}`;
       }
-      
+
       const response = await fetch(url);
-      
+
       if (!response.ok) {
         console.warn('Manager leaves admin endpoint failed, trying fallback...');
-        
+
         // Fallback to regular leaves endpoint with manager flag
         let fallbackUrl = `${API_URL}/leaves?isManagerLeave=true&limit=1000`;
         if (selectedSite && selectedSite !== 'all') {
           fallbackUrl += `&siteId=${selectedSite}`;
         }
-        
+
         const fallbackResponse = await fetch(fallbackUrl);
-        
+
         if (!fallbackResponse.ok) {
           throw new Error('Failed to fetch manager leaves');
         }
-        
+
         const fallbackData = await fallbackResponse.json();
         const allLeaves = extractArrayFromResponse(fallbackData);
-        
+
         // Filter for manager leaves
         const managerLeaves = allLeaves
           .filter((leave: any) => leave.isManagerLeave === true)
@@ -479,31 +478,31 @@ const LeaveManagementTab = ({
             siteName: leave.siteName || leave.site || '',
             siteId: leave.siteId || ''
           }));
-        
+
         // Apply filters
         let filteredLeaves = managerLeaves;
-        
+
         if (searchQuery) {
-          filteredLeaves = filteredLeaves.filter((leave: any) => 
+          filteredLeaves = filteredLeaves.filter((leave: any) =>
             leave.employeeName?.toLowerCase().includes(searchQuery.toLowerCase()) ||
             leave.managerName?.toLowerCase().includes(searchQuery.toLowerCase()) ||
             leave.employeeId?.toLowerCase().includes(searchQuery.toLowerCase()) ||
             leave.managerId?.toLowerCase().includes(searchQuery.toLowerCase())
           );
         }
-        
+
         if (departmentFilter !== 'all') {
-          filteredLeaves = filteredLeaves.filter((leave: any) => 
+          filteredLeaves = filteredLeaves.filter((leave: any) =>
             leave.managerDepartment === departmentFilter || leave.department === departmentFilter
           );
         }
-        
+
         if (statusFilter !== 'all') {
           filteredLeaves = filteredLeaves.filter((leave: any) => leave.status === statusFilter);
         }
-        
+
         setManagerLeaves(filteredLeaves);
-        
+
         // Calculate stats
         const stats = {
           total: filteredLeaves.length,
@@ -512,26 +511,26 @@ const LeaveManagementTab = ({
           rejected: filteredLeaves.filter((l: any) => l.status === 'rejected').length,
           cancelled: filteredLeaves.filter((l: any) => l.status === 'cancelled').length
         };
-        
+
         setManagerStats(stats);
         setTotalItems(filteredLeaves.length);
         setTotalPages(Math.ceil(filteredLeaves.length / itemsPerPage));
         setCurrentPage(page);
-        
+
         return;
       }
-      
+
       const data = await response.json();
       console.log('Manager leaves API response:', data);
-      
+
       let leaves: any[] = [];
-      
+
       if (data.success) {
         leaves = data.leaves || [];
       } else {
         leaves = extractArrayFromResponse(data);
       }
-      
+
       const transformedLeaves = leaves.map((leave: any) => ({
         ...leave,
         type: 'manager',
@@ -552,31 +551,31 @@ const LeaveManagementTab = ({
         siteName: leave.siteName || leave.site || '',
         siteId: leave.siteId || ''
       }));
-      
+
       // Apply filters
       let filteredLeaves = transformedLeaves;
-      
+
       if (searchQuery) {
-        filteredLeaves = filteredLeaves.filter((leave: any) => 
+        filteredLeaves = filteredLeaves.filter((leave: any) =>
           leave.employeeName?.toLowerCase().includes(searchQuery.toLowerCase()) ||
           leave.managerName?.toLowerCase().includes(searchQuery.toLowerCase()) ||
           leave.employeeId?.toLowerCase().includes(searchQuery.toLowerCase()) ||
           leave.managerId?.toLowerCase().includes(searchQuery.toLowerCase())
         );
       }
-      
+
       if (departmentFilter !== 'all') {
-        filteredLeaves = filteredLeaves.filter((leave: any) => 
+        filteredLeaves = filteredLeaves.filter((leave: any) =>
           leave.managerDepartment === departmentFilter || leave.department === departmentFilter
         );
       }
-      
+
       if (statusFilter !== 'all') {
         filteredLeaves = filteredLeaves.filter((leave: any) => leave.status === statusFilter);
       }
-      
+
       setManagerLeaves(filteredLeaves);
-      
+
       // Calculate stats
       const stats = {
         total: filteredLeaves.length,
@@ -585,12 +584,12 @@ const LeaveManagementTab = ({
         rejected: filteredLeaves.filter((l: any) => l.status === 'rejected').length,
         cancelled: filteredLeaves.filter((l: any) => l.status === 'cancelled').length
       };
-      
+
       setManagerStats(stats);
       setTotalItems(filteredLeaves.length);
       setTotalPages(Math.ceil(filteredLeaves.length / itemsPerPage));
       setCurrentPage(page);
-      
+
     } catch (error) {
       console.error("Error fetching manager leaves:", error);
       toast.error("Failed to load manager leaves");
@@ -604,36 +603,35 @@ const LeaveManagementTab = ({
   const fetchAdminLeaves = async (page = 1) => {
     try {
       setIsLoading(true);
-      
+
       // Try the admin endpoint first
-      let url = `${API_URL}/admin-leaves/admin/all?status=${
-        statusFilter === 'all' ? '' : statusFilter
-      }&page=${page}&limit=${itemsPerPage}`;
-      
+      let url = `${API_URL}/admin-leaves/admin/all?status=${statusFilter === 'all' ? '' : statusFilter
+        }&page=${page}&limit=${itemsPerPage}`;
+
       if (selectedSite && selectedSite !== 'all') {
         url += `&siteId=${selectedSite}`;
       }
-      
+
       const response = await fetch(url);
-      
+
       if (!response.ok) {
         console.warn('Admin leaves admin endpoint failed, trying fallback...');
-        
+
         // Fallback to regular leaves endpoint with admin flag
         let fallbackUrl = `${API_URL}/leaves?isAdminLeave=true&limit=1000`;
         if (selectedSite && selectedSite !== 'all') {
           fallbackUrl += `&siteId=${selectedSite}`;
         }
-        
+
         const fallbackResponse = await fetch(fallbackUrl);
-        
+
         if (!fallbackResponse.ok) {
           throw new Error('Failed to fetch admin leaves');
         }
-        
+
         const fallbackData = await fallbackResponse.json();
         const allLeaves = extractArrayFromResponse(fallbackData);
-        
+
         // Filter for admin leaves
         const adminLeaves = allLeaves
           .filter((leave: any) => leave.isAdminLeave === true || leave.requestType === 'admin-leave')
@@ -657,31 +655,31 @@ const LeaveManagementTab = ({
             siteName: leave.siteName || leave.site || '',
             siteId: leave.siteId || ''
           }));
-        
+
         // Apply filters
         let filteredLeaves = adminLeaves;
-        
+
         if (searchQuery) {
-          filteredLeaves = filteredLeaves.filter((leave: any) => 
+          filteredLeaves = filteredLeaves.filter((leave: any) =>
             leave.employeeName?.toLowerCase().includes(searchQuery.toLowerCase()) ||
             leave.adminName?.toLowerCase().includes(searchQuery.toLowerCase()) ||
             leave.employeeId?.toLowerCase().includes(searchQuery.toLowerCase()) ||
             leave.adminId?.toLowerCase().includes(searchQuery.toLowerCase())
           );
         }
-        
+
         if (departmentFilter !== 'all') {
-          filteredLeaves = filteredLeaves.filter((leave: any) => 
+          filteredLeaves = filteredLeaves.filter((leave: any) =>
             leave.adminDepartment === departmentFilter || leave.department === departmentFilter
           );
         }
-        
+
         if (statusFilter !== 'all') {
           filteredLeaves = filteredLeaves.filter((leave: any) => leave.status === statusFilter);
         }
-        
+
         setAdminLeaves(filteredLeaves);
-        
+
         // Calculate stats
         const stats = {
           total: filteredLeaves.length,
@@ -690,26 +688,26 @@ const LeaveManagementTab = ({
           rejected: filteredLeaves.filter((l: any) => l.status === 'rejected').length,
           cancelled: filteredLeaves.filter((l: any) => l.status === 'cancelled').length
         };
-        
+
         setAdminStats(stats);
         setTotalItems(filteredLeaves.length);
         setTotalPages(Math.ceil(filteredLeaves.length / itemsPerPage));
         setCurrentPage(page);
-        
+
         return;
       }
-      
+
       const data = await response.json();
       console.log('Admin leaves API response:', data);
-      
+
       let leaves: any[] = [];
-      
+
       if (data.success) {
         leaves = data.leaves || [];
       } else {
         leaves = extractArrayFromResponse(data);
       }
-      
+
       const transformedLeaves = leaves.map((leave: any) => ({
         ...leave,
         type: 'admin',
@@ -730,31 +728,31 @@ const LeaveManagementTab = ({
         siteName: leave.siteName || leave.site || '',
         siteId: leave.siteId || ''
       }));
-      
+
       // Apply filters
       let filteredLeaves = transformedLeaves;
-      
+
       if (searchQuery) {
-        filteredLeaves = filteredLeaves.filter((leave: any) => 
+        filteredLeaves = filteredLeaves.filter((leave: any) =>
           leave.employeeName?.toLowerCase().includes(searchQuery.toLowerCase()) ||
           leave.adminName?.toLowerCase().includes(searchQuery.toLowerCase()) ||
           leave.employeeId?.toLowerCase().includes(searchQuery.toLowerCase()) ||
           leave.adminId?.toLowerCase().includes(searchQuery.toLowerCase())
         );
       }
-      
+
       if (departmentFilter !== 'all') {
-        filteredLeaves = filteredLeaves.filter((leave: any) => 
+        filteredLeaves = filteredLeaves.filter((leave: any) =>
           leave.adminDepartment === departmentFilter || leave.department === departmentFilter
         );
       }
-      
+
       if (statusFilter !== 'all') {
         filteredLeaves = filteredLeaves.filter((leave: any) => leave.status === statusFilter);
       }
-      
+
       setAdminLeaves(filteredLeaves);
-      
+
       // Calculate stats
       const stats = {
         total: filteredLeaves.length,
@@ -763,12 +761,12 @@ const LeaveManagementTab = ({
         rejected: filteredLeaves.filter((l: any) => l.status === 'rejected').length,
         cancelled: filteredLeaves.filter((l: any) => l.status === 'cancelled').length
       };
-      
+
       setAdminStats(stats);
       setTotalItems(filteredLeaves.length);
       setTotalPages(Math.ceil(filteredLeaves.length / itemsPerPage));
       setCurrentPage(page);
-      
+
     } catch (error) {
       console.error("Error fetching admin leaves:", error);
       toast.error("Failed to load admin leaves");
@@ -800,7 +798,7 @@ const LeaveManagementTab = ({
         fetchAdminLeaves(1);
       }
     }, 500);
-    
+
     return () => clearTimeout(timer);
   }, [statusFilter, departmentFilter, searchQuery, selectedSite]); // ✅ Added selectedSite
 
@@ -820,13 +818,13 @@ const LeaveManagementTab = ({
     try {
       setIsUpdating(true);
       setSelectedLeave(leave);
-      
+
       let response;
       let endpoint = '';
       let requestBody = {};
-      
+
       const leaveId = leave._id || leave.id || '';
-      
+
       if (!leaveId) {
         toast.error("Leave ID is missing");
         setIsUpdating(false);
@@ -838,7 +836,7 @@ const LeaveManagementTab = ({
         action,
         leaveType: isAdminLeave(leave) ? 'Admin' : isManagerLeave(leave) ? 'Manager' : 'Employee/Supervisor'
       });
-      
+
       // Determine correct endpoint based on leave type
       if (isAdminLeave(leave)) {
         endpoint = `${API_URL}/admin-leaves/superadmin/${leaveId}/status`;
@@ -856,7 +854,7 @@ const LeaveManagementTab = ({
         };
       } else {
         endpoint = `${API_URL}/leaves/${leaveId}/status`;
-        requestBody = { 
+        requestBody = {
           status: action,
           approvedBy: action === 'approved' ? superAdminInfo.superAdminName || 'Super Admin' : undefined,
           rejectedBy: action === 'rejected' ? superAdminInfo.superAdminName || 'Super Admin' : undefined,
@@ -865,7 +863,7 @@ const LeaveManagementTab = ({
       }
 
       console.log(`Updating leave at ${endpoint}`, requestBody);
-      
+
       response = await fetch(endpoint, {
         method: 'PUT',
         headers: {
@@ -877,27 +875,27 @@ const LeaveManagementTab = ({
       if (!response.ok) {
         const errorText = await response.text();
         let errorMessage = 'Failed to update leave status';
-        
+
         try {
           const errorData = JSON.parse(errorText);
           errorMessage = errorData.message || errorMessage;
         } catch (e) {
           errorMessage = response.statusText || errorMessage;
         }
-        
+
         throw new Error(errorMessage);
       }
 
       const data = await response.json();
-      
+
       // Update local state based on active tab and leave type
       if (activeTab === "supervisor-employee") {
-        setSupervisorEmployeeLeaves(prev => 
+        setSupervisorEmployeeLeaves(prev =>
           prev.map(l => {
             const lId = l._id || l.id;
             if (lId === leaveId) {
-              return { 
-                ...l, 
+              return {
+                ...l,
                 status: action,
                 approvedBy: action === 'approved' ? superAdminInfo.superAdminName || 'Super Admin' : undefined,
                 rejectedBy: action === 'rejected' ? superAdminInfo.superAdminName || 'Super Admin' : undefined,
@@ -909,7 +907,7 @@ const LeaveManagementTab = ({
             return l;
           })
         );
-        
+
         setSupervisorEmployeeStats(prev => {
           const newStats = { ...prev };
           if (action === 'approved') {
@@ -922,12 +920,12 @@ const LeaveManagementTab = ({
           return newStats;
         });
       } else if (activeTab === "manager") {
-        setManagerLeaves(prev => 
+        setManagerLeaves(prev =>
           prev.map(l => {
             const lId = l._id || l.id;
             if (lId === leaveId) {
-              return { 
-                ...l, 
+              return {
+                ...l,
                 status: action,
                 approvedBy: action === 'approved' ? superAdminInfo.superAdminName || 'Super Admin' : undefined,
                 rejectedBy: action === 'rejected' ? superAdminInfo.superAdminName || 'Super Admin' : undefined,
@@ -939,7 +937,7 @@ const LeaveManagementTab = ({
             return l;
           })
         );
-        
+
         setManagerStats(prev => {
           const newStats = { ...prev };
           if (action === 'approved') {
@@ -952,12 +950,12 @@ const LeaveManagementTab = ({
           return newStats;
         });
       } else if (activeTab === "admin") {
-        setAdminLeaves(prev => 
+        setAdminLeaves(prev =>
           prev.map(l => {
             const lId = l._id || l.id;
             if (lId === leaveId) {
-              return { 
-                ...l, 
+              return {
+                ...l,
                 status: action,
                 approvedBy: action === 'approved' ? superAdminInfo.superAdminName || 'Super Admin' : undefined,
                 rejectedBy: action === 'rejected' ? superAdminInfo.superAdminName || 'Super Admin' : undefined,
@@ -969,7 +967,7 @@ const LeaveManagementTab = ({
             return l;
           })
         );
-        
+
         setAdminStats(prev => {
           const newStats = { ...prev };
           if (action === 'approved') {
@@ -986,7 +984,7 @@ const LeaveManagementTab = ({
       // ✅ Dispatch leave-update event
       const leaveName = leave.employeeName || leave.managerName || leave.adminName || 'Employee';
       const leaveType = leave.leaveType || 'leave';
-      
+
       window.dispatchEvent(new CustomEvent('leave-update', {
         detail: {
           leaveId: leaveId,
@@ -1002,7 +1000,7 @@ const LeaveManagementTab = ({
       toast.success(data.message || `Leave request ${action} successfully!`);
       setViewDialogOpen(false);
       setRemarks("");
-      
+
       // Refresh the list
       if (activeTab === "supervisor-employee") {
         fetchSupervisorEmployeeLeaves(currentPage);
@@ -1025,13 +1023,13 @@ const LeaveManagementTab = ({
     try {
       setIsUpdating(true);
       setSelectedLeave(leave);
-      
+
       let response;
       let endpoint = '';
       let requestBody = {};
-      
+
       const leaveId = leave._id || leave.id || '';
-      
+
       if (!leaveId) {
         toast.error("Leave ID is missing");
         setIsUpdating(false);
@@ -1042,7 +1040,7 @@ const LeaveManagementTab = ({
         leaveId,
         leaveType: isAdminLeave(leave) ? 'Admin' : isManagerLeave(leave) ? 'Manager' : 'Employee/Supervisor'
       });
-      
+
       // Determine correct endpoint based on leave type
       if (isAdminLeave(leave)) {
         endpoint = `${API_URL}/admin-leaves/superadmin/${leaveId}/revert`;
@@ -1058,7 +1056,7 @@ const LeaveManagementTab = ({
         };
       } else {
         endpoint = `${API_URL}/leaves/${leaveId}/status`;
-        requestBody = { 
+        requestBody = {
           status: 'pending',
           remarks: remarks || `Reverted to pending by ${superAdminInfo.superAdminName || 'Super Admin'}`,
           revertedBy: superAdminInfo.superAdminName || 'Super Admin'
@@ -1066,7 +1064,7 @@ const LeaveManagementTab = ({
       }
 
       console.log(`Reverting leave at ${endpoint}`, requestBody);
-      
+
       response = await fetch(endpoint, {
         method: 'PUT',
         headers: {
@@ -1078,27 +1076,27 @@ const LeaveManagementTab = ({
       if (!response.ok) {
         const errorText = await response.text();
         let errorMessage = 'Failed to revert leave status';
-        
+
         try {
           const errorData = JSON.parse(errorText);
           errorMessage = errorData.message || errorMessage;
         } catch (e) {
           errorMessage = response.statusText || errorMessage;
         }
-        
+
         throw new Error(errorMessage);
       }
 
       const data = await response.json();
-      
+
       // Update local state based on active tab
       if (activeTab === "supervisor-employee") {
-        setSupervisorEmployeeLeaves(prev => 
+        setSupervisorEmployeeLeaves(prev =>
           prev.map(l => {
             const lId = l._id || l.id;
             if (lId === leaveId) {
-              return { 
-                ...l, 
+              return {
+                ...l,
                 status: 'pending',
                 approvedBy: undefined,
                 rejectedBy: undefined,
@@ -1110,7 +1108,7 @@ const LeaveManagementTab = ({
             return l;
           })
         );
-        
+
         setSupervisorEmployeeStats(prev => {
           const newStats = { ...prev };
           if (leave.status === 'approved') {
@@ -1123,12 +1121,12 @@ const LeaveManagementTab = ({
           return newStats;
         });
       } else if (activeTab === "manager") {
-        setManagerLeaves(prev => 
+        setManagerLeaves(prev =>
           prev.map(l => {
             const lId = l._id || l.id;
             if (lId === leaveId) {
-              return { 
-                ...l, 
+              return {
+                ...l,
                 status: 'pending',
                 approvedBy: undefined,
                 rejectedBy: undefined,
@@ -1140,7 +1138,7 @@ const LeaveManagementTab = ({
             return l;
           })
         );
-        
+
         setManagerStats(prev => {
           const newStats = { ...prev };
           if (leave.status === 'approved') {
@@ -1153,12 +1151,12 @@ const LeaveManagementTab = ({
           return newStats;
         });
       } else if (activeTab === "admin") {
-        setAdminLeaves(prev => 
+        setAdminLeaves(prev =>
           prev.map(l => {
             const lId = l._id || l.id;
             if (lId === leaveId) {
-              return { 
-                ...l, 
+              return {
+                ...l,
                 status: 'pending',
                 approvedBy: undefined,
                 rejectedBy: undefined,
@@ -1170,7 +1168,7 @@ const LeaveManagementTab = ({
             return l;
           })
         );
-        
+
         setAdminStats(prev => {
           const newStats = { ...prev };
           if (leave.status === 'approved') {
@@ -1187,7 +1185,7 @@ const LeaveManagementTab = ({
       // ✅ Dispatch leave-update event
       const leaveName = leave.employeeName || leave.managerName || leave.adminName || 'Employee';
       const leaveType = leave.leaveType || 'leave';
-      
+
       window.dispatchEvent(new CustomEvent('leave-update', {
         detail: {
           leaveId: leaveId,
@@ -1203,7 +1201,7 @@ const LeaveManagementTab = ({
       toast.success(data.message || 'Leave request reverted to pending successfully!');
       setViewDialogOpen(false);
       setRemarks("");
-      
+
       // Refresh the list
       if (activeTab === "supervisor-employee") {
         fetchSupervisorEmployeeLeaves(currentPage);
@@ -1222,7 +1220,7 @@ const LeaveManagementTab = ({
   };
 
   const getStatusColor = (status: string) => {
-    switch(status) {
+    switch (status) {
       case "approved": return "default";
       case "rejected": return "destructive";
       case "pending": return "secondary";
@@ -1241,7 +1239,7 @@ const LeaveManagementTab = ({
         </Badge>
       );
     }
-    
+
     if (isManagerLeave(leave)) {
       return (
         <Badge variant="default" className="bg-blue-600 text-xs sm:text-sm">
@@ -1251,7 +1249,7 @@ const LeaveManagementTab = ({
         </Badge>
       );
     }
-    
+
     if (isSupervisorLeave(leave)) {
       return (
         <Badge variant="default" className="bg-green-600 text-xs sm:text-sm">
@@ -1261,7 +1259,7 @@ const LeaveManagementTab = ({
         </Badge>
       );
     }
-    
+
     return (
       <Badge variant="default" className="bg-gray-600 text-xs sm:text-sm">
         <Users className="h-3 w-3 mr-1 inline-block" />
@@ -1287,11 +1285,11 @@ const LeaveManagementTab = ({
   const handleViewDetails = (leave: any) => {
     setSelectedLeave(leave);
     setRemarks(
-      isAdminLeave(leave) 
-        ? leave.adminRemarks || "" 
-        : isManagerLeave(leave)
+      isAdminLeave(leave)
         ? leave.adminRemarks || ""
-        : leave.remarks || ""
+        : isManagerLeave(leave)
+          ? leave.adminRemarks || ""
+          : leave.remarks || ""
     );
     setViewDialogOpen(true);
   };
@@ -1397,7 +1395,7 @@ const LeaveManagementTab = ({
     const isExpanded = expandedRow === (leave._id || leave.id);
     const leaveId = leave._id || leave.id || '';
     const canRevert = leave.status === 'approved' || leave.status === 'rejected';
-    
+
     return (
       <div key={leaveId} className="border rounded-lg p-4 mb-3 bg-white shadow-sm">
         {/* Header with basic info */}
@@ -1408,16 +1406,16 @@ const LeaveManagementTab = ({
               {leave.status}
             </Badge>
           </div>
-          <Button 
-            variant="ghost" 
-            size="sm" 
+          <Button
+            variant="ghost"
+            size="sm"
             className="h-8 w-8 p-0"
             onClick={() => toggleRowExpansion(leaveId)}
           >
             {isExpanded ? <ChevronLeft className="h-4 w-4" /> : <ChevronRight className="h-4 w-4" />}
           </Button>
         </div>
-        
+
         {/* Always visible info */}
         <div className="space-y-2">
           <div className="flex items-center gap-2">
@@ -1427,23 +1425,23 @@ const LeaveManagementTab = ({
               <p className="text-xs text-muted-foreground">ID: {getDisplayId(leave)}</p>
             </div>
           </div>
-          
+
           <div className="flex items-center gap-2">
             <Building className="h-4 w-4 text-muted-foreground flex-shrink-0" />
             <span className="text-sm truncate">{getDisplayDepartment(leave)}</span>
           </div>
-          
+
           <div className="flex items-center gap-2">
             <Calendar className="h-4 w-4 text-muted-foreground flex-shrink-0" />
             <span className="text-sm">{formatDate(leave.fromDate)} - {formatDate(leave.toDate)}</span>
           </div>
-          
+
           <div className="flex items-center gap-2">
             <Clock className="h-4 w-4 text-muted-foreground flex-shrink-0" />
             <span className="text-sm">{leave.totalDays} days</span>
           </div>
         </div>
-        
+
         {/* Expandable section with actions */}
         {isExpanded && (
           <div className="mt-4 pt-3 border-t space-y-3">
@@ -1453,22 +1451,22 @@ const LeaveManagementTab = ({
                 {leave.leaveType}
               </Badge>
             </div>
-            
+
             <div className="text-sm">
               <span className="font-medium">Applied by:</span> {leave.appliedBy || 'N/A'}
             </div>
-            
+
             {leave.reason && (
               <div className="text-sm">
                 <span className="font-medium">Reason:</span>
                 <p className="mt-1 text-muted-foreground bg-muted/30 p-2 rounded">
-                  {leave.reason.length > 100 
-                    ? `${leave.reason.substring(0, 100)}...` 
+                  {leave.reason.length > 100
+                    ? `${leave.reason.substring(0, 100)}...`
                     : leave.reason}
                 </p>
               </div>
             )}
-            
+
             {/* Show remarks if available */}
             {(leave.remarks || leave.adminRemarks) && (
               <div className="text-sm p-2 bg-yellow-50 rounded border border-yellow-200">
@@ -1476,10 +1474,10 @@ const LeaveManagementTab = ({
                 <p className="mt-1">{leave.remarks || leave.adminRemarks}</p>
               </div>
             )}
-            
+
             <div className="flex flex-col gap-2 mt-2">
-              <Button 
-                size="sm" 
+              <Button
+                size="sm"
                 variant="outline"
                 onClick={() => handleViewDetails(leave)}
                 className="w-full"
@@ -1487,11 +1485,11 @@ const LeaveManagementTab = ({
                 <Eye className="h-4 w-4 mr-2" />
                 View Details
               </Button>
-              
+
               {leave.status === "pending" && (
                 <div className="flex gap-2">
-                  <Button 
-                    size="sm" 
+                  <Button
+                    size="sm"
                     variant="default"
                     onClick={() => handleLeaveAction(leave, "approved")}
                     disabled={isUpdating}
@@ -1504,8 +1502,8 @@ const LeaveManagementTab = ({
                     )}
                     Approve
                   </Button>
-                  <Button 
-                    size="sm" 
+                  <Button
+                    size="sm"
                     variant="destructive"
                     onClick={() => handleLeaveAction(leave, "rejected")}
                     disabled={isUpdating}
@@ -1520,7 +1518,7 @@ const LeaveManagementTab = ({
                   </Button>
                 </div>
               )}
-              
+
               {canRevert && (
                 <Button
                   size="sm"
@@ -1608,34 +1606,34 @@ const LeaveManagementTab = ({
 
         {/* Stats Cards for each tab */}
         <div className="mt-4 grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-2 sm:gap-4">
-          <StatCard 
-            title="Total" 
+          <StatCard
+            title="Total"
             value={getCurrentStats().total}
             icon={<Users className="h-3 w-3 sm:h-4 sm:w-4" />}
             className="text-xs sm:text-sm"
           />
-          <StatCard 
-            title="Pending" 
-            value={getCurrentStats().pending} 
-            className="text-yellow-600 text-xs sm:text-sm" 
+          <StatCard
+            title="Pending"
+            value={getCurrentStats().pending}
+            className="text-yellow-600 text-xs sm:text-sm"
             icon={<AlertCircle className="h-3 w-3 sm:h-4 sm:w-4" />}
           />
-          <StatCard 
-            title="Approved" 
-            value={getCurrentStats().approved} 
-            className="text-green-600 text-xs sm:text-sm" 
+          <StatCard
+            title="Approved"
+            value={getCurrentStats().approved}
+            className="text-green-600 text-xs sm:text-sm"
             icon={<CheckCircle className="h-3 w-3 sm:h-4 sm:w-4" />}
           />
-          <StatCard 
-            title="Rejected" 
-            value={getCurrentStats().rejected} 
-            className="text-red-600 text-xs sm:text-sm" 
+          <StatCard
+            title="Rejected"
+            value={getCurrentStats().rejected}
+            className="text-red-600 text-xs sm:text-sm"
             icon={<XCircle className="h-3 w-3 sm:h-4 sm:w-4" />}
           />
-          <StatCard 
-            title="Cancelled" 
-            value={getCurrentStats().cancelled} 
-            className="text-gray-600 text-xs sm:text-sm col-span-2 sm:col-span-1" 
+          <StatCard
+            title="Cancelled"
+            value={getCurrentStats().cancelled}
+            className="text-gray-600 text-xs sm:text-sm col-span-2 sm:col-span-1"
             icon={<XCircle className="h-3 w-3 sm:h-4 sm:w-4" />}
           />
         </div>
@@ -1646,16 +1644,16 @@ const LeaveManagementTab = ({
         <CardHeader className="p-3 sm:p-6">
           <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 sm:gap-4">
             <CardTitle className="text-sm sm:text-base">
-              {activeTab === "supervisor-employee" 
-                ? "Employee & Supervisor Leave Requests" 
+              {activeTab === "supervisor-employee"
+                ? "Employee & Supervisor Leave Requests"
                 : activeTab === "manager"
-                ? "Manager Leave Requests"
-                : "Admin Leave Requests"}
+                  ? "Manager Leave Requests"
+                  : "Admin Leave Requests"}
             </CardTitle>
             <div className="flex gap-2 w-full sm:w-auto">
-              <Button 
-                variant="outline" 
-                size="sm" 
+              <Button
+                variant="outline"
+                size="sm"
                 onClick={handleRefresh}
                 disabled={isLoading}
                 className="flex-1 sm:flex-initial text-xs sm:text-sm h-8 sm:h-9"
@@ -1668,9 +1666,9 @@ const LeaveManagementTab = ({
                 <span className="hidden xs:inline">Refresh</span>
                 <span className="xs:hidden">Sync</span>
               </Button>
-              <Button 
-                variant="outline" 
-                size="sm" 
+              <Button
+                variant="outline"
+                size="sm"
                 onClick={handleClearFilters}
                 className="flex-1 sm:flex-initial text-xs sm:text-sm h-8 sm:h-9"
               >
@@ -1684,11 +1682,11 @@ const LeaveManagementTab = ({
             <form onSubmit={handleSearch} className="flex gap-2">
               <Input
                 placeholder={
-                  activeTab === "supervisor-employee" 
-                    ? "Search by Employee ID or Name..." 
+                  activeTab === "supervisor-employee"
+                    ? "Search by Employee ID or Name..."
                     : activeTab === "manager"
-                    ? "Search by Manager Name..."
-                    : "Search by Admin Name..."
+                      ? "Search by Manager Name..."
+                      : "Search by Admin Name..."
                 }
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
@@ -1700,7 +1698,7 @@ const LeaveManagementTab = ({
             </form>
 
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
-               <div className="space-y-1 sm:space-y-2">
+              <div className="space-y-1 sm:space-y-2">
                 <Label htmlFor="status" className="text-xs sm:text-sm">Status</Label>
                 <Select value={statusFilter} onValueChange={setStatusFilter}>
                   <SelectTrigger className="h-8 sm:h-10 text-xs sm:text-sm">
@@ -1725,11 +1723,11 @@ const LeaveManagementTab = ({
         <CardHeader className="p-3 sm:p-6">
           <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 sm:gap-4">
             <CardTitle className="text-sm sm:text-base">
-              {activeTab === "supervisor-employee" 
-                ? "Employee & Supervisor Leave Requests" 
+              {activeTab === "supervisor-employee"
+                ? "Employee & Supervisor Leave Requests"
                 : activeTab === "manager"
-                ? "Manager Leave Requests"
-                : "Admin Leave Requests"}
+                  ? "Manager Leave Requests"
+                  : "Admin Leave Requests"}
             </CardTitle>
             <div className="text-xs sm:text-sm text-muted-foreground">
               Showing {getCurrentLeaves().length} of {totalItems} requests
@@ -1769,7 +1767,7 @@ const LeaveManagementTab = ({
                     {getCurrentLeaves().map((leave) => {
                       const leaveId = leave._id || leave.id || '';
                       const canRevert = leave.status === 'approved' || leave.status === 'rejected';
-                      
+
                       return (
                         <TableRow key={leaveId}>
                           <TableCell className="text-xs sm:text-sm">
@@ -1819,19 +1817,19 @@ const LeaveManagementTab = ({
                           </TableCell>
                           <TableCell className="text-right">
                             <div className="flex justify-end gap-1 sm:gap-2">
-                              <Button 
-                                size="sm" 
+                              <Button
+                                size="sm"
                                 variant="outline"
                                 onClick={() => handleViewDetails(leave)}
                                 className="h-7 w-7 sm:h-8 sm:w-8 p-0"
                               >
                                 <Eye className="h-3 w-3 sm:h-4 sm:w-4" />
                               </Button>
-                          
+
                               {leave.status === "pending" && (
                                 <>
-                                  <Button 
-                                    size="sm" 
+                                  <Button
+                                    size="sm"
                                     variant="default"
                                     onClick={() => handleLeaveAction(leave, "approved")}
                                     disabled={isUpdating}
@@ -1844,8 +1842,8 @@ const LeaveManagementTab = ({
                                     )}
                                     <span className="hidden sm:inline">Approve</span>
                                   </Button>
-                                  <Button 
-                                    size="sm" 
+                                  <Button
+                                    size="sm"
                                     variant="destructive"
                                     onClick={() => handleLeaveAction(leave, "rejected")}
                                     disabled={isUpdating}
@@ -1860,7 +1858,7 @@ const LeaveManagementTab = ({
                                   </Button>
                                 </>
                               )}
-                              
+
                               {canRevert && (
                                 <Button
                                   size="sm"
@@ -1909,16 +1907,16 @@ const LeaveManagementTab = ({
         <DialogContent className="max-w-[95vw] sm:max-w-3xl max-h-[90vh] sm:max-h-[85vh] overflow-y-auto p-3 sm:p-6">
           <DialogHeader className="space-y-1 sm:space-y-2">
             <DialogTitle className="text-base sm:text-lg">
-              {selectedLeave && isAdminLeave(selectedLeave) 
-                ? "Admin Leave Request Details" 
+              {selectedLeave && isAdminLeave(selectedLeave)
+                ? "Admin Leave Request Details"
                 : selectedLeave && isManagerLeave(selectedLeave)
-                ? "Manager Leave Request Details"
-                : selectedLeave && isSupervisorLeave(selectedLeave)
-                ? "Supervisor Leave Request Details"
-                : "Employee Leave Request Details"}
+                  ? "Manager Leave Request Details"
+                  : selectedLeave && isSupervisorLeave(selectedLeave)
+                    ? "Supervisor Leave Request Details"
+                    : "Employee Leave Request Details"}
             </DialogTitle>
           </DialogHeader>
-          
+
           {selectedLeave && (
             <div className="space-y-4 sm:space-y-6">
               {/* Header with basic info */}
@@ -2042,8 +2040,8 @@ const LeaveManagementTab = ({
                       <div className="flex justify-between">
                         <span className="text-muted-foreground">Applied Date:</span>
                         <span className="font-medium">
-                          {'appliedDate' in selectedLeave 
-                            ? formatDate(selectedLeave.appliedDate) 
+                          {'appliedDate' in selectedLeave
+                            ? formatDate(selectedLeave.appliedDate)
                             : formatDate(selectedLeave.createdAt)}
                         </span>
                       </div>
@@ -2097,17 +2095,17 @@ const LeaveManagementTab = ({
                       className="mt-1 text-xs sm:text-sm min-h-[80px] sm:min-h-[100px]"
                     />
                   </div>
-                  
+
                   <div className="flex flex-col sm:flex-row gap-2 sm:gap-3">
-                    <Button 
-                      variant="outline" 
+                    <Button
+                      variant="outline"
                       className="w-full sm:flex-1 order-3 sm:order-1 text-xs sm:text-sm h-8 sm:h-10"
                       onClick={() => setViewDialogOpen(false)}
                     >
                       Cancel
                     </Button>
-                    <Button 
-                      variant="destructive" 
+                    <Button
+                      variant="destructive"
                       className="w-full sm:flex-1 order-2 text-xs sm:text-sm h-8 sm:h-10"
                       onClick={() => handleLeaveAction(selectedLeave, "rejected")}
                       disabled={isUpdating}
@@ -2119,7 +2117,7 @@ const LeaveManagementTab = ({
                       )}
                       Reject
                     </Button>
-                    <Button 
+                    <Button
                       className="w-full sm:flex-1 order-1 sm:order-3 bg-green-600 hover:bg-green-700 text-xs sm:text-sm h-8 sm:h-10"
                       onClick={() => handleLeaveAction(selectedLeave, "approved")}
                       disabled={isUpdating}

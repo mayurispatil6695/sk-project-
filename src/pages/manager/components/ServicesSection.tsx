@@ -21,16 +21,16 @@ const ServicesSection = () => {
   const [loading, setLoading] = useState(true);
 
   // API Base URL
- const API_URL = import.meta.env.VITE_API_URL || 
-  (import.meta.env.DEV ? 'http://localhost:5001/api' : 'https://sk-backend-btbj.onrender.com/api');
-    // Fetch services from backend
+  const API_URL = import.meta.env.VITE_API_URL ||
+    (import.meta.env.DEV ? 'http://localhost:5001/api' : 'https://sk-backend-868y.onrender.com');
+  // Fetch services from backend
   const fetchServices = async () => {
     try {
       setLoading(true);
       const response = await fetch(`${API_URL}/services`);
-      
+
       if (!response.ok) throw new Error('Failed to fetch services');
-      
+
       const data = await response.json();
       if (data.success) {
         // Transform data to match frontend structure
@@ -45,7 +45,7 @@ const ServicesSection = () => {
           createdByRole: service.createdByRole || 'manager',
           updatedByRole: service.updatedByRole
         }));
-        
+
         setServices(transformedServices);
       }
     } catch (error) {
@@ -67,27 +67,27 @@ const ServicesSection = () => {
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({ 
+        body: JSON.stringify({
           status,
           updatedBy: "Manager User", // You can pass actual user data
           updatedByRole: "manager" // Manager role
         })
       });
-      
+
       if (!response.ok) throw new Error('Failed to update service status');
-      
+
       const data = await response.json();
       if (data.success) {
         // Update local state
-        setServices(prev => prev.map(service => 
-          service._id === serviceId ? { 
-            ...service, 
+        setServices(prev => prev.map(service =>
+          service._id === serviceId ? {
+            ...service,
             status,
             lastChecked: new Date().toISOString().split('T')[0],
             updatedByRole: "manager" // Update the role in local state
           } : service
         ));
-        
+
         toast.success(`Service status updated to ${status}`);
       }
     } catch (error) {
@@ -155,22 +155,22 @@ const ServicesSection = () => {
                       )}
                     </div>
                     <div className="flex gap-2 pt-2">
-                      <Button 
-                        size="sm" 
+                      <Button
+                        size="sm"
                         variant={service.status === "operational" ? "default" : "outline"}
                         onClick={() => handleUpdateStatus(service._id, "operational")}
                       >
                         Operational
                       </Button>
-                      <Button 
-                        size="sm" 
+                      <Button
+                        size="sm"
                         variant={service.status === "maintenance" ? "secondary" : "outline"}
                         onClick={() => handleUpdateStatus(service._id, "maintenance")}
                       >
                         Maintenance
                       </Button>
-                      <Button 
-                        size="sm" 
+                      <Button
+                        size="sm"
                         variant={service.status === "down" ? "destructive" : "outline"}
                         onClick={() => handleUpdateStatus(service._id, "down")}
                       >

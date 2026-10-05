@@ -6,25 +6,25 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { 
-  Calendar, 
-  CheckCircle, 
-  XCircle, 
-  Clock, 
-  Download, 
-  Filter, 
-  BarChart3, 
-  TrendingUp, 
-  AlertCircle, 
-  User, 
-  Loader2, 
-  Coffee, 
-  Timer, 
-  Users, 
-  Building, 
-  Eye, 
-  UserCheck, 
-  UserX, 
+import {
+  Calendar,
+  CheckCircle,
+  XCircle,
+  Clock,
+  Download,
+  Filter,
+  BarChart3,
+  TrendingUp,
+  AlertCircle,
+  User,
+  Loader2,
+  Coffee,
+  Timer,
+  Users,
+  Building,
+  Eye,
+  UserCheck,
+  UserX,
   Crown,
   ArrowLeft,
   RefreshCw,
@@ -83,8 +83,8 @@ import {
 import { format } from "date-fns";
 
 // API Base URL
-const API_URL = import.meta.env.VITE_API_URL || 
-  (import.meta.env.DEV ? 'http://localhost:5001/api' : 'https://sk-backend-btbj.onrender.com/api');
+const API_URL = import.meta.env.VITE_API_URL ||
+  (import.meta.env.DEV ? 'http://localhost:5001/api' : 'https://sk-backend-868y.onrender.com');
 
 // Interface for Leave Request (Employee & Supervisor)
 interface LeaveRequest {
@@ -256,7 +256,7 @@ const formatDate = (date: Date | string) => {
 const formatDateDisplay = (dateString: string) => {
   if (!dateString) return '-';
   const date = new Date(dateString);
-  return date.toLocaleDateString('en-US', { 
+  return date.toLocaleDateString('en-US', {
     weekday: 'short',
     year: 'numeric',
     month: 'short',
@@ -267,7 +267,7 @@ const formatDateDisplay = (dateString: string) => {
 const formatDateTimeDisplay = (dateString: string) => {
   if (!dateString) return '-';
   const date = new Date(dateString);
-  return date.toLocaleString('en-US', { 
+  return date.toLocaleString('en-US', {
     year: 'numeric',
     month: 'short',
     day: 'numeric',
@@ -289,23 +289,23 @@ const calculateDaysBetween = (startDate: string, endDate: string): number => {
 const fetchAllLeaveRequests = async (date?: string): Promise<LeaveRequest[]> => {
   try {
     console.log('🔄 Fetching all leave requests from API...');
-    
+
     let url = `${API_URL}/leaves?limit=1000`;
     if (date) {
       url += `&date=${date}`;
     }
-    
+
     const response = await fetch(url);
-    
+
     if (!response.ok) {
       throw new Error(`http error! status: ${response.status}`);
     }
-    
+
     const data = await response.json();
     console.log('📥 Leave API response:', data);
-    
+
     let leavesData = [];
-    
+
     if (Array.isArray(data)) {
       leavesData = data;
     } else if (data?.success && Array.isArray(data.data)) {
@@ -317,9 +317,9 @@ const fetchAllLeaveRequests = async (date?: string): Promise<LeaveRequest[]> => 
     } else if (data?.results && Array.isArray(data.results)) {
       leavesData = data.results;
     }
-    
+
     console.log(`📊 Raw leaves data count: ${leavesData.length}`);
-    
+
     const transformedLeaves: LeaveRequest[] = leavesData.map((leave: any) => ({
       _id: leave._id || leave.id || `leave_${Math.random()}`,
       id: leave._id || leave.id,
@@ -359,7 +359,7 @@ const fetchAllLeaveRequests = async (date?: string): Promise<LeaveRequest[]> => 
       position: leave.position,
       email: leave.email
     }));
-    
+
     console.log(`✅ Transformed ${transformedLeaves.length} leave requests`);
     return transformedLeaves;
   } catch (error: any) {
@@ -375,13 +375,13 @@ const fetchMyManagerLeaves = async (managerId: string): Promise<ManagerLeaveRequ
     console.log('❌ No manager ID provided');
     return [];
   }
-  
+
   try {
     console.log('🔄 Fetching manager leaves for:', managerId);
     console.log('📍 Endpoint:', `${API_URL}/manager-leaves?managerId=${managerId}`);
-    
+
     const response = await fetch(`${API_URL}/manager-leaves?managerId=${managerId}&limit=100`);
-    
+
     if (!response.ok) {
       if (response.status === 404) {
         console.warn('⚠️ Manager leaves endpoint not found. Make sure backend is running and routes are configured.');
@@ -390,12 +390,12 @@ const fetchMyManagerLeaves = async (managerId: string): Promise<ManagerLeaveRequ
       }
       throw new Error(`http error! status: ${response.status}`);
     }
-    
+
     const data = await response.json();
     console.log('📥 Manager leaves API response:', data);
-    
+
     let leavesData = [];
-    
+
     if (data?.success && Array.isArray(data.data)) {
       leavesData = data.data;
     } else if (Array.isArray(data)) {
@@ -403,7 +403,7 @@ const fetchMyManagerLeaves = async (managerId: string): Promise<ManagerLeaveRequ
     } else if (data?.leaves && Array.isArray(data.leaves)) {
       leavesData = data.leaves;
     }
-    
+
     console.log(`✅ Found ${leavesData.length} manager leaves`);
     return leavesData;
   } catch (error: any) {
@@ -417,17 +417,17 @@ const fetchMyManagerLeaves = async (managerId: string): Promise<ManagerLeaveRequ
 const fetchEmployees = async (): Promise<Employee[]> => {
   try {
     console.log('🔄 Fetching employees from API...');
-    
+
     const response = await fetch(`${API_URL}/employees?limit=1000`);
-    
+
     if (!response.ok) {
       throw new Error(`http error! status: ${response.status}`);
     }
-    
+
     const data = await response.json();
-    
+
     let employeesData = [];
-    
+
     if (Array.isArray(data)) {
       employeesData = data;
     } else if (data?.success && Array.isArray(data.data)) {
@@ -437,9 +437,9 @@ const fetchEmployees = async (): Promise<Employee[]> => {
     } else if (data?.data && Array.isArray(data.data.employees)) {
       employeesData = data.data.employees;
     }
-    
+
     console.log(`📊 Raw employees data count: ${employeesData.length}`);
-    
+
     const transformedEmployees: Employee[] = employeesData.map((emp: any) => ({
       _id: emp._id || emp.id,
       employeeId: emp.employeeId || emp.employeeID || emp.empId || `EMP${String(Math.random()).slice(2, 6)}`,
@@ -453,7 +453,7 @@ const fetchEmployees = async (): Promise<Employee[]> => {
       isSupervisor: emp.role === 'supervisor' || emp.isSupervisor === true || emp.position?.toLowerCase().includes('supervisor'),
       role: emp.role || 'employee'
     }));
-    
+
     console.log(`✅ Transformed ${transformedEmployees.length} employees`);
     return transformedEmployees;
   } catch (error: any) {
@@ -467,17 +467,17 @@ const fetchEmployees = async (): Promise<Employee[]> => {
 const fetchManagerSites = async (managerId: string): Promise<Site[]> => {
   try {
     console.log('🔄 Fetching sites for manager:', managerId);
-    
+
     const response = await fetch(`${API_URL}/sites?limit=100`);
-    
+
     if (!response.ok) {
       throw new Error(`http error! status: ${response.status}`);
     }
-    
+
     const data = await response.json();
-    
+
     let sitesData = [];
-    
+
     if (Array.isArray(data)) {
       sitesData = data;
     } else if (data?.success && Array.isArray(data.data)) {
@@ -487,9 +487,9 @@ const fetchManagerSites = async (managerId: string): Promise<Site[]> => {
     } else if (data?.data && Array.isArray(data.data.sites)) {
       sitesData = data.data.sites;
     }
-    
+
     console.log(`📊 Raw sites data count: ${sitesData.length}`);
-    
+
     const transformedSites: Site[] = sitesData.map((site: any) => ({
       _id: site._id || site.id,
       name: site.name || site.siteName || 'Unknown Site',
@@ -500,7 +500,7 @@ const fetchManagerSites = async (managerId: string): Promise<Site[]> => {
       supervisorCount: site.supervisorCount || 0,
       employeeCount: site.employeeCount || 0
     }));
-    
+
     console.log(`✅ Transformed ${transformedSites.length} sites`);
     return transformedSites.slice(0, 10);
   } catch (error: any) {
@@ -513,21 +513,21 @@ const fetchManagerSites = async (managerId: string): Promise<Site[]> => {
 const generateSiteLeaveData = async (site: Site, date: string, allLeaves: LeaveRequest[]): Promise<SiteLeaveData> => {
   try {
     const allEmployees = await fetchEmployees();
-    
-    const siteEmployees = allEmployees.filter(emp => 
+
+    const siteEmployees = allEmployees.filter(emp =>
       emp.site === site.name || emp.site === site._id
     );
-    
+
     const employeeIds = new Set(siteEmployees.map(emp => emp._id));
     const employeeNames = new Set(siteEmployees.map(emp => emp.name));
-    
-    const siteLeaves = allLeaves.filter(leave => 
-      employeeIds.has(leave.employeeId) || 
+
+    const siteLeaves = allLeaves.filter(leave =>
+      employeeIds.has(leave.employeeId) ||
       employeeNames.has(leave.employeeName) ||
       leave.site === site.name ||
       leave.siteId === site._id
     );
-    
+
     const pendingLeaves = siteLeaves.filter(l => l.status === 'pending').length;
     const approvedLeaves = siteLeaves.filter(l => l.status === 'approved').length;
     const rejectedLeaves = siteLeaves.filter(l => l.status === 'rejected').length;
@@ -535,7 +535,7 @@ const generateSiteLeaveData = async (site: Site, date: string, allLeaves: LeaveR
     const supervisorLeaves = siteLeaves.filter(l => l.isSupervisorLeave).length;
     const managerLeaves = siteLeaves.filter(l => l.isManagerLeave).length;
     const employeeLeaves = siteLeaves.filter(l => !l.isSupervisorLeave && !l.isManagerLeave).length;
-    
+
     return {
       id: site._id,
       siteId: site._id,
@@ -591,9 +591,9 @@ interface ViewLeaveDialogProps {
   onRevertToPending?: (leaveId: string, remarks: string) => Promise<void>;
 }
 
-const ViewLeaveDialog: React.FC<ViewLeaveDialogProps> = ({ 
-  leave, 
-  open, 
+const ViewLeaveDialog: React.FC<ViewLeaveDialogProps> = ({
+  leave,
+  open,
   onOpenChange,
   onApprove,
   onReject,
@@ -690,12 +690,11 @@ const ViewLeaveDialog: React.FC<ViewLeaveDialogProps> = ({
 
           <div className="space-y-6">
             {/* Status Banner */}
-            <div className={`p-4 rounded-lg border ${
-              leave.status === 'approved' ? 'bg-green-50 border-green-200' :
-              leave.status === 'rejected' ? 'bg-red-50 border-red-200' :
-              leave.status === 'pending' ? 'bg-yellow-50 border-yellow-200' :
-              'bg-gray-50 border-gray-200'
-            }`}>
+            <div className={`p-4 rounded-lg border ${leave.status === 'approved' ? 'bg-green-50 border-green-200' :
+                leave.status === 'rejected' ? 'bg-red-50 border-red-200' :
+                  leave.status === 'pending' ? 'bg-yellow-50 border-yellow-200' :
+                    'bg-gray-50 border-gray-200'
+              }`}>
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-3">
                   {leave.status === 'approved' && <CheckCircle className="h-6 w-6 text-green-600" />}
@@ -945,8 +944,8 @@ const ViewLeaveDialog: React.FC<ViewLeaveDialogProps> = ({
               disabled={isProcessing || (actionDialog.type === 'reject' && !actionDialog.remarks)}
               className={
                 actionDialog.type === 'approve' ? 'bg-green-600 hover:bg-green-700' :
-                actionDialog.type === 'reject' ? 'bg-red-600 hover:bg-red-700' :
-                'bg-yellow-600 hover:bg-yellow-700'
+                  actionDialog.type === 'reject' ? 'bg-red-600 hover:bg-red-700' :
+                    'bg-yellow-600 hover:bg-yellow-700'
               }
             >
               {isProcessing && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
@@ -971,9 +970,9 @@ interface ViewManagerLeaveDialogProps {
   onDeleteById?: (leaveId: string) => void;
 }
 
-const ViewManagerLeaveDialog: React.FC<ViewManagerLeaveDialogProps> = ({ 
-  leave, 
-  open, 
+const ViewManagerLeaveDialog: React.FC<ViewManagerLeaveDialogProps> = ({
+  leave,
+  open,
   onOpenChange,
   onEdit,
   onDelete,
@@ -1032,12 +1031,11 @@ const ViewManagerLeaveDialog: React.FC<ViewManagerLeaveDialogProps> = ({
 
         <div className="space-y-6">
           {/* Status Banner */}
-          <div className={`p-4 rounded-lg border ${
-            leave.status === 'approved' ? 'bg-green-50 border-green-200' :
-            leave.status === 'rejected' ? 'bg-red-50 border-red-200' :
-            leave.status === 'pending' ? 'bg-yellow-50 border-yellow-200' :
-            'bg-gray-50 border-gray-200'
-          }`}>
+          <div className={`p-4 rounded-lg border ${leave.status === 'approved' ? 'bg-green-50 border-green-200' :
+              leave.status === 'rejected' ? 'bg-red-50 border-red-200' :
+                leave.status === 'pending' ? 'bg-yellow-50 border-yellow-200' :
+                  'bg-gray-50 border-gray-200'
+            }`}>
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-3">
                 {leave.status === 'approved' && <CheckCircle className="h-6 w-6 text-green-600" />}
@@ -1222,9 +1220,9 @@ interface EditManagerLeaveDialogProps {
   onSave: (leaveId: string, data: any) => Promise<void>;
 }
 
-const EditManagerLeaveDialog: React.FC<EditManagerLeaveDialogProps> = ({ 
-  leave, 
-  open, 
+const EditManagerLeaveDialog: React.FC<EditManagerLeaveDialogProps> = ({
+  leave,
+  open,
   onOpenChange,
   onSave
 }) => {
@@ -1260,38 +1258,38 @@ const EditManagerLeaveDialog: React.FC<EditManagerLeaveDialogProps> = ({
       toDate: '',
       reason: ''
     };
-    
+
     let isValid = true;
-    
+
     if (!formData.leaveType) {
       errors.leaveType = 'Please select leave type';
       isValid = false;
     }
-    
+
     if (!formData.fromDate) {
       errors.fromDate = 'Please select from date';
       isValid = false;
     }
-    
+
     if (!formData.toDate) {
       errors.toDate = 'Please select to date';
       isValid = false;
     }
-    
+
     if (!formData.reason.trim()) {
       errors.reason = 'Please enter reason for leave';
       isValid = false;
     }
-    
+
     setFormErrors(errors);
     return isValid;
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    
+
     if (!leave) return;
-    
+
     if (!validateForm()) {
       toast.error('Please fill in all required fields');
       return;
@@ -1299,7 +1297,7 @@ const EditManagerLeaveDialog: React.FC<EditManagerLeaveDialogProps> = ({
 
     const fromDate = new Date(formData.fromDate);
     const toDate = new Date(formData.toDate);
-    
+
     if (fromDate > toDate) {
       toast.error('From date must be before to date');
       return;
@@ -1442,11 +1440,11 @@ interface SiteLeaveDetailsProps {
   onRevertToPending: (leaveId: string, remarks: string) => Promise<void>;
 }
 
-const SiteLeaveDetails: React.FC<SiteLeaveDetailsProps> = ({ 
-  siteData, 
-  onBack, 
-  selectedDate, 
-  onApprove, 
+const SiteLeaveDetails: React.FC<SiteLeaveDetailsProps> = ({
+  siteData,
+  onBack,
+  selectedDate,
+  onApprove,
   onReject,
   onRevertToPending
 }) => {
@@ -1887,45 +1885,45 @@ const ManagerLeaves = () => {
   const { onMenuClick } = useOutletContext<{ onMenuClick: () => void }>();
   const navigate = useNavigate();
   const { user: authUser, isAuthenticated } = useRole();
-  
+
   // Current user state
   const [managerId, setManagerId] = useState<string>('');
   const [managerName, setManagerName] = useState<string>('');
   const [managerDepartment, setManagerDepartment] = useState<string>('');
   const [managerContact, setManagerContact] = useState<string>('');
   const [managerEmail, setManagerEmail] = useState<string>('');
-  
+
   // Tab state
   const [activeTab, setActiveTab] = useState("team-leaves");
-  
+
   // Leave data states
   const [leaveRequests, setLeaveRequests] = useState<LeaveRequest[]>([]); // Employee & Supervisor leaves
   const [managerLeaves, setManagerLeaves] = useState<ManagerLeaveRequest[]>([]); // Manager's own leaves
   const [sites, setSites] = useState<Site[]>([]);
   const [siteLeaveData, setSiteLeaveData] = useState<SiteLeaveData[]>([]);
-  
+
   // Loading states
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  
+
   // Filter states
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedDate, setSelectedDate] = useState<string>(formatDate(new Date()));
   const [currentPage, setCurrentPage] = useState(1);
   const [showSiteDetails, setShowSiteDetails] = useState(false);
   const [selectedSite, setSelectedSite] = useState<SiteLeaveData | null>(null);
-  
+
   // My Leaves filter states
   const [myLeavesFilter, setMyLeavesFilter] = useState<string>("all");
   const [myLeavesSearch, setMyLeavesSearch] = useState('');
   const [myLeavesPage, setMyLeavesPage] = useState(1);
-  
+
   // Supervisor Leaves filter states
   const [supervisorFilter, setSupervisorFilter] = useState<string>("all");
   const [supervisorSearch, setSupervisorSearch] = useState('');
   const [supervisorPage, setSupervisorPage] = useState(1);
-  
+
   // Apply for Leave Dialog
   const [applyDialogOpen, setApplyDialogOpen] = useState(false);
   const [applyFormData, setApplyFormData] = useState({
@@ -1935,22 +1933,22 @@ const ManagerLeaves = () => {
     reason: ''
   });
   const [isSubmitting, setIsSubmitting] = useState(false);
-  
+
   // View Details Dialog
   const [viewDialogOpen, setViewDialogOpen] = useState(false);
   const [selectedLeave, setSelectedLeave] = useState<LeaveRequest | null>(null);
-  
+
   // View Manager Leave Details Dialog
   const [viewManagerDialogOpen, setViewManagerDialogOpen] = useState(false);
   const [selectedManagerLeave, setSelectedManagerLeave] = useState<ManagerLeaveRequest | null>(null);
-  
+
   // Edit/Delete states for manager leaves
   const [editDialogOpen, setEditDialogOpen] = useState(false);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [selectedLeaveForEdit, setSelectedLeaveForEdit] = useState<ManagerLeaveRequest | null>(null);
   const [isSubmittingEdit, setIsSubmittingEdit] = useState(false);
   const [isSubmittingDelete, setIsSubmittingDelete] = useState(false);
-  
+
   // Statistics
   const [stats, setStats] = useState<LeaveStats>({
     total: 0,
@@ -1963,7 +1961,7 @@ const ManagerLeaves = () => {
     managerLeaves: 0,
     totalDays: 0
   });
-  
+
   const itemsPerPage = 10;
 
   // Initialize current user info
@@ -1972,13 +1970,13 @@ const ManagerLeaves = () => {
       try {
         if (authUser) {
           const userId = authUser._id || authUser.id;
-          
+
           if (userId) {
             const allUsersResponse = await userService.getAllUsers();
-            const foundUser = allUsersResponse.allUsers.find((user: any) => 
+            const foundUser = allUsersResponse.allUsers.find((user: any) =>
               user._id === userId || user.id === userId
             );
-            
+
             if (foundUser) {
               setManagerId(foundUser._id);
               setManagerName(foundUser.name || foundUser.firstName || 'Manager');
@@ -2024,26 +2022,26 @@ const ManagerLeaves = () => {
   const fetchAllData = async () => {
     try {
       setLoading(true);
-      
+
       // Fetch all leave requests (employee & supervisor)
       const leaves = await fetchAllLeaveRequests(selectedDate);
       setLeaveRequests(leaves);
-      
+
       // Fetch manager's own leaves
       const myLeaves = await fetchMyManagerLeaves(managerId);
       console.log('📊 Manager leaves fetched:', myLeaves);
       setManagerLeaves(myLeaves);
-      
+
       // Fetch sites where manager is assigned
       const sitesData = await fetchManagerSites(managerId);
       setSites(sitesData);
-      
+
       // Calculate site leave data
       await calculateSiteLeaveData(sitesData, selectedDate, leaves);
-      
+
       // Update statistics
       updateStats(leaves, myLeaves);
-      
+
       console.log(`✅ Loaded ${leaves.length} total leaves, ${myLeaves.length} manager leaves, ${sitesData.length} sites`);
     } catch (error: any) {
       console.error('❌ Error fetching data:', error);
@@ -2058,7 +2056,7 @@ const ManagerLeaves = () => {
   const testApiConnection = async () => {
     try {
       console.log('🔄 Testing API connection...');
-      
+
       // Test main API
       const testResponse = await fetch(`${API_URL}/test`);
       if (testResponse.ok) {
@@ -2068,13 +2066,13 @@ const ManagerLeaves = () => {
       } else {
         console.warn('⚠️ Main API test failed');
       }
-      
+
       // Test manager leaves API
       const managerTestResponse = await fetch(`${API_URL}/manager-leaves/test`);
       if (managerTestResponse.ok) {
         const managerTestData = await managerTestResponse.json();
         console.log('✅ Manager leaves API test:', managerTestData);
-       
+
       } else {
         console.warn('⚠️ Manager leaves API test failed');
         toast.warning('Manager leaves API not available');
@@ -2096,17 +2094,17 @@ const ManagerLeaves = () => {
   const calculateSiteLeaveData = async (sitesList: Site[], date: string, leaves?: LeaveRequest[]) => {
     try {
       setRefreshing(true);
-      
+
       const allLeaves = leaves || leaveRequests;
       const data: SiteLeaveData[] = [];
-      
+
       for (const site of sitesList) {
         const siteLeave = await generateSiteLeaveData(site, date, allLeaves);
         data.push(siteLeave);
       }
-      
+
       setSiteLeaveData(data);
-      
+
     } catch (error) {
       console.error('Error calculating site data:', error);
       toast.error('Error calculating leave data');
@@ -2119,7 +2117,7 @@ const ManagerLeaves = () => {
   const updateStats = (leaves: LeaveRequest[], myLeaves: ManagerLeaveRequest[]) => {
     const supervisorLeaves = leaves.filter(l => l.isSupervisorLeave).length;
     const employeeLeaves = leaves.filter(l => !l.isSupervisorLeave && !l.isManagerLeave).length;
-    
+
     setStats({
       total: leaves.length + myLeaves.length,
       pending: leaves.filter(l => l.status === 'pending').length + myLeaves.filter(l => l.status === 'pending').length,
@@ -2134,38 +2132,38 @@ const ManagerLeaves = () => {
   };
 
   // Handle approve leave
- // Example for approve:
-const handleApproveLeave = async (leaveId: string, remarks: string) => {
-  try {
-    const response = await fetch(`${API_URL}/leaves/${leaveId}/status`, {
-      method: 'PUT',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ status: 'approved', managerId, managerName, remarks })
-    });
-    const data = await response.json();
-    if (response.ok && data.success) {
-      // ✅ NEW: Dispatch event
-      const leave = leaveRequests.find(l => l._id === leaveId);
-      if (leave) {
-        window.dispatchEvent(new CustomEvent('leave-update', {
-          detail: {
-            leaveId: leave._id,
-            title: '✅ Leave Approved',
-            message: `${leave.employeeName}'s ${leave.leaveType} leave has been approved by ${managerName}`,
-            notificationType: 'leave_approved',
-            employeeName: leave.employeeName,
-            leaveType: leave.leaveType,
-            approvedBy: managerName
-          }
-        }));
+  // Example for approve:
+  const handleApproveLeave = async (leaveId: string, remarks: string) => {
+    try {
+      const response = await fetch(`${API_URL}/leaves/${leaveId}/status`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ status: 'approved', managerId, managerName, remarks })
+      });
+      const data = await response.json();
+      if (response.ok && data.success) {
+        // ✅ NEW: Dispatch event
+        const leave = leaveRequests.find(l => l._id === leaveId);
+        if (leave) {
+          window.dispatchEvent(new CustomEvent('leave-update', {
+            detail: {
+              leaveId: leave._id,
+              title: '✅ Leave Approved',
+              message: `${leave.employeeName}'s ${leave.leaveType} leave has been approved by ${managerName}`,
+              notificationType: 'leave_approved',
+              employeeName: leave.employeeName,
+              leaveType: leave.leaveType,
+              approvedBy: managerName
+            }
+          }));
+        }
+
+        toast.success('Leave approved successfully');
+        await fetchAllData();
+      } else {
+        toast.error(data.message || 'Failed to approve leave');
       }
-      
-      toast.success('Leave approved successfully');
-      await fetchAllData();
-    } else {
-      toast.error(data.message || 'Failed to approve leave');
-    }
-  } catch (error: any) {
+    } catch (error: any) {
       console.error('❌ Error approving leave:', error);
       toast.error('Failed to approve leave');
     }
@@ -2177,7 +2175,7 @@ const handleApproveLeave = async (leaveId: string, remarks: string) => {
       const response = await fetch(`${API_URL}/leaves/${leaveId}/status`, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ 
+        body: JSON.stringify({
           status: 'rejected',
           managerId,
           managerName,
@@ -2188,20 +2186,20 @@ const handleApproveLeave = async (leaveId: string, remarks: string) => {
       const data = await response.json();
 
       if (response.ok && data.success) {
-  const leave = leaveRequests.find(l => l._id === leaveId);
-      if (leave) {
-         window.dispatchEvent(new CustomEvent('leave-update', {
-    detail: {
-      leaveId: leave._id,
-      title: '❌ Leave Rejected',
-      message: `${leave.employeeName}'s ${leave.leaveType} leave has been rejected by ${managerName}`,
-      notificationType: 'leave_rejected',
-      employeeName: leave.employeeName,
-      leaveType: leave.leaveType,
-      rejectedBy: managerName
-    }
-  }));
-}
+        const leave = leaveRequests.find(l => l._id === leaveId);
+        if (leave) {
+          window.dispatchEvent(new CustomEvent('leave-update', {
+            detail: {
+              leaveId: leave._id,
+              title: '❌ Leave Rejected',
+              message: `${leave.employeeName}'s ${leave.leaveType} leave has been rejected by ${managerName}`,
+              notificationType: 'leave_rejected',
+              employeeName: leave.employeeName,
+              leaveType: leave.leaveType,
+              rejectedBy: managerName
+            }
+          }));
+        }
         toast.success('Leave rejected successfully');
         await fetchAllData();
       } else {
@@ -2219,7 +2217,7 @@ const handleApproveLeave = async (leaveId: string, remarks: string) => {
       const response = await fetch(`${API_URL}/leaves/${leaveId}/status`, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ 
+        body: JSON.stringify({
           status: 'pending',
           managerId,
           managerName,
@@ -2245,16 +2243,16 @@ const handleApproveLeave = async (leaveId: string, remarks: string) => {
   const handleEditManagerLeave = async (leaveId: string, data: any) => {
     try {
       setIsSubmittingEdit(true);
-      
+
       console.log('📤 Updating manager leave:', {
         leaveId,
         data,
         endpoint: `${API_URL}/manager-leaves/${leaveId}`
       });
-      
+
       const response = await fetch(`${API_URL}/manager-leaves/${leaveId}`, {
         method: 'PUT',
-        headers: { 
+        headers: {
           'Content-Type': 'application/json',
           'Accept': 'application/json'
         },
@@ -2272,11 +2270,11 @@ const handleApproveLeave = async (leaveId: string, remarks: string) => {
           statusText: response.statusText,
           data: errorData
         });
-        
+
         if (response.status === 404) {
           throw new Error('Manager leave endpoint not found. Please check if backend server is running and routes are configured.');
         }
-        
+
         throw new Error(errorData.message || `http error! status: ${response.status}`);
       }
 
@@ -2285,14 +2283,14 @@ const handleApproveLeave = async (leaveId: string, remarks: string) => {
 
       if (result.success) {
         toast.success('Leave request updated successfully');
-        
+
         // Update local state
-        setManagerLeaves(prev => 
-          prev.map(leave => 
+        setManagerLeaves(prev =>
+          prev.map(leave =>
             leave._id === leaveId ? { ...leave, ...data } : leave
           )
         );
-        
+
         setEditDialogOpen(false);
       } else {
         toast.error(result.message || 'Failed to update leave');
@@ -2309,7 +2307,7 @@ const handleApproveLeave = async (leaveId: string, remarks: string) => {
   const handleDeleteById = async (leaveId: string) => {
     try {
       setIsSubmittingDelete(true);
-      
+
       const response = await fetch(`${API_URL}/manager-leaves/${leaveId}`, {
         method: 'DELETE',
         headers: { 'Content-Type': 'application/json' },
@@ -2343,91 +2341,91 @@ const handleApproveLeave = async (leaveId: string, remarks: string) => {
   };
 
   // Handle apply for manager leave
-const handleApplyManagerLeave = async (e: React.FormEvent) => {
-  e.preventDefault();
-  
-  // Validation (same as before)
-  if (!applyFormData.leaveType) {
-    toast.error('Please select leave type');
-    return;
-  }
-  if (!applyFormData.fromDate || !applyFormData.toDate) {
-    toast.error('Please select dates');
-    return;
-  }
-  const fromDate = new Date(applyFormData.fromDate);
-  const toDate = new Date(applyFormData.toDate);
-  if (fromDate > toDate) {
-    toast.error('From date must be before to date');
-    return;
-  }
-  const totalDays = calculateDaysBetween(applyFormData.fromDate, applyFormData.toDate);
-  if (!applyFormData.reason) {
-    toast.error('Please provide a reason');
-    return;
-  }
+  const handleApplyManagerLeave = async (e: React.FormEvent) => {
+    e.preventDefault();
 
-  setIsSubmitting(true);
-  try {
-    const leaveData = {
-      managerId,
-      managerName,
-      managerDepartment,
-      managerPosition: 'Manager',
-      managerEmail,
-      managerContact: managerContact || '0000000000',
-      leaveType: applyFormData.leaveType,
-      fromDate: applyFormData.fromDate,
-      toDate: applyFormData.toDate,
-      totalDays,
-      reason: applyFormData.reason,
-      appliedBy: managerName,
-      appliedDate: new Date().toISOString()
-    };
-
-    const response = await fetch(`${API_URL}/manager-leaves/apply`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(leaveData)
-    });
-
-    const data = await response.json();
-
-    if (response.ok && data.success) {
-      toast.success('Leave request submitted successfully! Waiting for superadmin approval.');
-
-      // ✅ Dispatch leave-update event here, using the returned data
-      window.dispatchEvent(new CustomEvent('leave-update', {
-        detail: {
-          leaveId: data._id || data.leaveId || applyFormData.leaveId,
-          title: '📅 New Manager Leave Request',
-          message: `${managerName} applied for ${applyFormData.leaveType} leave (${totalDays} days)`,
-          notificationType: 'leave_request',
-          employeeName: managerName,
-          leaveType: applyFormData.leaveType,
-          totalDays
-        }
-      }));
-
-      setApplyDialogOpen(false);
-      setApplyFormData({
-        leaveType: '',
-        fromDate: '',
-        toDate: '',
-        reason: ''
-      });
-      await fetchAllData();
-      setActiveTab('my-leaves');
-    } else {
-      toast.error(data.message || 'Failed to apply for leave');
+    // Validation (same as before)
+    if (!applyFormData.leaveType) {
+      toast.error('Please select leave type');
+      return;
     }
-  } catch (error: any) {
-    console.error('❌ Error applying for leave:', error);
-    toast.error('Failed to apply for leave');
-  } finally {
-    setIsSubmitting(false);
-  }
-};
+    if (!applyFormData.fromDate || !applyFormData.toDate) {
+      toast.error('Please select dates');
+      return;
+    }
+    const fromDate = new Date(applyFormData.fromDate);
+    const toDate = new Date(applyFormData.toDate);
+    if (fromDate > toDate) {
+      toast.error('From date must be before to date');
+      return;
+    }
+    const totalDays = calculateDaysBetween(applyFormData.fromDate, applyFormData.toDate);
+    if (!applyFormData.reason) {
+      toast.error('Please provide a reason');
+      return;
+    }
+
+    setIsSubmitting(true);
+    try {
+      const leaveData = {
+        managerId,
+        managerName,
+        managerDepartment,
+        managerPosition: 'Manager',
+        managerEmail,
+        managerContact: managerContact || '0000000000',
+        leaveType: applyFormData.leaveType,
+        fromDate: applyFormData.fromDate,
+        toDate: applyFormData.toDate,
+        totalDays,
+        reason: applyFormData.reason,
+        appliedBy: managerName,
+        appliedDate: new Date().toISOString()
+      };
+
+      const response = await fetch(`${API_URL}/manager-leaves/apply`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(leaveData)
+      });
+
+      const data = await response.json();
+
+      if (response.ok && data.success) {
+        toast.success('Leave request submitted successfully! Waiting for superadmin approval.');
+
+        // ✅ Dispatch leave-update event here, using the returned data
+        window.dispatchEvent(new CustomEvent('leave-update', {
+          detail: {
+            leaveId: data._id || data.leaveId || applyFormData.leaveId,
+            title: '📅 New Manager Leave Request',
+            message: `${managerName} applied for ${applyFormData.leaveType} leave (${totalDays} days)`,
+            notificationType: 'leave_request',
+            employeeName: managerName,
+            leaveType: applyFormData.leaveType,
+            totalDays
+          }
+        }));
+
+        setApplyDialogOpen(false);
+        setApplyFormData({
+          leaveType: '',
+          fromDate: '',
+          toDate: '',
+          reason: ''
+        });
+        await fetchAllData();
+        setActiveTab('my-leaves');
+      } else {
+        toast.error(data.message || 'Failed to apply for leave');
+      }
+    } catch (error: any) {
+      console.error('❌ Error applying for leave:', error);
+      toast.error('Failed to apply for leave');
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
 
   // Handle view site details
   const handleViewSiteDetails = (site: SiteLeaveData) => {
@@ -2468,7 +2466,7 @@ const handleApplyManagerLeave = async (e: React.FormEvent) => {
   // Filter sites based on search
   const filteredSites = useMemo(() => {
     if (!siteLeaveData || siteLeaveData.length === 0) return [];
-    
+
     return siteLeaveData.filter(site =>
       site.name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
       site.clientName?.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -2479,13 +2477,13 @@ const handleApplyManagerLeave = async (e: React.FormEvent) => {
   // Filter supervisor leaves
   const filteredSupervisorLeaves = useMemo(() => {
     const supervisorLeaves = leaveRequests.filter(l => l.isSupervisorLeave);
-    
+
     let filtered = supervisorLeaves;
-    
+
     if (supervisorFilter !== 'all') {
       filtered = filtered.filter(l => l.status === supervisorFilter);
     }
-    
+
     if (supervisorSearch) {
       filtered = filtered.filter(l =>
         l.employeeName.toLowerCase().includes(supervisorSearch.toLowerCase()) ||
@@ -2493,25 +2491,25 @@ const handleApplyManagerLeave = async (e: React.FormEvent) => {
         l.leaveType.toLowerCase().includes(supervisorSearch.toLowerCase())
       );
     }
-    
+
     return filtered;
   }, [leaveRequests, supervisorFilter, supervisorSearch]);
 
   // Filter my leaves (manager's own leaves)
   const filteredMyLeaves = useMemo(() => {
     let filtered = managerLeaves;
-    
+
     if (myLeavesFilter !== 'all') {
       filtered = filtered.filter(l => l.status === myLeavesFilter);
     }
-    
+
     if (myLeavesSearch) {
       filtered = filtered.filter(l =>
         l.leaveType.toLowerCase().includes(myLeavesSearch.toLowerCase()) ||
         l.reason.toLowerCase().includes(myLeavesSearch.toLowerCase())
       );
     }
-    
+
     return filtered;
   }, [managerLeaves, myLeavesFilter, myLeavesSearch]);
 
@@ -2620,13 +2618,13 @@ const handleApplyManagerLeave = async (e: React.FormEvent) => {
 
   return (
     <div className="min-h-screen bg-background">
-      <DashboardHeader 
-        title="Leave Management" 
+      <DashboardHeader
+        title="Leave Management"
         subtitle="Manage team leaves, supervisor leaves, and your personal leaves"
         onMenuClick={onMenuClick}
       />
-      
-      <motion.div 
+
+      <motion.div
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
         className="p-6 space-y-6"
@@ -2750,7 +2748,7 @@ const handleApplyManagerLeave = async (e: React.FormEvent) => {
                       Today
                     </Button>
                   </div>
-                  
+
                   <div className="flex items-center gap-2 flex-1 max-w-sm">
                     <Search className="h-4 w-4 text-muted-foreground" />
                     <Input
@@ -2791,7 +2789,7 @@ const handleApplyManagerLeave = async (e: React.FormEvent) => {
                 </CardContent>
               </Card>
             )}
-            
+
             {/* Sites Table */}
             {!loading && !error && (
               <Card>
@@ -2922,7 +2920,7 @@ const handleApplyManagerLeave = async (e: React.FormEvent) => {
                       </SelectContent>
                     </Select>
                   </div>
-                  
+
                   <div className="flex items-center gap-2 flex-1 max-w-sm">
                     <Search className="h-4 w-4 text-muted-foreground" />
                     <Input
@@ -3065,7 +3063,7 @@ const handleApplyManagerLeave = async (e: React.FormEvent) => {
                       </SelectContent>
                     </Select>
                   </div>
-                  
+
                   <div className="flex items-center gap-2 flex-1 max-w-sm">
                     <Search className="h-4 w-4 text-muted-foreground" />
                     <Input
@@ -3096,7 +3094,7 @@ const handleApplyManagerLeave = async (e: React.FormEvent) => {
                     <Crown className="h-12 w-12 text-gray-400 mx-auto mb-4" />
                     <h3 className="text-lg font-medium text-gray-900 mb-2">No Personal Leaves</h3>
                     <p className="text-gray-500 mb-4">
-                      {myLeavesSearch || myLeavesFilter !== 'all' 
+                      {myLeavesSearch || myLeavesFilter !== 'all'
                         ? 'No leave requests match your filters.'
                         : 'You haven\'t applied for any leaves yet.'}
                     </p>
@@ -3149,7 +3147,7 @@ const handleApplyManagerLeave = async (e: React.FormEvent) => {
                                   >
                                     <Eye className="h-4 w-4" />
                                   </Button>
-                                  
+
                                   {leave.status === 'pending' && (
                                     <>
                                       <Button

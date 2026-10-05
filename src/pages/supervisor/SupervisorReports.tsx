@@ -11,9 +11,9 @@ import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { 
-  Calendar, Clock, Download, FileText, Printer, Save, Send, User, 
-  CheckCircle, XCircle, AlertCircle, Package, BarChart, TrendingUp, 
+import {
+  Calendar, Clock, Download, FileText, Printer, Save, Send, User,
+  CheckCircle, XCircle, AlertCircle, Package, BarChart, TrendingUp,
   RefreshCw, Loader2, Users, Briefcase, Building, Mail, Phone,
   ChevronRight, Eye, Filter, MoreVertical, Search, Shield, Target,
   Activity, Zap, Award, Clock3, TrendingDown, AlertTriangle, CheckSquare
@@ -30,8 +30,8 @@ import { autoTable } from "jspdf-autotable";
 import { utils, writeFile } from "xlsx";
 
 // API base URL
-const API_URL = import.meta.env.VITE_API_URL || 
-  (import.meta.env.DEV ? 'http://localhost:5001/api' : 'https://sk-backend-btbj.onrender.com/api');
+const API_URL = import.meta.env.VITE_API_URL ||
+  (import.meta.env.DEV ? 'http://localhost:5001/api' : 'https://sk-backend-868y.onrender.com');
 
 // Interfaces
 interface ReportAttendanceRecord {
@@ -152,23 +152,23 @@ interface ProductionTask {
 // Attendance Service Functions
 const formatTimeForDisplay = (timestamp: string | null): string => {
   if (!timestamp || timestamp === "-" || timestamp === "") return "-";
-  
+
   try {
     if (typeof timestamp === 'string' && (timestamp.includes('AM') || timestamp.includes('PM'))) {
       return timestamp;
     }
-    
+
     if (timestamp.includes('T')) {
       const date = new Date(timestamp);
       if (!isNaN(date.getTime())) {
-        return date.toLocaleTimeString([], { 
-          hour: '2-digit', 
+        return date.toLocaleTimeString([], {
+          hour: '2-digit',
           minute: '2-digit',
-          hour12: true 
+          hour12: true
         });
       }
     }
-    
+
     const timeParts = timestamp.split(':');
     if (timeParts.length >= 2) {
       const hours = parseInt(timeParts[0]);
@@ -177,7 +177,7 @@ const formatTimeForDisplay = (timestamp: string | null): string => {
       const displayHours = hours % 12 || 12;
       return `${displayHours}:${minutes} ${period}`;
     }
-    
+
     return timestamp;
   } catch (error) {
     return timestamp || "-";
@@ -186,7 +186,7 @@ const formatTimeForDisplay = (timestamp: string | null): string => {
 
 const convertToReportFormat = (attendance: AttendanceRecord, employee?: Employee): ReportAttendanceRecord => {
   let status: "Present" | "Absent" | "Late" | "Half-Day" | "Leave" | "Weekly-Off" = "Absent";
-  
+
   switch (attendance.status) {
     case 'present':
       status = "Present";
@@ -206,19 +206,19 @@ const convertToReportFormat = (attendance: AttendanceRecord, employee?: Employee
     default:
       status = "Absent";
   }
-  
+
   // Calculate if late (check-in after 9:30 AM)
   const checkInTime = attendance.checkInTime;
   if (checkInTime && status === "Present") {
     const checkInDate = new Date(checkInTime);
     const lateThreshold = new Date(checkInDate);
     lateThreshold.setHours(9, 30, 0, 0); // 9:30 AM
-    
+
     if (checkInDate > lateThreshold) {
       status = "Late";
     }
   }
-  
+
   return {
     id: attendance._id,
     employeeName: attendance.employeeName,
@@ -288,34 +288,34 @@ const SupervisorReport = () => {
   const { onMenuClick } = useOutletContext<{ onMenuClick: () => void }>();
   const [activeTab, setActiveTab] = useState("attendance");
   const [searchQuery, setSearchQuery] = useState("");
-  
+
   // Get user from RoleContext
   const { user: currentUser } = useRole();
-  
+
   // Attendance data states
   const [attendanceRecords, setAttendanceRecords] = useState<ReportAttendanceRecord[]>([]);
   const [employees, setEmployees] = useState<Employee[]>([]);
   const [loadingAttendance, setLoadingAttendance] = useState(false);
   const [attendanceError, setAttendanceError] = useState<string | null>(null);
-  
+
   // Date selection for attendance
   const [selectedDate, setSelectedDate] = useState<string>(() => {
     const today = new Date();
     return today.toISOString().split('T')[0];
   });
-  
+
   // Inventory data
   const [inventoryItems, setInventoryItems] = useState<FrontendInventoryItem[]>([]);
   const [inventoryLoading, setInventoryLoading] = useState(true);
   const [inventoryError, setInventoryError] = useState<string | null>(null);
-  
+
   // Task data states
   const [productionTasks, setProductionTasks] = useState<ProductionTask[]>([]);
   const [allTasks, setAllTasks] = useState<ProductionTask[]>([]); // Store all tasks
   const [taskReports, setTaskReports] = useState<TaskReport[]>([]);
   const [loadingTasks, setLoadingTasks] = useState(false);
   const [tasksError, setTasksError] = useState<string | null>(null);
-  
+
   // Safety incidents (static data for now)
   const [safetyIncidents] = useState<SafetyIncident[]>([
     {
@@ -353,11 +353,11 @@ const SupervisorReport = () => {
     try {
       const response = await fetch(`${API_URL}/employees`);
       const data = await response.json();
-      
+
       if (data.success) {
         // Handle different response formats
         let employeesData = [];
-        
+
         if (Array.isArray(data.data)) {
           employeesData = data.data;
         } else if (Array.isArray(data.employees)) {
@@ -367,7 +367,7 @@ const SupervisorReport = () => {
         } else if (Array.isArray(data)) {
           employeesData = data;
         }
-        
+
         // Transform employee data
         return employeesData.map((emp: any) => ({
           _id: emp._id || emp.id || `emp_${Math.random()}`,
@@ -394,45 +394,45 @@ const SupervisorReport = () => {
     try {
       setLoadingAttendance(true);
       setAttendanceError(null);
-      
+
       // Fetch employees first
       const employeesData = await fetchEmployees();
       setEmployees(employeesData);
-      
+
       // Fetch attendance for selected date
       const response = await fetch(`${API_URL}/attendance?date=${selectedDate}`);
       const data = await response.json();
-      
+
       if (data.success) {
         const attendanceData: AttendanceRecord[] = data.data || [];
-        
+
         // Convert to report format
         const formattedRecords = attendanceData.map(record => {
           const employee = employeesData.find(emp => emp._id === record.employeeId);
           return convertToReportFormat(record, employee);
         });
-        
+
         setAttendanceRecords(formattedRecords);
-        
+
         toast({
           title: "✅ Attendance Data Loaded",
           description: `Loaded ${formattedRecords.length} attendance records for ${selectedDate}`,
         });
-        
+
       } else {
         throw new Error(data.message || "Failed to load attendance data");
       }
-      
+
     } catch (error: any) {
       console.error('Error fetching attendance data:', error);
       setAttendanceError(error.message || "Failed to load attendance data");
-      
+
       toast({
         title: "❌ Error Loading Data",
         description: "Could not load attendance data.",
         variant: "destructive",
       });
-      
+
       // Don't load sample data - show empty state
       setAttendanceRecords([]);
     } finally {
@@ -461,14 +461,14 @@ const SupervisorReport = () => {
     if (!currentUser || currentUser.role !== "supervisor") {
       return [];
     }
-    
+
     // Filter tasks based on:
     // 1. Tasks assigned to the current supervisor
     // 2. Tasks created by the current supervisor
     return tasks.filter(task => {
       const isAssignedToSupervisor = task.assignedToId === currentUser._id;
       const isCreatedBySupervisor = task.createdById === currentUser._id;
-      
+
       return isAssignedToSupervisor || isCreatedBySupervisor;
     });
   };
@@ -478,10 +478,10 @@ const SupervisorReport = () => {
     try {
       setLoadingTasks(true);
       setTasksError(null);
-      
+
       // Fetch tasks from API using taskService
       const tasks = await taskService.getAllTasks();
-      
+
       if (!Array.isArray(tasks) || tasks.length === 0) {
         setAllTasks([]);
         setProductionTasks([]);
@@ -493,13 +493,13 @@ const SupervisorReport = () => {
         });
         return;
       }
-      
+
       // Transform real API tasks to production tasks format
       const transformedTasks: ProductionTask[] = tasks.map((task: ApiTask, index: number) => {
         // Calculate real progress based on task status
         let completed = 0;
         let quantity = 100; // Default quantity for visualization
-        
+
         if (task.status === "completed") {
           completed = 100;
         } else if (task.status === "in-progress") {
@@ -509,7 +509,7 @@ const SupervisorReport = () => {
         } else if (task.status === "cancelled") {
           completed = 0;
         }
-        
+
         // Determine quality check based on status
         let qualityCheck: "Passed" | "Failed" | "Pending" = "Pending";
         if (task.status === "completed") {
@@ -517,15 +517,15 @@ const SupervisorReport = () => {
         } else if (task.status === "cancelled") {
           qualityCheck = "Failed";
         }
-        
+
         // Calculate efficiency based on completion
         const efficiency = Math.round((completed / quantity) * 100);
-        
+
         // Generate time based on creation date
         const createdAt = new Date(task.createdAt);
         const startHour = createdAt.getHours();
         const endHour = (startHour + 8) % 24;
-        
+
         return {
           id: task._id,
           taskName: task.title,
@@ -548,14 +548,14 @@ const SupervisorReport = () => {
           createdById: task.createdBy
         };
       });
-      
+
       // Store all tasks
       setAllTasks(transformedTasks);
-      
+
       // Filter tasks for the logged-in supervisor
       const supervisorTasks = filterTasksForSupervisor(transformedTasks);
       setProductionTasks(supervisorTasks);
-      
+
       // Transform to TaskReport format for supervisor's tasks only
       const transformedTaskReports: TaskReport[] = supervisorTasks.map((task: ProductionTask) => {
         let status: "Completed" | "In Progress" | "Delayed" | "Not Started";
@@ -574,11 +574,11 @@ const SupervisorReport = () => {
           default:
             status = "Not Started";
         }
-        
+
         const progress = task.status === "completed" ? 100 :
-                        task.status === "in-progress" ? 65 :
-                        task.status === "pending" ? 0 : 0;
-        
+          task.status === "in-progress" ? 65 :
+            task.status === "pending" ? 0 : 0;
+
         return {
           id: task.id,
           taskName: task.taskName,
@@ -589,24 +589,24 @@ const SupervisorReport = () => {
           progress
         };
       });
-      
+
       setTaskReports(transformedTaskReports);
-      
+
       toast({
         title: "✅ Tasks Data Loaded",
         description: `Loaded ${supervisorTasks.length} tasks for ${currentUser?.name || "Supervisor"}`,
       });
-      
+
     } catch (error: any) {
       console.error('Error fetching tasks data:', error);
       setTasksError(error.message || "Failed to load tasks data");
-      
+
       toast({
         title: "❌ Error Loading Tasks",
         description: "Could not load tasks data from the server.",
         variant: "destructive",
       });
-      
+
       // Don't set any dummy data - keep arrays empty
       setAllTasks([]);
       setProductionTasks([]);
@@ -633,7 +633,7 @@ const SupervisorReport = () => {
     if (allTasks.length > 0) {
       const supervisorTasks = filterTasksForSupervisor(allTasks);
       setProductionTasks(supervisorTasks);
-      
+
       // Update task reports
       const transformedTaskReports: TaskReport[] = supervisorTasks.map((task: ProductionTask) => {
         let status: "Completed" | "In Progress" | "Delayed" | "Not Started";
@@ -652,11 +652,11 @@ const SupervisorReport = () => {
           default:
             status = "Not Started";
         }
-        
+
         const progress = task.status === "completed" ? 100 :
-                        task.status === "in-progress" ? 65 :
-                        task.status === "pending" ? 0 : 0;
-        
+          task.status === "in-progress" ? 65 :
+            task.status === "pending" ? 0 : 0;
+
         return {
           id: task.id,
           taskName: task.taskName,
@@ -667,7 +667,7 @@ const SupervisorReport = () => {
           progress
         };
       });
-      
+
       setTaskReports(transformedTaskReports);
     }
   }, [currentUser, allTasks]);
@@ -681,14 +681,14 @@ const SupervisorReport = () => {
     const leaveCount = attendanceRecords.filter(a => a.status === "Leave").length;
     const weeklyOffCount = attendanceRecords.filter(a => a.status === "Weekly-Off").length;
     const totalEmployees = attendanceRecords.length;
-    
-    const attendanceRate = totalEmployees > 0 
+
+    const attendanceRate = totalEmployees > 0
       ? Math.round(((presentCount + halfDayCount * 0.5) / totalEmployees) * 100)
       : 0;
-    
+
     const totalHours = attendanceRecords.reduce((sum, record) => sum + record.hoursWorked, 0);
     const totalOvertime = attendanceRecords.reduce((sum, record) => sum + record.overtime, 0);
-    
+
     return {
       presentCount,
       absentCount,
@@ -715,7 +715,7 @@ const SupervisorReport = () => {
     const lowStockItems = inventoryItems.filter(item => item.quantity <= item.reorderLevel).length;
     const outOfStockItems = inventoryItems.filter(item => item.quantity === 0).length;
     const categories = Array.from(new Set(inventoryItems.map(item => item.category))).filter(Boolean);
-    
+
     return {
       totalItems,
       lowStockItems,
@@ -730,16 +730,16 @@ const SupervisorReport = () => {
     const inProgressTasks = productionTasks.filter(t => t.status === "in-progress").length;
     const pendingTasks = productionTasks.filter(t => t.status === "pending").length;
     const cancelledTasks = productionTasks.filter(t => t.status === "cancelled").length;
-    
-    const totalEfficiency = productionTasks.length > 0 
+
+    const totalEfficiency = productionTasks.length > 0
       ? Math.round(productionTasks.reduce((sum, task) => sum + task.efficiency, 0) / productionTasks.length)
       : 0;
-    
+
     const totalUnits = productionTasks.reduce((sum, task) => sum + task.completed, 0);
-    const qualityPassRate = productionTasks.length > 0 
+    const qualityPassRate = productionTasks.length > 0
       ? Math.round((productionTasks.filter(t => t.qualityCheck === "Passed").length / productionTasks.length) * 100)
       : 0;
-    
+
     return {
       totalTasks: productionTasks.length,
       completedTasks,
@@ -856,7 +856,7 @@ const SupervisorReport = () => {
   );
 
   // =================== EXPORT FUNCTIONS ===================
-  
+
   // Export Attendance to PDF
   const exportAttendanceToPDF = () => {
     if (attendanceRecords.length === 0) {
@@ -867,15 +867,15 @@ const SupervisorReport = () => {
       });
       return;
     }
-    
+
     const doc = new jsPDF();
-    
+
     // Add title
     doc.setFontSize(20);
     doc.text("Attendance Report", 14, 22);
     doc.setFontSize(12);
     doc.text(`Date: ${selectedDate} | Generated: ${new Date().toLocaleDateString()}`, 14, 30);
-    
+
     // Add summary stats
     const stats = calculateAttendanceStats();
     doc.setFontSize(10);
@@ -884,7 +884,7 @@ const SupervisorReport = () => {
     doc.text(`Absent: ${stats.absentCount}`, 60, 46);
     doc.text(`Late: ${stats.lateCount}`, 100, 46);
     doc.text(`Attendance Rate: ${stats.attendanceRate}%`, 140, 46);
-    
+
     // Prepare table data
     const tableData = attendanceRecords.map(record => [
       record.employeeName,
@@ -897,7 +897,7 @@ const SupervisorReport = () => {
       record.overtime > 0 ? record.overtime.toFixed(1) : "-",
       record.notes || "-"
     ]);
-    
+
     // Create table
     autoTable(doc, {
       head: [['Employee Name', 'ID', 'Date', 'Check In', 'Check Out', 'Hours', 'Status', 'Overtime', 'Notes']],
@@ -907,16 +907,16 @@ const SupervisorReport = () => {
       headStyles: { fillColor: [41, 128, 185] },
       margin: { top: 50 }
     });
-    
+
     // Add footer
     const finalY = (doc as any).lastAutoTable.finalY || 60;
     doc.setFontSize(10);
     doc.text(`Report generated by ${currentUser?.name || 'Supervisor'}`, 14, finalY + 10);
     doc.text(`Total Hours: ${stats.totalHours.toFixed(1)} | Total Overtime: ${stats.totalOvertime.toFixed(1)}`, 14, finalY + 16);
-    
+
     // Save the PDF
     doc.save(`Attendance_Report_${selectedDate.replace(/-/g, '_')}.pdf`);
-    
+
     toast({
       title: "✅ PDF Exported",
       description: "Attendance report has been exported as PDF",
@@ -933,7 +933,7 @@ const SupervisorReport = () => {
       });
       return;
     }
-    
+
     // Prepare data for Excel
     const excelData = attendanceRecords.map(record => ({
       'Employee Name': record.employeeName,
@@ -946,7 +946,7 @@ const SupervisorReport = () => {
       'Overtime Hours': record.overtime,
       'Notes': record.notes || ''
     }));
-    
+
     // Add summary stats as first row
     const stats = calculateAttendanceStats();
     const summaryRow = {
@@ -960,19 +960,19 @@ const SupervisorReport = () => {
       'Overtime Hours': stats.totalOvertime,
       'Notes': `Attendance Rate: ${stats.attendanceRate}%`
     };
-    
+
     const allData = [summaryRow, ...excelData];
-    
+
     // Create worksheet
     const ws = utils.json_to_sheet(allData);
-    
+
     // Create workbook
     const wb = utils.book_new();
     utils.book_append_sheet(wb, ws, "Attendance Report");
-    
+
     // Generate Excel file
     writeFile(wb, `Attendance_Report_${selectedDate.replace(/-/g, '_')}.xlsx`);
-    
+
     toast({
       title: "✅ Excel Exported",
       description: "Attendance report has been exported as Excel",
@@ -989,15 +989,15 @@ const SupervisorReport = () => {
       });
       return;
     }
-    
+
     const doc = new jsPDF();
-    
+
     // Add title
     doc.setFontSize(20);
     doc.text(`${currentUser?.name || 'Supervisor'} Tasks Report`, 14, 22);
     doc.setFontSize(12);
     doc.text(`Generated: ${new Date().toLocaleDateString()}`, 14, 30);
-    
+
     // Add summary stats
     const stats = calculateTaskStats();
     doc.setFontSize(10);
@@ -1005,7 +1005,7 @@ const SupervisorReport = () => {
     doc.text(`Completed: ${stats.completedTasks}`, 60, 40);
     doc.text(`In Progress: ${stats.inProgressTasks}`, 110, 40);
     doc.text(`Average Efficiency: ${stats.totalEfficiency}%`, 160, 40);
-    
+
     // Prepare table data
     const tableData = productionTasks.map(task => [
       task.taskName.substring(0, 30),
@@ -1018,7 +1018,7 @@ const SupervisorReport = () => {
       new Date(task.deadline).toLocaleDateString(),
       task.siteName
     ]);
-    
+
     // Create table
     autoTable(doc, {
       head: [['Task Name', 'Operator', 'Status', 'Priority', 'Progress', 'Quality', 'Efficiency', 'Due Date', 'Site']],
@@ -1028,16 +1028,16 @@ const SupervisorReport = () => {
       headStyles: { fillColor: [52, 152, 219] },
       margin: { top: 50 }
     });
-    
+
     // Add footer
     const finalY = (doc as any).lastAutoTable.finalY || 60;
     doc.setFontSize(10);
     doc.text(`Report generated for ${currentUser?.name || 'Supervisor'}`, 14, finalY + 10);
     doc.text(`Total Units Produced: ${stats.totalUnits} | Quality Pass Rate: ${stats.qualityPassRate}%`, 14, finalY + 16);
-    
+
     // Save the PDF
     doc.save(`${currentUser?.name?.replace(/\s+/g, '_') || 'Supervisor'}_Tasks_Report_${new Date().toISOString().split('T')[0].replace(/-/g, '_')}.pdf`);
-    
+
     toast({
       title: "✅ Tasks PDF Exported",
       description: "Tasks report has been exported as PDF",
@@ -1054,15 +1054,15 @@ const SupervisorReport = () => {
       });
       return;
     }
-    
+
     const doc = new jsPDF();
-    
+
     // Add title
     doc.setFontSize(20);
     doc.text("Inventory Report", 14, 22);
     doc.setFontSize(12);
     doc.text(`Generated: ${new Date().toLocaleDateString()}`, 14, 30);
-    
+
     // Add summary stats
     const stats = calculateInventoryStats();
     doc.setFontSize(10);
@@ -1070,7 +1070,7 @@ const SupervisorReport = () => {
     doc.text(`Low Stock: ${stats.lowStockItems}`, 60, 40);
     doc.text(`Out of Stock: ${stats.outOfStockItems}`, 100, 40);
     doc.text(`Categories: ${stats.categoriesCount}`, 140, 40);
-    
+
     // Prepare table data
     const tableData = inventoryItems.map(item => [
       item.name.substring(0, 25),
@@ -1082,7 +1082,7 @@ const SupervisorReport = () => {
       item.supplier || '-',
       item.updatedAt ? new Date(item.updatedAt).toLocaleDateString() : 'N/A'
     ]);
-    
+
     // Create table
     autoTable(doc, {
       head: [['Item Name', 'SKU', 'Category', 'Current Stock', 'Min Stock', 'Status', 'Supplier', 'Last Updated']],
@@ -1092,15 +1092,15 @@ const SupervisorReport = () => {
       headStyles: { fillColor: [39, 174, 96] },
       margin: { top: 50 }
     });
-    
+
     // Add footer
     const finalY = (doc as any).lastAutoTable.finalY || 60;
     doc.setFontSize(10);
     doc.text(`Report generated by ${currentUser?.name || 'Supervisor'}`, 14, finalY + 10);
-    
+
     // Save the PDF
     doc.save(`Inventory_Report_${new Date().toISOString().split('T')[0].replace(/-/g, '_')}.pdf`);
-    
+
     toast({
       title: "✅ Inventory PDF Exported",
       description: "Inventory report has been exported as PDF",
@@ -1110,20 +1110,20 @@ const SupervisorReport = () => {
   // Export All Data to Comprehensive PDF
   const exportAllToPDF = () => {
     const doc = new jsPDF();
-    
+
     // Add main title
     doc.setFontSize(24);
     doc.text("Supervisor Comprehensive Report", 14, 22);
     doc.setFontSize(12);
     doc.text(`Date: ${new Date().toLocaleDateString()} | Supervisor: ${currentUser?.name || 'N/A'}`, 14, 30);
-    
+
     let yPosition = 40;
-    
+
     // 1. Attendance Section
     doc.setFontSize(16);
     doc.text("1. Attendance Summary", 14, yPosition);
     yPosition += 10;
-    
+
     const attendanceStats = calculateAttendanceStats();
     doc.setFontSize(10);
     doc.text(`Total Employees: ${attendanceStats.totalEmployees}`, 20, yPosition);
@@ -1131,40 +1131,40 @@ const SupervisorReport = () => {
     doc.text(`Absent: ${attendanceStats.absentCount}`, 80, yPosition + 6);
     doc.text(`Attendance Rate: ${attendanceStats.attendanceRate}%`, 140, yPosition + 6);
     yPosition += 20;
-    
+
     // 2. Tasks Section
     doc.setFontSize(16);
     doc.text("2. Tasks Summary", 14, yPosition);
     yPosition += 10;
-    
+
     const taskStats = calculateTaskStats();
     doc.setFontSize(10);
     doc.text(`Total Tasks: ${taskStats.totalTasks}`, 20, yPosition);
     doc.text(`Completed: ${taskStats.completedTasks}`, 80, yPosition);
     doc.text(`Average Efficiency: ${taskStats.totalEfficiency}%`, 140, yPosition);
     yPosition += 10;
-    
+
     // 3. Inventory Section
     doc.setFontSize(16);
     doc.text("3. Inventory Summary", 14, yPosition);
     yPosition += 10;
-    
+
     const inventoryStats = calculateInventoryStats();
     doc.setFontSize(10);
     doc.text(`Total Items: ${inventoryStats.totalItems}`, 20, yPosition);
     doc.text(`Low Stock: ${inventoryStats.lowStockItems}`, 80, yPosition);
     doc.text(`Out of Stock: ${inventoryStats.outOfStockItems}`, 140, yPosition);
     yPosition += 20;
-    
+
     // Add footer
     doc.setFontSize(10);
     doc.text("This is a comprehensive report generated by the Supervisor Dashboard System.", 14, yPosition);
     yPosition += 6;
     doc.text("For detailed information, please refer to individual section exports.", 14, yPosition);
-    
+
     // Save the PDF
     doc.save(`Supervisor_Comprehensive_Report_${new Date().toISOString().split('T')[0].replace(/-/g, '_')}.pdf`);
-    
+
     toast({
       title: "✅ Comprehensive PDF Exported",
       description: "Complete supervisor report has been exported as PDF",
@@ -1175,7 +1175,7 @@ const SupervisorReport = () => {
   const exportAllToExcel = () => {
     // Create workbook
     const wb = utils.book_new();
-    
+
     // 1. Attendance Sheet
     if (attendanceRecords.length > 0) {
       const attendanceData = attendanceRecords.map(record => ({
@@ -1189,11 +1189,11 @@ const SupervisorReport = () => {
         'Overtime Hours': record.overtime,
         'Notes': record.notes || ''
       }));
-      
+
       const wsAttendance = utils.json_to_sheet(attendanceData);
       utils.book_append_sheet(wb, wsAttendance, "Attendance");
     }
-    
+
     // 2. Tasks Sheet
     if (productionTasks.length > 0) {
       const tasksData = productionTasks.map(task => ({
@@ -1208,11 +1208,11 @@ const SupervisorReport = () => {
         'Site': task.siteName,
         'Client': task.clientName
       }));
-      
+
       const wsTasks = utils.json_to_sheet(tasksData);
       utils.book_append_sheet(wb, wsTasks, "Tasks");
     }
-    
+
     // 3. Inventory Sheet
     if (inventoryItems.length > 0) {
       const inventoryData = inventoryItems.map(item => ({
@@ -1225,11 +1225,11 @@ const SupervisorReport = () => {
         'Supplier': item.supplier || '-',
         'Last Updated': item.updatedAt ? new Date(item.updatedAt).toLocaleDateString() : 'N/A'
       }));
-      
+
       const wsInventory = utils.json_to_sheet(inventoryData);
       utils.book_append_sheet(wb, wsInventory, "Inventory");
     }
-    
+
     // 4. Summary Sheet
     const summaryData = [
       {
@@ -1254,14 +1254,14 @@ const SupervisorReport = () => {
         'Categories': calculateInventoryStats().categoriesCount
       }
     ];
-    
+
     const wsSummary = utils.json_to_sheet(summaryData);
     utils.book_append_sheet(wb, wsSummary, "Summary");
-    
+
     // Generate Excel file
     const fileName = `Supervisor_Report_${currentUser?.name?.replace(/\s+/g, '_') || 'Supervisor'}_${new Date().toISOString().split('T')[0].replace(/-/g, '_')}.xlsx`;
     writeFile(wb, fileName);
-    
+
     toast({
       title: "✅ Complete Excel Report Exported",
       description: "All sections have been exported to Excel",
@@ -1398,15 +1398,15 @@ const SupervisorReport = () => {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-gray-50 to-blue-50">
-      <DashboardHeader 
-        title="Supervisor Reports" 
+      <DashboardHeader
+        title="Supervisor Reports"
         subtitle={isSupervisor ? `Reports for ${currentUser.name}` : "Generate and manage daily reports"}
         onMenuClick={onMenuClick}
         actionButtons={headerActionButtons}
       />
 
       <div className="p-4 md:p-6 space-y-6">
-       
+
         {/* Search Bar */}
         <motion.div
           initial={{ opacity: 0, y: -10 }}
@@ -1498,8 +1498,8 @@ const SupervisorReport = () => {
                           />
                         </div>
                         <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
-                          <Button 
-                            variant="outline" 
+                          <Button
+                            variant="outline"
                             size="sm"
                             onClick={refreshAttendanceData}
                             disabled={loadingAttendance}
@@ -1510,8 +1510,8 @@ const SupervisorReport = () => {
                           </Button>
                         </motion.div>
                         <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
-                          <Button 
-                            variant="outline" 
+                          <Button
+                            variant="outline"
                             size="sm"
                             onClick={() => handleSectionExport("attendance", 'pdf')}
                             className="border-[#3b82f6]/30 bg-white hover:bg-[#3b82f6]/10 text-[#3b82f6] rounded-xl"
@@ -1521,8 +1521,8 @@ const SupervisorReport = () => {
                           </Button>
                         </motion.div>
                         <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
-                          <Button 
-                            variant="outline" 
+                          <Button
+                            variant="outline"
                             size="sm"
                             onClick={() => handleSectionExport("attendance", 'excel')}
                             className="border-green-200 bg-white hover:bg-green-50 rounded-xl"
@@ -1536,7 +1536,7 @@ const SupervisorReport = () => {
                   </CardHeader>
                   <CardContent className="p-6">
                     {loadingAttendance ? (
-                      <motion.div 
+                      <motion.div
                         initial={{ opacity: 0 }}
                         animate={{ opacity: 1 }}
                         className="flex flex-col items-center justify-center py-12"
@@ -1551,7 +1551,7 @@ const SupervisorReport = () => {
                         <p className="text-green-600">Fetching real data from backend...</p>
                       </motion.div>
                     ) : attendanceError ? (
-                      <motion.div 
+                      <motion.div
                         initial={{ opacity: 0 }}
                         animate={{ opacity: 1 }}
                         className="text-center py-12"
@@ -1566,7 +1566,7 @@ const SupervisorReport = () => {
                         </div>
                       </motion.div>
                     ) : (
-                      <motion.div 
+                      <motion.div
                         initial={{ opacity: 0 }}
                         animate={{ opacity: 1 }}
                         transition={{ staggerChildren: 0.1 }}
@@ -1584,37 +1584,32 @@ const SupervisorReport = () => {
                               key={stat.label}
                               variants={itemVariants}
                               whileHover={{ y: -5 }}
-                              className={`border ${
-                                stat.color === "blue" 
+                              className={`border ${stat.color === "blue"
                                   ? "border-[#3b82f6]/30 bg-gradient-to-br from-[#3b82f6]/10 to-white"
                                   : `border-${stat.color}-200 bg-gradient-to-br from-${stat.color}-50 to-white`
-                              } rounded-xl p-4 shadow-sm`}
+                                } rounded-xl p-4 shadow-sm`}
                             >
                               <div className="flex items-center justify-between">
                                 <div>
-                                  <p className={`${
-                                    stat.color === "blue" 
+                                  <p className={`${stat.color === "blue"
                                       ? "text-[#3b82f6]"
                                       : `text-${stat.color}-700`
-                                  } text-sm font-medium`}>{stat.label}</p>
-                                  <p className={`${
-                                    stat.color === "blue" 
+                                    } text-sm font-medium`}>{stat.label}</p>
+                                  <p className={`${stat.color === "blue"
                                       ? "text-[#3b82f6]"
                                       : `text-${stat.color}-900`
-                                  } text-2xl font-bold`}>
+                                    } text-2xl font-bold`}>
                                     {stat.value}
                                   </p>
                                 </div>
-                                <div className={`h-10 w-10 rounded-full ${
-                                  stat.color === "blue" 
+                                <div className={`h-10 w-10 rounded-full ${stat.color === "blue"
                                     ? "bg-gradient-to-r from-[#3b82f6]/20 to-[#06b6d4]/20"
                                     : `bg-gradient-to-r from-${stat.color}-100 to-${stat.color}-50`
-                                } flex items-center justify-center`}>
-                                  <stat.icon className={`h-5 w-5 ${
-                                    stat.color === "blue" 
+                                  } flex items-center justify-center`}>
+                                  <stat.icon className={`h-5 w-5 ${stat.color === "blue"
                                       ? "text-[#3b82f6]"
                                       : `text-${stat.color}-600`
-                                  }`} />
+                                    }`} />
                                 </div>
                               </div>
                             </motion.div>
@@ -1760,11 +1755,10 @@ const SupervisorReport = () => {
                                 <motion.div
                                   key={item.label}
                                   whileHover={{ scale: 1.05 }}
-                                  className={`px-3 py-1.5 rounded-full ${
-                                    item.color === "blue" 
+                                  className={`px-3 py-1.5 rounded-full ${item.color === "blue"
                                       ? "bg-gradient-to-r from-[#3b82f6]/20 to-[#06b6d4]/20 border border-[#3b82f6]/30 text-[#3b82f6]"
                                       : `bg-gradient-to-r from-${item.color}-100 to-${item.color}-50 border border-${item.color}-200 text-${item.color}-800`
-                                  }`}
+                                    }`}
                                 >
                                   <span className="text-sm font-medium">
                                     {item.label}: {item.count}
@@ -1798,15 +1792,15 @@ const SupervisorReport = () => {
                           {isSupervisor ? `${currentUser?.name}'s Tasks` : "Production Tasks"}
                         </CardTitle>
                         <CardDescription className="text-[#3b82f6]/80">
-                          {isSupervisor 
-                            ? "Tasks assigned to you or created by you" 
+                          {isSupervisor
+                            ? "Tasks assigned to you or created by you"
                             : "Real tasks data from backend"}
                         </CardDescription>
                       </div>
                       <div className="flex flex-wrap gap-2">
                         <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
-                          <Button 
-                            variant="outline" 
+                          <Button
+                            variant="outline"
                             size="sm"
                             onClick={refreshTasksData}
                             disabled={loadingTasks}
@@ -1817,8 +1811,8 @@ const SupervisorReport = () => {
                           </Button>
                         </motion.div>
                         <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
-                          <Button 
-                            variant="outline" 
+                          <Button
+                            variant="outline"
                             size="sm"
                             onClick={() => handleSectionExport("tasks", 'pdf')}
                             className="border-[#3b82f6]/30 bg-white hover:bg-[#3b82f6]/10 text-[#3b82f6] rounded-xl"
@@ -1828,8 +1822,8 @@ const SupervisorReport = () => {
                           </Button>
                         </motion.div>
                         <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
-                          <Button 
-                            variant="outline" 
+                          <Button
+                            variant="outline"
                             size="sm"
                             onClick={exportAllToExcel}
                             className="border-green-200 bg-white hover:bg-green-50 rounded-xl"
@@ -1843,7 +1837,7 @@ const SupervisorReport = () => {
                   </CardHeader>
                   <CardContent className="p-6">
                     {!isSupervisor ? (
-                      <motion.div 
+                      <motion.div
                         initial={{ opacity: 0 }}
                         animate={{ opacity: 1 }}
                         className="text-center py-12"
@@ -1858,7 +1852,7 @@ const SupervisorReport = () => {
                         </Badge>
                       </motion.div>
                     ) : loadingTasks ? (
-                      <motion.div 
+                      <motion.div
                         initial={{ opacity: 0 }}
                         animate={{ opacity: 1 }}
                         className="flex flex-col items-center justify-center py-12"
@@ -1873,7 +1867,7 @@ const SupervisorReport = () => {
                         <p className="text-[#3b82f6]/80">Fetching tasks data from backend...</p>
                       </motion.div>
                     ) : tasksError ? (
-                      <motion.div 
+                      <motion.div
                         initial={{ opacity: 0 }}
                         animate={{ opacity: 1 }}
                         className="text-center py-12"
@@ -1888,7 +1882,7 @@ const SupervisorReport = () => {
                         </div>
                       </motion.div>
                     ) : productionTasks.length === 0 ? (
-                      <motion.div 
+                      <motion.div
                         initial={{ opacity: 0 }}
                         animate={{ opacity: 1 }}
                         className="text-center py-12"
@@ -1903,7 +1897,7 @@ const SupervisorReport = () => {
                         </Button>
                       </motion.div>
                     ) : (
-                      <motion.div 
+                      <motion.div
                         initial={{ opacity: 0 }}
                         animate={{ opacity: 1 }}
                         transition={{ staggerChildren: 0.1 }}
@@ -1941,37 +1935,32 @@ const SupervisorReport = () => {
                               <motion.div
                                 key={stat.label}
                                 whileHover={{ y: -5 }}
-                                className={`border ${
-                                  stat.color === "blue" || stat.color === "cyan"
+                                className={`border ${stat.color === "blue" || stat.color === "cyan"
                                     ? "border-[#3b82f6]/30 bg-gradient-to-br from-[#3b82f6]/10 to-white"
                                     : `border-${stat.color}-200 bg-gradient-to-br from-${stat.color}-50 to-white`
-                                } rounded-xl p-4 shadow-sm`}
+                                  } rounded-xl p-4 shadow-sm`}
                               >
                                 <div className="flex items-center justify-between">
                                   <div>
-                                    <p className={`${
-                                      stat.color === "blue" || stat.color === "cyan"
+                                    <p className={`${stat.color === "blue" || stat.color === "cyan"
                                         ? "text-[#3b82f6]"
                                         : `text-${stat.color}-700`
-                                    } text-sm font-medium`}>{stat.label}</p>
-                                    <p className={`${
-                                      stat.color === "blue" || stat.color === "cyan"
+                                      } text-sm font-medium`}>{stat.label}</p>
+                                    <p className={`${stat.color === "blue" || stat.color === "cyan"
                                         ? "text-[#3b82f6]"
                                         : `text-${stat.color}-900`
-                                    } text-2xl font-bold`}>
+                                      } text-2xl font-bold`}>
                                       {stat.value}
                                     </p>
                                   </div>
-                                  <div className={`h-10 w-10 rounded-full ${
-                                    stat.color === "blue" || stat.color === "cyan"
+                                  <div className={`h-10 w-10 rounded-full ${stat.color === "blue" || stat.color === "cyan"
                                       ? "bg-gradient-to-r from-[#3b82f6]/20 to-[#06b6d4]/20"
                                       : `bg-gradient-to-r from-${stat.color}-100 to-${stat.color}-50`
-                                  } flex items-center justify-center`}>
-                                    <stat.icon className={`h-5 w-5 ${
-                                      stat.color === "blue" || stat.color === "cyan"
+                                    } flex items-center justify-center`}>
+                                    <stat.icon className={`h-5 w-5 ${stat.color === "blue" || stat.color === "cyan"
                                         ? "text-[#3b82f6]"
                                         : `text-${stat.color}-600`
-                                    }`} />
+                                      }`} />
                                   </div>
                                 </div>
                               </motion.div>
@@ -1999,17 +1988,16 @@ const SupervisorReport = () => {
                                 {filteredTasks.slice(0, 10).map((task, index) => {
                                   const isAssignedToMe = task.assignedToId === currentUser?._id;
                                   const isCreatedByMe = task.createdById === currentUser?._id;
-                                  
+
                                   return (
                                     <motion.tr
                                       key={`${task.id}-${index}`}
                                       initial={{ opacity: 0, x: -20 }}
                                       animate={{ opacity: 1, x: 0 }}
                                       transition={{ delay: index * 0.05 }}
-                                      className={`hover:bg-gray-50/50 ${
-                                        isAssignedToMe ? 'bg-gradient-to-r from-green-50 to-white' : 
-                                        isCreatedByMe ? 'bg-gradient-to-r from-[#3b82f6]/10 to-white' : ''
-                                      }`}
+                                      className={`hover:bg-gray-50/50 ${isAssignedToMe ? 'bg-gradient-to-r from-green-50 to-white' :
+                                          isCreatedByMe ? 'bg-gradient-to-r from-[#3b82f6]/10 to-white' : ''
+                                        }`}
                                     >
                                       <TableCell className="font-medium">
                                         <div>
@@ -2048,9 +2036,9 @@ const SupervisorReport = () => {
                                       <TableCell>
                                         <motion.div whileHover={{ scale: 1.05 }}>
                                           <Badge className={getStatusColor(task.status)}>
-                                            {task.status === "in-progress" ? "In Progress" : 
-                                             task.status === "pending" ? "Pending" :
-                                             task.status.charAt(0).toUpperCase() + task.status.slice(1)}
+                                            {task.status === "in-progress" ? "In Progress" :
+                                              task.status === "pending" ? "Pending" :
+                                                task.status.charAt(0).toUpperCase() + task.status.slice(1)}
                                           </Badge>
                                         </motion.div>
                                       </TableCell>
@@ -2064,7 +2052,7 @@ const SupervisorReport = () => {
                                       <TableCell>
                                         <div className="flex items-center gap-3">
                                           <div className="w-20 bg-gray-200 rounded-full h-2">
-                                            <motion.div 
+                                            <motion.div
                                               initial={{ width: 0 }}
                                               animate={{ width: `${(task.completed / task.quantity) * 100}%` }}
                                               transition={{ duration: 1, delay: index * 0.1 }}
@@ -2082,7 +2070,7 @@ const SupervisorReport = () => {
                                         </motion.div>
                                       </TableCell>
                                       <TableCell>
-                                        <motion.div 
+                                        <motion.div
                                           whileHover={{ scale: 1.1 }}
                                           className={`inline-flex items-center gap-1 ${getEfficiencyColor(task.efficiency)}`}
                                         >
@@ -2118,16 +2106,14 @@ const SupervisorReport = () => {
                                 { label: "Completion Rate", value: `${taskStats.totalTasks > 0 ? Math.round((taskStats.completedTasks / taskStats.totalTasks) * 100) : 0}%`, color: "cyan" }
                               ].map((stat) => (
                                 <div key={stat.label} className="text-center">
-                                  <p className={`text-sm ${
-                                    stat.color === "blue" || stat.color === "cyan" 
-                                      ? "text-[#3b82f6]/80" 
+                                  <p className={`text-sm ${stat.color === "blue" || stat.color === "cyan"
+                                      ? "text-[#3b82f6]/80"
                                       : "text-green-700"
-                                  } mb-2`}>{stat.label}</p>
-                                  <p className={`text-3xl font-bold ${
-                                    stat.color === "blue" || stat.color === "cyan" 
-                                      ? "text-[#3b82f6]" 
+                                    } mb-2`}>{stat.label}</p>
+                                  <p className={`text-3xl font-bold ${stat.color === "blue" || stat.color === "cyan"
+                                      ? "text-[#3b82f6]"
                                       : "text-green-900"
-                                  }`}>
+                                    }`}>
                                     {stat.value}
                                   </p>
                                 </div>
@@ -2145,11 +2131,10 @@ const SupervisorReport = () => {
                                   <motion.div
                                     key={item.label}
                                     whileHover={{ scale: 1.05 }}
-                                    className={`px-3 py-1.5 rounded-full ${
-                                      item.color === "blue" 
+                                    className={`px-3 py-1.5 rounded-full ${item.color === "blue"
                                         ? "bg-gradient-to-r from-[#3b82f6]/20 to-[#06b6d4]/20 border border-[#3b82f6]/30 text-[#3b82f6]"
                                         : `bg-gradient-to-r from-${item.color}-100 to-${item.color}-50 border border-${item.color}-200 text-${item.color}-800`
-                                    }`}
+                                      }`}
                                   >
                                     <span className="text-sm font-medium">
                                       {item.label}: {item.count}
@@ -2185,8 +2170,8 @@ const SupervisorReport = () => {
                       </div>
                       <div className="flex flex-wrap gap-2">
                         <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
-                          <Button 
-                            variant="outline" 
+                          <Button
+                            variant="outline"
                             size="sm"
                             onClick={refreshInventoryData}
                             disabled={inventoryLoading}
@@ -2197,8 +2182,8 @@ const SupervisorReport = () => {
                           </Button>
                         </motion.div>
                         <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
-                          <Button 
-                            variant="outline" 
+                          <Button
+                            variant="outline"
                             size="sm"
                             onClick={() => handleSectionExport("inventory", 'pdf')}
                             className="border-[#3b82f6]/30 bg-white hover:bg-[#3b82f6]/10 text-[#3b82f6] rounded-xl"
@@ -2208,8 +2193,8 @@ const SupervisorReport = () => {
                           </Button>
                         </motion.div>
                         <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
-                          <Button 
-                            variant="outline" 
+                          <Button
+                            variant="outline"
                             size="sm"
                             onClick={exportAllToExcel}
                             className="border-green-200 bg-white hover:bg-green-50 rounded-xl"
@@ -2223,7 +2208,7 @@ const SupervisorReport = () => {
                   </CardHeader>
                   <CardContent className="p-6">
                     {inventoryLoading ? (
-                      <motion.div 
+                      <motion.div
                         initial={{ opacity: 0 }}
                         animate={{ opacity: 1 }}
                         className="flex items-center justify-center py-12"
@@ -2239,7 +2224,7 @@ const SupervisorReport = () => {
                         </div>
                       </motion.div>
                     ) : inventoryError ? (
-                      <motion.div 
+                      <motion.div
                         initial={{ opacity: 0 }}
                         animate={{ opacity: 1 }}
                         className="text-center py-12"
@@ -2252,7 +2237,7 @@ const SupervisorReport = () => {
                         </Button>
                       </motion.div>
                     ) : (
-                      <motion.div 
+                      <motion.div
                         initial={{ opacity: 0 }}
                         animate={{ opacity: 1 }}
                         transition={{ staggerChildren: 0.1 }}
@@ -2270,37 +2255,32 @@ const SupervisorReport = () => {
                               key={stat.label}
                               variants={itemVariants}
                               whileHover={{ y: -5 }}
-                              className={`border ${
-                                stat.color === "blue" 
+                              className={`border ${stat.color === "blue"
                                   ? "border-[#3b82f6]/30 bg-gradient-to-br from-[#3b82f6]/10 to-white"
                                   : `border-${stat.color}-200 bg-gradient-to-br from-${stat.color}-50 to-white`
-                              } rounded-xl p-4 shadow-sm`}
+                                } rounded-xl p-4 shadow-sm`}
                             >
                               <div className="flex items-center justify-between">
                                 <div>
-                                  <p className={`${
-                                    stat.color === "blue" 
+                                  <p className={`${stat.color === "blue"
                                       ? "text-[#3b82f6]"
                                       : `text-${stat.color}-700`
-                                  } text-sm font-medium`}>{stat.label}</p>
-                                  <p className={`${
-                                    stat.color === "blue" 
+                                    } text-sm font-medium`}>{stat.label}</p>
+                                  <p className={`${stat.color === "blue"
                                       ? "text-[#3b82f6]"
                                       : `text-${stat.color}-900`
-                                  } text-2xl font-bold`}>
+                                    } text-2xl font-bold`}>
                                     {stat.value}
                                   </p>
                                 </div>
-                                <div className={`h-10 w-10 rounded-full ${
-                                  stat.color === "blue" 
+                                <div className={`h-10 w-10 rounded-full ${stat.color === "blue"
                                     ? "bg-gradient-to-r from-[#3b82f6]/20 to-[#06b6d4]/20"
                                     : `bg-gradient-to-r from-${stat.color}-100 to-${stat.color}-50`
-                                } flex items-center justify-center`}>
-                                  <stat.icon className={`h-5 w-5 ${
-                                    stat.color === "blue" 
+                                  } flex items-center justify-center`}>
+                                  <stat.icon className={`h-5 w-5 ${stat.color === "blue"
                                       ? "text-[#3b82f6]"
                                       : `text-${stat.color}-600`
-                                  }`} />
+                                    }`} />
                                 </div>
                               </div>
                             </motion.div>
@@ -2360,8 +2340,8 @@ const SupervisorReport = () => {
                                         <div className="flex items-center gap-2">
                                           <span className="font-medium">{item.quantity}</span>
                                           <span className="text-gray-500 text-sm">
-                                            {item.brushCount ? `(${item.brushCount} brushes)` : 
-                                             item.squeegeeCount ? `(${item.squeegeeCount} squeegees)` : 'units'}
+                                            {item.brushCount ? `(${item.brushCount} brushes)` :
+                                              item.squeegeeCount ? `(${item.squeegeeCount} squeegees)` : 'units'}
                                           </span>
                                         </div>
                                       </TableCell>
@@ -2402,9 +2382,9 @@ const SupervisorReport = () => {
                                 {filteredInventory.slice(0, 5).map((item, index) => {
                                   const percentage = Math.min(100, (item.quantity / (item.reorderLevel * 2)) * 100);
                                   const statusColor = item.quantity > item.reorderLevel * 1.5 ? "bg-green-500" :
-                                                    item.quantity > item.reorderLevel ? "bg-yellow-500" :
-                                                    item.quantity === 0 ? "bg-red-500" : "bg-orange-500";
-                                  
+                                    item.quantity > item.reorderLevel ? "bg-yellow-500" :
+                                      item.quantity === 0 ? "bg-red-500" : "bg-orange-500";
+
                                   return (
                                     <motion.div
                                       key={`${item.id}-${index}`}
@@ -2420,7 +2400,7 @@ const SupervisorReport = () => {
                                         </span>
                                       </div>
                                       <div className="w-full bg-gray-200 rounded-full h-2">
-                                        <motion.div 
+                                        <motion.div
                                           initial={{ width: 0 }}
                                           animate={{ width: `${percentage}%` }}
                                           transition={{ duration: 1, delay: index * 0.2 }}
@@ -2431,7 +2411,7 @@ const SupervisorReport = () => {
                                   );
                                 })}
                                 {filteredInventory.length > 5 && (
-                                  <motion.p 
+                                  <motion.p
                                     initial={{ opacity: 0 }}
                                     animate={{ opacity: 1 }}
                                     className="text-sm text-yellow-700 text-center"
@@ -2465,7 +2445,7 @@ const SupervisorReport = () => {
             animate={{ y: [0, -5, 0] }}
             transition={{ duration: 2, repeat: Infinity }}
           >
-           
+
           </motion.div>
         </motion.div>
       </div>

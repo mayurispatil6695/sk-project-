@@ -9,10 +9,10 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
-import { 
-  Download, 
+import {
+  Download,
   Filter,
-  Calendar, 
+  Calendar,
   TrendingUp,
   Users,
   Building,
@@ -177,7 +177,7 @@ const attendanceStatuses = ["All Status", "present", "absent", "late", "half-day
 // Helper function to get department from task type
 const getDepartmentFromTaskType = (taskType?: string): string => {
   if (!taskType) return "Operations";
-  
+
   const type = taskType.toLowerCase();
   if (type.includes('it') || type.includes('tech') || type.includes('software')) return "IT";
   if (type.includes('hr') || type.includes('human')) return "HR";
@@ -191,17 +191,17 @@ const getDepartmentFromTaskType = (taskType?: string): string => {
   if (type.includes('maintenance') || type.includes('repair')) return "Maintenance";
   if (type.includes('inspection') || type.includes('audit')) return "Quality";
   if (type.includes('training') || type.includes('meeting')) return "Training";
-  
+
   return "Operations";
 };
 
 const ManagerReports = () => {
   const { onMenuClick } = useOutletContext<{ onMenuClick: () => void }>();
   const { user: authUser, isAuthenticated } = useRole();
-  
+
   // API Base URL
-const API_URL = import.meta.env.VITE_API_URL || 
-  (import.meta.env.DEV ? 'http://localhost:5001/api' : 'https://sk-backend-btbj.onrender.com/api');
+  const API_URL = import.meta.env.VITE_API_URL ||
+    (import.meta.env.DEV ? 'http://localhost:5001/api' : 'https://sk-backend-868y.onrender.com');
   // Manager ID and Name
   const [managerId, setManagerId] = useState<string>('');
   const [managerName, setManagerName] = useState<string>('');
@@ -215,11 +215,11 @@ const API_URL = import.meta.env.VITE_API_URL ||
     phone: "",
     position: "Manager"
   });
-  
+
   // State for API connection
   const [isBackendConnected, setIsBackendConnected] = useState(false);
   const [isCheckingConnection, setIsCheckingConnection] = useState(false);
-  
+
   // State for Tasks
   const [taskSearch, setTaskSearch] = useState("");
   const [taskDeptFilter, setTaskDeptFilter] = useState("all");
@@ -282,7 +282,7 @@ const API_URL = import.meta.env.VITE_API_URL ||
     const initializeManagerInfo = async () => {
       try {
         let managerData: ManagerInfo | null = null;
-        
+
         // First try to get from auth context
         if (authUser && isAuthenticated) {
           managerData = {
@@ -297,7 +297,7 @@ const API_URL = import.meta.env.VITE_API_URL ||
             position: authUser.position || "Manager",
             site: authUser.site || ""
           };
-        } 
+        }
         // Try from localStorage
         else {
           const storedUser = localStorage.getItem("sk_user");
@@ -321,15 +321,15 @@ const API_URL = import.meta.env.VITE_API_URL ||
             }
           }
         }
-        
+
         // If still no manager data, fetch from user service
         if (!managerData) {
           try {
             const allUsersResponse = await userService.getAllUsers();
-            const currentUser = allUsersResponse.allUsers.find(user => 
+            const currentUser = allUsersResponse.allUsers.find(user =>
               user.role === "manager" || user.role === "Manager"
             );
-            
+
             if (currentUser) {
               managerData = {
                 _id: currentUser._id || currentUser.id,
@@ -348,7 +348,7 @@ const API_URL = import.meta.env.VITE_API_URL ||
             console.error('Error fetching user from service:', error);
           }
         }
-        
+
         // Set default if still no data
         if (!managerData) {
           const randomId = `manager-${Date.now()}`;
@@ -365,14 +365,14 @@ const API_URL = import.meta.env.VITE_API_URL ||
             site: "Main Office"
           };
         }
-        
+
         setManagerInfo(managerData);
         setManagerId(managerData._id);
         setManagerName(managerData.name);
         setManagerDepartment(managerData.department || "");
-        
+
         console.log('Current Manager Info:', managerData);
-        
+
       } catch (error) {
         console.error('Error initializing manager info:', error);
         // Set fallback data
@@ -423,18 +423,18 @@ const API_URL = import.meta.env.VITE_API_URL ||
     try {
       setIsCheckingConnection(true);
       console.log('Checking backend connection at:', `${API_URL}/health`);
-      
+
       const response = await fetch(`${API_URL}/health`, {
         method: 'GET',
         headers: {
           'Content-Type': 'application/json',
         }
       });
-      
+
       if (response.ok) {
         const data = await response.json();
         console.log('Health check response:', data);
-        
+
         if (data.status === 'OK') {
           setIsBackendConnected(true);
           console.log('✅ Backend connected successfully');
@@ -459,7 +459,7 @@ const API_URL = import.meta.env.VITE_API_URL ||
     try {
       setLeaveApiStatus('checking');
       const response = await fetch(`${API_URL}/test`);
-      
+
       if (response.ok) {
         setLeaveApiStatus('connected');
         console.log("✅ Leave API connection successful");
@@ -489,11 +489,11 @@ const API_URL = import.meta.env.VITE_API_URL ||
   // Format duration in hours to Xh Ym format
   const formatDuration = (hours: number): string => {
     if (!hours || hours === 0) return "0m";
-    
+
     const totalMinutes = Math.round(hours * 60);
     const hoursPart = Math.floor(totalMinutes / 60);
     const minutesPart = totalMinutes % 60;
-    
+
     if (hoursPart > 0 && minutesPart > 0) {
       return `${hoursPart}h ${minutesPart}m`;
     } else if (hoursPart > 0) {
@@ -506,7 +506,7 @@ const API_URL = import.meta.env.VITE_API_URL ||
   // Transform API attendance data to UI format
   const transformApiAttendanceData = (apiRecords: any[], year: number, month: number, daysInMonth: number): AttendanceRecord[] => {
     const records: AttendanceRecord[] = [];
-    
+
     // Create a map of existing records by date
     const recordsByDate = new Map<string, any>();
     apiRecords.forEach(record => {
@@ -514,15 +514,15 @@ const API_URL = import.meta.env.VITE_API_URL ||
         recordsByDate.set(record.date, record);
       }
     });
-    
+
     // Generate records for all days in the month
     for (let day = 1; day <= daysInMonth; day++) {
       const date = new Date(year, month - 1, day);
       const dateString = date.toISOString().split('T')[0];
       const dayOfWeek = date.toLocaleDateString('en-US', { weekday: 'short' });
-      
+
       const existingRecord = recordsByDate.get(dateString);
-      
+
       if (existingRecord) {
         // Has attendance record
         const status = existingRecord.status || "Absent";
@@ -531,7 +531,7 @@ const API_URL = import.meta.env.VITE_API_URL ||
         const checkIn = existingRecord.checkIn || "-";
         const checkOut = existingRecord.checkOut || "-";
         const overtime = totalHours > 8 ? (totalHours - 8).toFixed(1) : "0.0";
-        
+
         records.push({
           id: existingRecord._id || `record-${dateString}`,
           date: dateString,
@@ -580,7 +580,7 @@ const API_URL = import.meta.env.VITE_API_URL ||
         });
       }
     }
-    
+
     return records;
   };
 
@@ -589,7 +589,7 @@ const API_URL = import.meta.env.VITE_API_URL ||
     const [year, month] = selectedMonth.split('-').map(Number);
     const endDate = new Date(year, month, 0);
     const daysInMonth = endDate.getDate();
-    
+
     const records: AttendanceRecord[] = [];
     let presentCount = 0;
     let lateCount = 0;
@@ -609,7 +609,7 @@ const API_URL = import.meta.env.VITE_API_URL ||
       const date = new Date(year, month - 1, day);
       const dateStr = date.toISOString().split('T')[0];
       const dayOfWeek = date.toLocaleDateString('en-US', { weekday: 'short' });
-      
+
       // Skip weekends for sample data
       if (date.getDay() === 0 || date.getDay() === 6) {
         // Weekend - mark as absent or present with some probability
@@ -617,7 +617,7 @@ const API_URL = import.meta.env.VITE_API_URL ||
           // Sometimes work on weekends
           const hours = 6 + (Math.random() * 2);
           const overtime = Math.max(0, hours - 8);
-          
+
           records.push({
             id: `sample-weekend-${dateStr}`,
             date: dateStr,
@@ -640,7 +640,7 @@ const API_URL = import.meta.env.VITE_API_URL ||
             isCheckedIn: false,
             isOnBreak: false
           });
-          
+
           presentCount++;
           totalHours += hours;
           totalOvertime += overtime;
@@ -693,7 +693,7 @@ const API_URL = import.meta.env.VITE_API_URL ||
         }
 
         const overtime = Math.max(0, hours - 8.0);
-        
+
         records.push({
           id: `sample-${dateStr}`,
           date: dateStr,
@@ -748,20 +748,20 @@ const API_URL = import.meta.env.VITE_API_URL ||
 
     setIsLoadingAttendance(true);
     setIsFetchingFromAPI(false);
-    
+
     try {
       console.log('📅 Fetching attendance data for manager:', managerId);
       console.log('Selected month:', selectedMonth);
-      
+
       const [year, month] = selectedMonth.split('-').map(Number);
       const startDate = new Date(year, month - 1, 1);
       const endDate = new Date(year, month, 0);
-      
+
       const startDateStr = startDate.toISOString().split('T')[0];
       const endDateStr = endDate.toISOString().split('T')[0];
-      
+
       console.log('Date range:', { startDateStr, endDateStr });
-      
+
       // Try the new endpoint
       setIsFetchingFromAPI(true);
       const response = await fetch(
@@ -773,45 +773,45 @@ const API_URL = import.meta.env.VITE_API_URL ||
           }
         }
       );
-      
+
       console.log('API Response status:', response.status);
-      
+
       if (response.ok) {
         const data = await response.json();
         console.log('API response for manager attendance:', data);
-        
+
         if (data.success && data.data) {
           const { dailyRecords, stats } = data.data;
-          
+
           // Get number of days in the month
           const daysInMonth = endDate.getDate();
           const formattedRecords = transformApiAttendanceData(dailyRecords, year, month, daysInMonth);
-          
+
           setAttendanceRecords(formattedRecords);
-          
+
           // Calculate statistics
           const totalDays = daysInMonth;
-          const presentDays = formattedRecords.filter(r => 
+          const presentDays = formattedRecords.filter(r =>
             r.status === "Present" || r.status === "Late" || r.status === "Half Day"
           ).length;
           const absentDays = formattedRecords.filter(r => r.status === "Absent").length;
           const lateDays = formattedRecords.filter(r => r.status === "Late").length;
           const halfDays = formattedRecords.filter(r => r.status === "Half Day").length;
-          
+
           // Calculate hours
-          const presentRecords = formattedRecords.filter(r => 
+          const presentRecords = formattedRecords.filter(r =>
             r.status === "Present" || r.status === "Late" || r.status === "Half Day"
           );
-          const totalHours = presentRecords.reduce((sum, record) => 
+          const totalHours = presentRecords.reduce((sum, record) =>
             sum + parseFloat(record.totalHours || "0"), 0
           );
-          const totalOvertime = presentRecords.reduce((sum, record) => 
+          const totalOvertime = presentRecords.reduce((sum, record) =>
             sum + parseFloat(record.overtime || "0"), 0
           );
-          
+
           const averageHours = presentDays > 0 ? (totalHours / presentDays) : 0;
           const attendanceRate = totalDays > 0 ? Math.round((presentDays / totalDays) * 100) : 0;
-          
+
           setAttendanceStats({
             totalDays,
             presentDays,
@@ -822,7 +822,7 @@ const API_URL = import.meta.env.VITE_API_URL ||
             totalOvertime: totalOvertime.toFixed(1),
             attendanceRate
           });
-          
+
           toast.success(`Attendance data loaded for ${getCurrentMonthName()}`);
           return;
         } else {
@@ -831,11 +831,11 @@ const API_URL = import.meta.env.VITE_API_URL ||
       } else {
         console.warn('API request failed with status:', response.status);
       }
-      
+
       // If API fails, generate sample data as fallback
       console.log('Generating sample attendance data as fallback');
       generateSampleAttendanceData();
-      
+
     } catch (error) {
       console.error('❌ Error fetching attendance from API:', error);
       toast.error("Could not load attendance data");
@@ -849,14 +849,14 @@ const API_URL = import.meta.env.VITE_API_URL ||
   // Fetch tasks data
   const fetchTasksData = async () => {
     if (!managerId) return;
-    
+
     setIsLoadingTasks(true);
     try {
       console.log("📊 Fetching tasks for manager:", managerId);
-      
+
       // Fetch tasks based on manager's access
       let fetchedTasks: ReportTask[] = [];
-      
+
       // First try to get tasks created by the manager
       try {
         const createdTasks = await taskService.getTasksByCreator(managerId);
@@ -874,14 +874,14 @@ const API_URL = import.meta.env.VITE_API_URL ||
       } catch (error) {
         console.error("Error fetching created tasks:", error);
       }
-      
+
       // Then try to get tasks for the manager's site
       if (managerInfo.site || authUser?.site) {
         const siteName = managerInfo.site || authUser?.site;
         try {
           const siteTasks = await taskService.getTasksBySite(siteName!);
           console.log("🏢 Tasks for site:", siteTasks);
-          
+
           const siteTasksFormatted = siteTasks
             .filter(task => !fetchedTasks.some(t => t._id === task._id))
             .map(task => ({
@@ -894,19 +894,19 @@ const API_URL = import.meta.env.VITE_API_URL ||
               assignee: task.assignedToName,
               site: task.siteName
             }));
-          
+
           fetchedTasks = [...fetchedTasks, ...siteTasksFormatted];
         } catch (error) {
           console.error("Error fetching site tasks:", error);
         }
       }
-      
+
       // If no tasks found, get all tasks as fallback
       if (fetchedTasks.length === 0) {
         try {
           const allTasks = await taskService.getAllTasks();
           console.log("🌐 All tasks:", allTasks);
-          
+
           fetchedTasks = allTasks.slice(0, 20).map(task => ({
             ...task,
             source: "all" as const,
@@ -922,12 +922,12 @@ const API_URL = import.meta.env.VITE_API_URL ||
           toast.error("Could not load tasks from server");
         }
       }
-      
+
       setTasks(fetchedTasks);
       calculateTaskStatistics(fetchedTasks);
-      
+
       console.log("✅ Tasks loaded successfully:", fetchedTasks.length);
-      
+
     } catch (error) {
       console.error("Error in fetchTasksData:", error);
       toast.error("Failed to load tasks");
@@ -941,14 +941,14 @@ const API_URL = import.meta.env.VITE_API_URL ||
   const calculateTaskProgress = (task: Task): number => {
     if (task.status === 'completed') return 100;
     if (task.status === 'cancelled') return 0;
-    
+
     // For in-progress tasks, estimate based on time
     if (task.status === 'in-progress') {
       if (task.createdAt && task.deadline) {
         const created = new Date(task.createdAt).getTime();
         const deadline = new Date(task.deadline).getTime();
         const now = new Date().getTime();
-        
+
         if (deadline > created) {
           const totalTime = deadline - created;
           const elapsed = now - created;
@@ -957,21 +957,21 @@ const API_URL = import.meta.env.VITE_API_URL ||
       }
       return 40; // Default for in-progress
     }
-    
+
     // For pending tasks, based on urgency
     if (task.status === 'pending') {
       if (task.deadline) {
         const deadline = new Date(task.deadline).getTime();
         const now = new Date().getTime();
         const daysUntilDeadline = Math.ceil((deadline - now) / (1000 * 60 * 60 * 24));
-        
+
         if (daysUntilDeadline < 0) return 0; // Overdue
         if (daysUntilDeadline < 3) return 10; // Urgent
         if (daysUntilDeadline < 7) return 5; // Soon
       }
       return 0; // Default for pending
     }
-    
+
     return 0;
   };
 
@@ -983,7 +983,7 @@ const API_URL = import.meta.env.VITE_API_URL ||
     const pending = tasks.filter(t => t.status === 'pending').length;
     const cancelled = tasks.filter(t => t.status === 'cancelled').length;
     const highPriority = tasks.filter(t => t.priority === 'high').length;
-    
+
     // Calculate overdue tasks
     const today = new Date();
     const overdue = tasks.filter(task => {
@@ -993,9 +993,9 @@ const API_URL = import.meta.env.VITE_API_URL ||
       }
       return false;
     }).length;
-    
+
     const completionRate = total > 0 ? ((completed / total) * 100).toFixed(1) : "0";
-    
+
     setTaskStats({
       total,
       completed,
@@ -1015,7 +1015,7 @@ const API_URL = import.meta.env.VITE_API_URL ||
       if (response.ok) {
         const departments = await response.json();
         console.log("📋 Available departments:", departments);
-        
+
         if (departments && departments.length > 0) {
           setAvailableDepartments(departments);
           if (!managerDepartment && departments.length > 0) {
@@ -1057,11 +1057,11 @@ const API_URL = import.meta.env.VITE_API_URL ||
       const response = await fetch(
         `${API_URL}/leaves/supervisor?department=${encodeURIComponent(managerDepartment)}`
       );
-      
+
       if (!response.ok) {
         const errorText = await response.text();
         console.error("Error response:", errorText);
-        
+
         let errorMessage = 'Failed to fetch leaves';
         try {
           const errorData = JSON.parse(errorText);
@@ -1069,19 +1069,19 @@ const API_URL = import.meta.env.VITE_API_URL ||
         } catch (e) {
           errorMessage = response.statusText || errorMessage;
         }
-        
+
         throw new Error(errorMessage);
       }
-      
+
       const data = await response.json();
       console.log("✅ Team leaves data received:", data);
-      
+
       const formattedData = data.map((leave: any) => ({
         ...leave,
         id: leave._id || leave.id,
         isManagerLeave: false
       }));
-      
+
       setLeaveRequests(formattedData);
     } catch (error: any) {
       console.error("Error fetching leave requests:", error);
@@ -1105,17 +1105,17 @@ const API_URL = import.meta.env.VITE_API_URL ||
 
     try {
       setIsLoadingMyLeaves(true);
-      
+
       const response = await fetch(
         `${API_URL}/manager-leaves?managerId=${encodeURIComponent(managerInfo._id)}`
       );
-      
+
       if (!response.ok) {
         throw new Error(`Failed to fetch manager leaves: ${response.status}`);
       }
-      
+
       const data = await response.json();
-      
+
       if (data.success) {
         const formattedData = data.leaves.map((leave: any) => ({
           ...leave,
@@ -1128,7 +1128,7 @@ const API_URL = import.meta.env.VITE_API_URL ||
           contactNumber: leave.managerContact,
           appliedDate: leave.appliedDate || leave.createdAt
         }));
-        
+
         setMyLeaves(formattedData);
       }
     } catch (error) {
@@ -1142,17 +1142,17 @@ const API_URL = import.meta.env.VITE_API_URL ||
   // Filter Tasks
   const filteredTasks = useMemo(() => {
     return tasks.filter(task => {
-      const matchesSearch = taskSearch === "" || 
+      const matchesSearch = taskSearch === "" ||
         task.title.toLowerCase().includes(taskSearch.toLowerCase()) ||
         task.description.toLowerCase().includes(taskSearch.toLowerCase()) ||
         (task.assignee && task.assignee.toLowerCase().includes(taskSearch.toLowerCase())) ||
         (task.site && task.site.toLowerCase().includes(taskSearch.toLowerCase()));
-      
+
       const matchesDept = taskDeptFilter === "all" || (task.department && task.department.toLowerCase() === taskDeptFilter.toLowerCase());
       const matchesStatus = taskStatusFilter === "all" || task.status === taskStatusFilter;
       const matchesPriority = taskPriorityFilter === "all" || task.priority === taskPriorityFilter;
       const matchesSite = taskSiteFilter === "all" || (task.siteName && task.siteName === taskSiteFilter);
-      
+
       return matchesSearch && matchesDept && matchesStatus && matchesPriority && matchesSite;
     });
   }, [tasks, taskSearch, taskDeptFilter, taskStatusFilter, taskPriorityFilter, taskSiteFilter]);
@@ -1163,7 +1163,7 @@ const API_URL = import.meta.env.VITE_API_URL ||
       const matchesDept = attendanceDeptFilter === "all" || "Operations" === attendanceDeptFilter;
       const matchesStatus = attendanceStatusFilter === "all" || record.status.toLowerCase() === attendanceStatusFilter.toLowerCase();
       const matchesDate = record.date === attendanceDate;
-      
+
       return matchesDept && matchesStatus && matchesDate;
     });
   }, [attendanceDate, attendanceDeptFilter, attendanceStatusFilter, attendanceRecords]);
@@ -1175,7 +1175,7 @@ const API_URL = import.meta.env.VITE_API_URL ||
       const matchesDept = leaveDeptFilter === "all" || leave.department.toLowerCase() === leaveDeptFilter.toLowerCase();
       const matchesStatus = leaveStatusFilter === "all" || leave.status === leaveStatusFilter;
       const matchesType = leaveTypeFilter === "all" || leave.leaveType === leaveTypeFilter;
-      
+
       return matchesDept && matchesStatus && matchesType;
     });
   }, [leaveDeptFilter, leaveStatusFilter, leaveTypeFilter, leaveRequests, myLeaves]);
@@ -1193,14 +1193,14 @@ const API_URL = import.meta.env.VITE_API_URL ||
     const total = allLeaves.length;
     const totalDays = allLeaves.reduce((sum, l) => sum + l.totalDays, 0);
     const approvalRate = total > 0 ? ((approved / total) * 100).toFixed(1) : "0";
-    
-    return { 
-      total, 
-      approved, 
-      pending, 
-      rejected, 
+
+    return {
+      total,
+      approved,
+      pending,
+      rejected,
       cancelled,
-      totalDays, 
+      totalDays,
       approvalRate,
       teamLeaves: leaveRequests.length,
       myLeaves: myLeaves.length
@@ -1253,7 +1253,7 @@ const API_URL = import.meta.env.VITE_API_URL ||
       deptData.total++;
       if (task.status === 'completed') deptData.completed++;
     });
-    
+
     return Array.from(deptMap.values()).map(dept => ({
       department: dept.department,
       completed: dept.completed,
@@ -1274,7 +1274,7 @@ const API_URL = import.meta.env.VITE_API_URL ||
       siteData.total++;
       if (task.status === 'completed') siteData.completed++;
     });
-    
+
     return Array.from(siteMap.values()).map(site => ({
       site: site.site,
       completed: site.completed,
@@ -1303,7 +1303,7 @@ const API_URL = import.meta.env.VITE_API_URL ||
     setIsExporting(true);
     try {
       const headers = ['Task ID', 'Title', 'Description', 'Assignee', 'Site', 'Department', 'Priority', 'Status', 'Progress', 'Deadline', 'Created At', 'Hours Spent', 'Attachments'];
-      
+
       const csvRows = [
         headers.join(','),
         ...filteredTasks.map(task => [
@@ -1322,20 +1322,20 @@ const API_URL = import.meta.env.VITE_API_URL ||
           task.attachments || 0
         ].join(','))
       ];
-      
+
       const csvString = csvRows.join('\n');
       const blob = new Blob([csvString], { type: 'text/csv;charset=utf-8;' });
       const link = document.createElement('a');
       const url = URL.createObjectURL(blob);
-      
+
       link.setAttribute('href', url);
       link.setAttribute('download', `task-report-${new Date().toISOString().split('T')[0]}.csv`);
       link.style.visibility = 'hidden';
-      
+
       document.body.appendChild(link);
       link.click();
       document.body.removeChild(link);
-      
+
       toast.success(`Exported ${filteredTasks.length} tasks to CSV`);
     } catch (error) {
       console.error('Error exporting CSV:', error);
@@ -1354,7 +1354,7 @@ const API_URL = import.meta.env.VITE_API_URL ||
 
     try {
       const headers = ['Date', 'Day', 'Status', 'Check In', 'Check Out', 'Total Hours', 'Overtime', 'Breaks', 'Break Duration'];
-      
+
       const csvRows = [
         headers.join(','),
         ...filteredAttendanceRecords.map(record => [
@@ -1369,20 +1369,20 @@ const API_URL = import.meta.env.VITE_API_URL ||
           record.breakDuration
         ].join(','))
       ];
-      
+
       const csvString = csvRows.join('\n');
       const blob = new Blob([csvString], { type: 'text/csv;charset=utf-8;' });
       const link = document.createElement('a');
       const url = URL.createObjectURL(blob);
-      
+
       link.setAttribute('href', url);
       link.setAttribute('download', `attendance-report-${selectedMonth}.csv`);
       link.style.visibility = 'hidden';
-      
+
       document.body.appendChild(link);
       link.click();
       document.body.removeChild(link);
-      
+
       toast.success(`Exported ${filteredAttendanceRecords.length} attendance records to CSV`);
     } catch (error) {
       console.error('Error exporting attendance CSV:', error);
@@ -1399,7 +1399,7 @@ const API_URL = import.meta.env.VITE_API_URL ||
 
     try {
       const headers = ['Employee Name', 'Employee ID', 'Department', 'Leave Type', 'From Date', 'To Date', 'Total Days', 'Status', 'Reason', 'Applied Date', 'Contact Number'];
-      
+
       const csvRows = [
         headers.join(','),
         ...filteredLeaves.map(leave => [
@@ -1416,20 +1416,20 @@ const API_URL = import.meta.env.VITE_API_URL ||
           `"${leave.contactNumber || ''}"`
         ].join(','))
       ];
-      
+
       const csvString = csvRows.join('\n');
       const blob = new Blob([csvString], { type: 'text/csv;charset=utf-8;' });
       const link = document.createElement('a');
       const url = URL.createObjectURL(blob);
-      
+
       link.setAttribute('href', url);
       link.setAttribute('download', `leave-report-${new Date().toISOString().split('T')[0]}.csv`);
       link.style.visibility = 'hidden';
-      
+
       document.body.appendChild(link);
       link.click();
       document.body.removeChild(link);
-      
+
       toast.success(`Exported ${filteredLeaves.length} leave records to CSV`);
     } catch (error) {
       console.error('Error exporting leaves CSV:', error);
@@ -1472,9 +1472,9 @@ const API_URL = import.meta.env.VITE_API_URL ||
   };
 
   const getCurrentMonthName = () => {
-    return new Date(selectedMonth + "-01").toLocaleDateString('en-US', { 
-      year: 'numeric', 
-      month: 'long' 
+    return new Date(selectedMonth + "-01").toLocaleDateString('en-US', {
+      year: 'numeric',
+      month: 'long'
     });
   };
 
@@ -1561,17 +1561,17 @@ const API_URL = import.meta.env.VITE_API_URL ||
     try {
       setIsLoading(true);
       toast.info("Testing database connections...");
-      
+
       // Test attendance API
       const attendanceResponse = await fetch(`${API_URL}/health`);
       // Test leaves API
       const leavesResponse = await fetch(`${API_URL}/test`);
-      
+
       if (attendanceResponse.ok && leavesResponse.ok) {
         toast.success("Both database connections successful!");
         setIsBackendConnected(true);
         setLeaveApiStatus('connected');
-        
+
         // Fetch all data
         fetchAttendanceData();
         fetchTeamLeaves();
@@ -1598,22 +1598,22 @@ const API_URL = import.meta.env.VITE_API_URL ||
       }
 
       // Update via task service
-      await taskService.updateTaskStatus(taskId, { 
-        status: newStatus as "pending" | "in-progress" | "completed" | "cancelled" 
+      await taskService.updateTaskStatus(taskId, {
+        status: newStatus as "pending" | "in-progress" | "completed" | "cancelled"
       });
-      
+
       // Update local state
-      setTasks(tasks.map(t => 
+      setTasks(tasks.map(t =>
         t._id === taskId ? { ...t, status: newStatus as any, progress: newStatus === 'completed' ? 100 : t.progress } : t
       ));
-      
+
       // Recalculate statistics
-      calculateTaskStatistics(tasks.map(t => 
+      calculateTaskStatistics(tasks.map(t =>
         t._id === taskId ? { ...t, status: newStatus as any, progress: newStatus === 'completed' ? 100 : t.progress } : t
       ));
-      
+
       toast.success(`Task status updated to ${newStatus}`);
-      
+
     } catch (error: any) {
       console.error("Error updating task status:", error);
       toast.error(error.message || "Failed to update task status");
@@ -1634,19 +1634,19 @@ const API_URL = import.meta.env.VITE_API_URL ||
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-gray-50 to-gray-100">
-      <DashboardHeader 
-        title="Manager Reports" 
+      <DashboardHeader
+        title="Manager Reports"
         subtitle="Comprehensive analytics for tasks, attendance, and leaves"
         onMenuClick={onMenuClick}
       />
-      
-      <motion.div 
+
+      <motion.div
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.5 }}
         className="p-4 sm:p-6 space-y-4 sm:space-y-6"
       >
-      
+
         {/* Summary Cards - Responsive Grid */}
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4 lg:gap-6">
           {/* Task Summary */}
@@ -1790,11 +1790,11 @@ const API_URL = import.meta.env.VITE_API_URL ||
                   </span>
                 </div>
               </div>
-              
+
               <div className="flex flex-wrap items-center gap-2 w-full sm:w-auto">
-                <Button 
-                  variant="outline" 
-                  size="sm" 
+                <Button
+                  variant="outline"
+                  size="sm"
                   onClick={() => {
                     fetchAttendanceData();
                     fetchTasksData();
@@ -1807,8 +1807,8 @@ const API_URL = import.meta.env.VITE_API_URL ||
                   <RefreshCw className="mr-1 sm:mr-2 h-3 w-3 sm:h-4 sm:w-4 flex-shrink-0" />
                   <span className="truncate">Refresh All</span>
                 </Button>
-                <Button 
-                  variant="outline" 
+                <Button
+                  variant="outline"
                   onClick={() => handleDownloadReport("tasks")}
                   disabled={tasks.length === 0}
                   className="h-8 sm:h-9 text-xs sm:text-sm flex-1 sm:flex-initial"
@@ -1850,9 +1850,9 @@ const API_URL = import.meta.env.VITE_API_URL ||
                   <CardDescription className="text-xs sm:text-sm">Real task data from your site and assigned tasks</CardDescription>
                 </div>
                 <div className="flex flex-wrap gap-2 w-full sm:w-auto">
-                  <Button 
-                    variant="outline" 
-                    size="sm" 
+                  <Button
+                    variant="outline"
+                    size="sm"
                     onClick={refreshTasks}
                     disabled={isLoadingTasks}
                     className="h-8 sm:h-9 text-xs sm:text-sm flex-1 sm:flex-initial"
@@ -1860,9 +1860,9 @@ const API_URL = import.meta.env.VITE_API_URL ||
                     <RefreshCw className={`h-3 w-3 sm:h-4 sm:w-4 mr-1 sm:mr-2 flex-shrink-0 ${isLoadingTasks ? 'animate-spin' : ''}`} />
                     <span className="truncate">Refresh</span>
                   </Button>
-                  <Button 
-                    variant="outline" 
-                    size="sm" 
+                  <Button
+                    variant="outline"
+                    size="sm"
                     onClick={() => handleDownloadReport("tasks")}
                     disabled={isExporting || tasks.length === 0}
                     className="h-8 sm:h-9 text-xs sm:text-sm flex-1 sm:flex-initial"
@@ -1985,8 +1985,8 @@ const API_URL = import.meta.env.VITE_API_URL ||
                         {taskChartData.map((item) => (
                           <div key={item.name} className="flex items-center justify-between">
                             <div className="flex items-center min-w-0">
-                              <div 
-                                className="w-2 h-2 sm:w-3 sm:h-3 rounded-full mr-1 sm:mr-2 flex-shrink-0" 
+                              <div
+                                className="w-2 h-2 sm:w-3 sm:h-3 rounded-full mr-1 sm:mr-2 flex-shrink-0"
                                 style={{ backgroundColor: item.color }}
                               />
                               <span className="text-xs sm:text-sm truncate">{item.name}</span>
@@ -2158,9 +2158,9 @@ const API_URL = import.meta.env.VITE_API_URL ||
                       className="px-2 py-1 border border-gray-300 rounded-md text-xs sm:text-sm w-full sm:w-auto"
                     />
                   </div>
-                  <Button 
-                    variant="outline" 
-                    size="sm" 
+                  <Button
+                    variant="outline"
+                    size="sm"
                     onClick={refreshAttendance}
                     disabled={isLoadingAttendance}
                     className="h-8 sm:h-9 text-xs sm:text-sm flex-1 sm:flex-initial"
@@ -2168,9 +2168,9 @@ const API_URL = import.meta.env.VITE_API_URL ||
                     <RefreshCw className={`h-3 w-3 sm:h-4 sm:w-4 mr-1 sm:mr-2 flex-shrink-0 ${isLoadingAttendance ? 'animate-spin' : ''}`} />
                     <span className="truncate">Refresh</span>
                   </Button>
-                  <Button 
-                    variant="outline" 
-                    size="sm" 
+                  <Button
+                    variant="outline"
+                    size="sm"
                     onClick={() => handleDownloadReport("attendance")}
                     disabled={attendanceRecords.length === 0}
                     className="h-8 sm:h-9 text-xs sm:text-sm flex-1 sm:flex-initial"
@@ -2206,12 +2206,12 @@ const API_URL = import.meta.env.VITE_API_URL ||
                                 <Cell key={`cell-${index}`} fill={entry.color} />
                               ))}
                             </Pie>
-                            <Tooltip 
+                            <Tooltip
                               formatter={(value, name) => [`${value} days`, name]}
                               contentStyle={{ borderRadius: '6px', border: 'none', boxShadow: '0 2px 8px rgba(0,0,0,0.1)' }}
                             />
-                            <Legend 
-                              verticalAlign="bottom" 
+                            <Legend
+                              verticalAlign="bottom"
                               height={36}
                               wrapperStyle={{ fontSize: '10px', paddingTop: '8px' }}
                             />
@@ -2222,16 +2222,16 @@ const API_URL = import.meta.env.VITE_API_URL ||
                         {attendanceChartData.map((item) => (
                           <div key={item.status} className="text-center p-1 sm:p-2 rounded-lg bg-gray-50">
                             <div className="flex items-center justify-center mb-1">
-                              <div 
-                                className="w-2 h-2 sm:w-3 sm:h-3 rounded-full mr-1" 
+                              <div
+                                className="w-2 h-2 sm:w-3 sm:h-3 rounded-full mr-1"
                                 style={{ backgroundColor: item.color }}
                               />
                               <span className="text-xs sm:text-sm font-medium truncate">{item.status}</span>
                             </div>
                             <div className="text-base sm:text-xl lg:text-2xl font-bold">{item.count}</div>
                             <div className="text-xs text-gray-500 mt-0.5 sm:mt-1">
-                              {attendanceStatsMemo.totalDays > 0 
-                                ? `${Math.round((item.count / attendanceStatsMemo.totalDays) * 100)}%` 
+                              {attendanceStatsMemo.totalDays > 0
+                                ? `${Math.round((item.count / attendanceStatsMemo.totalDays) * 100)}%`
                                 : '0%'}
                             </div>
                           </div>
@@ -2256,7 +2256,7 @@ const API_URL = import.meta.env.VITE_API_URL ||
                               <span className="text-xs text-blue-600 ml-1">days</span>
                             </div>
                           </div>
-                          
+
                           <div className="bg-green-50 p-2 sm:p-4 rounded-lg border border-green-100">
                             <div className="text-xs text-green-600 font-medium mb-1">Attendance Rate</div>
                             <div className="text-lg sm:text-xl lg:text-2xl font-bold text-green-700">
@@ -2363,7 +2363,7 @@ const API_URL = import.meta.env.VITE_API_URL ||
                       <div>
                         <CardTitle className="text-sm sm:text-base">Attendance Records</CardTitle>
                         <CardDescription className="text-xs sm:text-sm">
-                          Showing records for {getCurrentMonthName()} 
+                          Showing records for {getCurrentMonthName()}
                           {attendanceFilter !== "all" && (
                             <span className="ml-1 sm:ml-2">
                               | Filtered: {attendanceFilter.charAt(0).toUpperCase() + attendanceFilter.slice(1)}
@@ -2432,11 +2432,10 @@ const API_URL = import.meta.env.VITE_API_URL ||
                                       </span>
                                     </TableCell>
                                     <TableCell className="px-2 sm:px-4 py-2 sm:py-3 whitespace-nowrap">
-                                      <div className={`w-6 h-6 sm:w-8 sm:h-8 rounded-full flex items-center justify-center text-xs font-medium ${
-                                        record.day === 'Sat' || record.day === 'Sun' 
-                                          ? 'bg-blue-100 text-blue-600' 
+                                      <div className={`w-6 h-6 sm:w-8 sm:h-8 rounded-full flex items-center justify-center text-xs font-medium ${record.day === 'Sat' || record.day === 'Sun'
+                                          ? 'bg-blue-100 text-blue-600'
                                           : 'bg-gray-100 text-gray-600'
-                                      }`}>
+                                        }`}>
                                         {record.day}
                                       </div>
                                     </TableCell>
@@ -2453,8 +2452,8 @@ const API_URL = import.meta.env.VITE_API_URL ||
                                       </div>
                                     </TableCell>
                                     <TableCell className="px-2 sm:px-4 py-2 sm:py-3 whitespace-nowrap">
-                                      <Badge 
-                                        variant="outline" 
+                                      <Badge
+                                        variant="outline"
                                         className={`${getStatusBadge(record.status)} px-2 py-0.5 sm:px-3 sm:py-1 text-xs`}
                                       >
                                         <span className="flex items-center gap-1">
@@ -2471,13 +2470,12 @@ const API_URL = import.meta.env.VITE_API_URL ||
                                       <span className="text-xs text-muted-foreground ml-1">({record.breakDuration})</span>
                                     </TableCell>
                                     <TableCell className="px-2 sm:px-4 py-2 sm:py-3 whitespace-nowrap">
-                                      <Badge 
-                                        variant="outline" 
-                                        className={`px-2 py-0.5 sm:px-3 sm:py-1 text-xs ${
-                                          parseFloat(record.overtime) > 0 
-                                            ? "bg-orange-100 text-orange-800 border-orange-200" 
+                                      <Badge
+                                        variant="outline"
+                                        className={`px-2 py-0.5 sm:px-3 sm:py-1 text-xs ${parseFloat(record.overtime) > 0
+                                            ? "bg-orange-100 text-orange-800 border-orange-200"
                                             : "bg-gray-100 text-gray-800 border-gray-200"
-                                        }`}
+                                          }`}
                                       >
                                         {record.overtime}h
                                       </Badge>
@@ -2496,7 +2494,7 @@ const API_URL = import.meta.env.VITE_API_URL ||
                         </div>
                         <h3 className="text-sm sm:text-base font-medium text-gray-900 mb-1 sm:mb-2">No attendance records</h3>
                         <p className="text-xs sm:text-sm text-gray-500 max-w-md mx-auto mb-3 sm:mb-4 px-4">
-                          {attendanceFilter !== "all" 
+                          {attendanceFilter !== "all"
                             ? `No ${attendanceFilter} records found for ${getCurrentMonthName()}. Try changing the filter.`
                             : `No attendance records found for ${getCurrentMonthName()}.`
                           }
@@ -2532,9 +2530,9 @@ const API_URL = import.meta.env.VITE_API_URL ||
                   </CardDescription>
                 </div>
                 <div className="flex flex-wrap gap-2 w-full sm:w-auto">
-                  <Button 
-                    variant="outline" 
-                    size="sm" 
+                  <Button
+                    variant="outline"
+                    size="sm"
                     onClick={() => {
                       fetchTeamLeaves();
                       fetchManagerLeaves();
@@ -2545,9 +2543,9 @@ const API_URL = import.meta.env.VITE_API_URL ||
                     <RefreshCw className={`h-3 w-3 sm:h-4 sm:w-4 mr-1 sm:mr-2 flex-shrink-0 ${(isLoadingLeaves || isLoadingMyLeaves) ? 'animate-spin' : ''}`} />
                     <span className="truncate">Refresh</span>
                   </Button>
-                  <Button 
-                    variant="outline" 
-                    size="sm" 
+                  <Button
+                    variant="outline"
+                    size="sm"
                     onClick={() => handleDownloadReport("leaves")}
                     disabled={leaveRequests.length === 0 && myLeaves.length === 0}
                     className="h-8 sm:h-9 text-xs sm:text-sm flex-1 sm:flex-initial"
@@ -2555,8 +2553,8 @@ const API_URL = import.meta.env.VITE_API_URL ||
                     <FileSpreadsheet className="h-3 w-3 sm:h-4 sm:w-4 mr-1 sm:mr-2 flex-shrink-0" />
                     <span className="truncate">Export CSV</span>
                   </Button>
-                  <Button 
-                    size="sm" 
+                  <Button
+                    size="sm"
                     onClick={() => handleDownloadReport("leaves")}
                     disabled={leaveRequests.length === 0 && myLeaves.length === 0}
                     className="h-8 sm:h-9 text-xs sm:text-sm flex-1 sm:flex-initial"
@@ -2663,8 +2661,8 @@ const API_URL = import.meta.env.VITE_API_URL ||
                         {leaveChartData.map((item) => (
                           <div key={item.status} className="flex items-center justify-between">
                             <div className="flex items-center min-w-0">
-                              <div 
-                                className="w-2 h-2 sm:w-3 sm:h-3 rounded-full mr-1 sm:mr-2 flex-shrink-0" 
+                              <div
+                                className="w-2 h-2 sm:w-3 sm:h-3 rounded-full mr-1 sm:mr-2 flex-shrink-0"
                                 style={{ backgroundColor: item.color }}
                               />
                               <span className="text-xs sm:text-sm truncate">{item.status}</span>
@@ -2739,7 +2737,7 @@ const API_URL = import.meta.env.VITE_API_URL ||
                 {/* Leaves Table - Responsive with horizontal scroll */}
                 <div>
                   <h3 className="text-sm sm:text-base lg:text-lg font-semibold mb-3 sm:mb-4">Leave Requests ({filteredLeaves.length})</h3>
-                  
+
                   {(isLoadingLeaves || isLoadingMyLeaves) ? (
                     <div className="flex items-center justify-center h-48 sm:h-64">
                       <Loader2 className="h-6 w-6 sm:h-8 sm:w-8 animate-spin text-primary" />

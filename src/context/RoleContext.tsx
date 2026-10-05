@@ -16,8 +16,8 @@ export interface User {
   contactNumber?: string;
   lastLogin?: string;
   [key: string]: unknown;
-   assignedSites?: string[];   // ✅ ADD THIS
-  siteName?: string;  
+  assignedSites?: string[];   // ✅ ADD THIS
+  siteName?: string;
 }
 
 interface RoleContextType {
@@ -40,7 +40,7 @@ const getApiUrl = () => {
 
   // For production (Vercel) - use your Render backend URL
   if (import.meta.env.PROD) {
-    return 'https://sk-backend-btbj.onrender.com/api/auth';
+    return 'https://sk-backend-868y.onrender.com/auth';
   }
 
   // For development (localhost)

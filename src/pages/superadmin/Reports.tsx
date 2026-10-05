@@ -13,12 +13,12 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { 
-  Download, 
-  FileText, 
-  Calendar, 
-  TrendingUp, 
-  Loader2, 
+import {
+  Download,
+  FileText,
+  Calendar,
+  TrendingUp,
+  Loader2,
   Users,
   Building,
   CheckCircle,
@@ -64,8 +64,8 @@ import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContaine
 import taskService, { type Task } from "@/services/TaskService";
 import * as XLSX from 'xlsx';
 
-const API_URL = import.meta.env.VITE_API_URL || 
-  (import.meta.env.DEV ? 'http://localhost:5001/api' : 'https://sk-backend-btbj.onrender.com/api');
+const API_URL = import.meta.env.VITE_API_URL ||
+  (import.meta.env.DEV ? 'http://localhost:5001/api' : 'https://sk-backend-868y.onrender.com');
 
 // Interfaces (same as before)
 interface LeaveData {
@@ -98,7 +98,7 @@ interface AttendanceRecord {
   notes?: string;
   site?: string;
   shift?: string;
-  shiftId?: string; 
+  shiftId?: string;
 
   lateByMinutes?: number;
   earlyDeparture?: boolean;
@@ -198,7 +198,7 @@ const MobileFilterCard = ({
 
   return (
     <Card className="mb-4 overflow-hidden">
-      <CardHeader 
+      <CardHeader
         className="p-4 cursor-pointer hover:bg-muted/50 transition-colors"
         onClick={() => setExpanded(!expanded)}
       >
@@ -345,10 +345,9 @@ const MobileEmployeeAttendanceCard = ({ record }: { record: AttendanceReportSumm
             <Clock className="h-3 w-3 text-muted-foreground" />
             <span className="text-xs">{record.averageHours}</span>
           </div>
-          <div className={`text-sm font-bold ${
-            percentage >= 90 ? "text-green-600" :
-            percentage >= 75 ? "text-yellow-600" : "text-red-600"
-          }`}>
+          <div className={`text-sm font-bold ${percentage >= 90 ? "text-green-600" :
+              percentage >= 75 ? "text-yellow-600" : "text-red-600"
+            }`}>
             {record.percentage}
           </div>
         </div>
@@ -405,15 +404,15 @@ const MobileTaskReportCard = ({ task }: { task: TaskReportData }) => {
         <div className="flex items-center gap-2 mb-2">
           <Badge variant={
             task.priority === 'high' ? 'destructive' :
-            task.priority === 'medium' ? 'default' : 'secondary'
+              task.priority === 'medium' ? 'default' : 'secondary'
           } className="text-xs">
             {task.priority}
           </Badge>
           <Badge variant="outline" className={
             task.status === 'completed' ? 'bg-green-100 text-green-800' :
-            task.status === 'in-progress' ? 'bg-blue-100 text-blue-800' :
-            task.status === 'pending' ? 'bg-yellow-100 text-yellow-800' :
-            'bg-gray-100 text-gray-800'
+              task.status === 'in-progress' ? 'bg-blue-100 text-blue-800' :
+                task.status === 'pending' ? 'bg-yellow-100 text-yellow-800' :
+                  'bg-gray-100 text-gray-800'
           }>
             {task.status}
           </Badge>
@@ -480,8 +479,8 @@ const MobileExpenseCard = ({ expense }: { expense: ExpenseData }) => {
               <h3 className="font-semibold">{expense.expenseId}</h3>
               <Badge variant="outline" className={
                 expense.status === 'approved' ? 'bg-green-100 text-green-800' :
-                expense.status === 'pending' ? 'bg-yellow-100 text-yellow-800' :
-                'bg-red-100 text-red-800'
+                  expense.status === 'pending' ? 'bg-yellow-100 text-yellow-800' :
+                    'bg-red-100 text-red-800'
               }>
                 {expense.status}
               </Badge>
@@ -693,7 +692,7 @@ const formatCurrency = (amount: number) => {
 const calculateWorkingDays = (startDate: Date, endDate: Date): number => {
   let count = 0;
   const current = new Date(startDate);
-  
+
   while (current <= endDate) {
     const dayOfWeek = current.getDay();
     if (dayOfWeek !== 0 && dayOfWeek !== 6) {
@@ -701,28 +700,28 @@ const calculateWorkingDays = (startDate: Date, endDate: Date): number => {
     }
     current.setDate(current.getDate() + 1);
   }
-  
+
   return count;
 };
 
 // Animated Counter Component
 const AnimatedCounter = ({ value, prefix = "", suffix = "", duration = 2000 }: { value: number; prefix?: string; suffix?: string; duration?: number }) => {
   const [count, setCount] = useState(0);
-  
+
   useEffect(() => {
     let start = 0;
     const end = value;
     const incrementTime = duration / end;
-    
+
     const timer = setInterval(() => {
       start += 1;
       setCount(start);
       if (start >= end) clearInterval(timer);
     }, incrementTime);
-    
+
     return () => clearInterval(timer);
   }, [value, duration]);
-  
+
   return (
     <motion.span
       initial={{ scale: 0.5, opacity: 0 }}
@@ -735,18 +734,18 @@ const AnimatedCounter = ({ value, prefix = "", suffix = "", duration = 2000 }: {
 };
 
 // Animated Stat Card Component
-const AnimatedStatCard = ({ 
-  title, 
-  value, 
-  icon: Icon, 
+const AnimatedStatCard = ({
+  title,
+  value,
+  icon: Icon,
   color = "blue",
   prefix = "",
   suffix = "",
   trend = null,
-  delay = 0 
-}: { 
-  title: string; 
-  value: number; 
+  delay = 0
+}: {
+  title: string;
+  value: number;
   icon: any;
   color?: string;
   prefix?: string;
@@ -762,7 +761,7 @@ const AnimatedStatCard = ({
     whileHover={{ y: -5, transition: { duration: 0.2 } }}
     className="relative overflow-hidden rounded-xl border bg-white shadow-sm transition-all hover:shadow-lg dark:bg-gray-900"
   >
-    <div 
+    <div
       className="absolute top-0 right-0 h-20 w-20 opacity-10"
       style={{ background: gradientBg[color as keyof typeof gradientBg] }}
     />
@@ -792,7 +791,7 @@ const AnimatedStatCard = ({
             </div>
           )}
         </div>
-        <div 
+        <div
           className="p-3 rounded-lg"
           style={{ background: gradientBg[color as keyof typeof gradientBg] }}
         >
@@ -820,13 +819,13 @@ const LoadingSkeleton = () => (
 );
 
 // Enhanced Badge Component
-const EnhancedBadge = ({ 
-  children, 
+const EnhancedBadge = ({
+  children,
   variant = "default",
   className = "",
-  withAnimation = false 
-}: { 
-  children: React.ReactNode; 
+  withAnimation = false
+}: {
+  children: React.ReactNode;
   variant?: "default" | "success" | "warning" | "danger" | "info";
   className?: string;
   withAnimation?: boolean;
@@ -853,11 +852,11 @@ const EnhancedBadge = ({
 
 const Reports = () => {
   const { onMenuClick } = useOutletContext<{ onMenuClick: () => void }>();
-  
+
   // Mobile responsive state
   const [isMobileView, setIsMobileView] = useState(false);
   const [showMobileFilters, setShowMobileFilters] = useState(false);
-  
+
   // State for attendance reports
   const [dateFrom, setDateFrom] = useState(() => {
     const date = new Date();
@@ -875,14 +874,14 @@ const Reports = () => {
   const [attendanceRecords, setAttendanceRecords] = useState<AttendanceRecord[]>([]);
   const [attendanceReport, setAttendanceReport] = useState<AttendanceReportSummary[]>([]);
   const [allEmployees, setAllEmployees] = useState<EmployeeData[]>([]);
-  
+
   // State for task reports
   const [tasks, setTasks] = useState<Task[]>([]);
   const [taskFilterStatus, setTaskFilterStatus] = useState("all");
   const [taskFilterPriority, setTaskFilterPriority] = useState("all");
   const [taskFilterSite, setTaskFilterSite] = useState("all");
   const [taskSearchQuery, setTaskSearchQuery] = useState("");
-  
+
   // State for expense reports
   const [expenses, setExpenses] = useState<ExpenseData[]>([]);
   const [filteredExpenses, setFilteredExpenses] = useState<ExpenseData[]>([]);
@@ -892,7 +891,7 @@ const Reports = () => {
   const [expenseDateFrom, setExpenseDateFrom] = useState("");
   const [expenseDateTo, setExpenseDateTo] = useState("");
   const [expenseLoading, setExpenseLoading] = useState(false);
-  
+
   // Common state
   const [departments, setDepartments] = useState<string[]>(["All Departments"]);
   const [sites, setSites] = useState<string[]>(["All Sites"]);
@@ -903,18 +902,18 @@ const Reports = () => {
     const checkMobile = () => {
       setIsMobileView(window.innerWidth < 768);
     };
-    
+
     checkMobile();
     window.addEventListener('resize', checkMobile);
-    
+
     return () => window.removeEventListener('resize', checkMobile);
   }, []);
 
   // Add tab change animation
   const tabContentVariants = {
     hidden: { opacity: 0, x: -20 },
-    visible: { 
-      opacity: 1, 
+    visible: {
+      opacity: 1,
       x: 0,
       transition: {
         type: "spring",
@@ -926,55 +925,55 @@ const Reports = () => {
   };
 
   // Fetch all employees from database
- const fetchAllEmployees = async () => {
-  try {
-    const response = await fetch(`${API_URL}/leaves/test/employees`);
-    if (!response.ok) {
-      throw new Error('Failed to fetch employees');
+  const fetchAllEmployees = async () => {
+    try {
+      const response = await fetch(`${API_URL}/leaves/test/employees`);
+      if (!response.ok) {
+        throw new Error('Failed to fetch employees');
+      }
+      const data = await response.json();
+      console.log('Employees data response:', data); // Debug log
+
+      let employeesArray: EmployeeData[] = [];
+
+      if (data.success && Array.isArray(data.sampleEmployees)) {
+        employeesArray = data.sampleEmployees;
+      } else if (Array.isArray(data)) {
+        employeesArray = data;
+      } else if (data && data.employees && Array.isArray(data.employees)) {
+        employeesArray = data.employees;
+      } else {
+        employeesArray = [];
+      }
+
+      setAllEmployees(employeesArray);
+      const uniqueDepts = Array.from(new Set(employeesArray.map((emp: EmployeeData) => emp.department)));
+      setDepartments(["All Departments", ...uniqueDepts]);
+    } catch (error) {
+      console.error("Error fetching employees:", error);
+      toast.error("Failed to load employees data");
+      setAllEmployees([]);
     }
-    const data = await response.json();
-    console.log('Employees data response:', data); // Debug log
-    
-    let employeesArray: EmployeeData[] = [];
-    
-    if (data.success && Array.isArray(data.sampleEmployees)) {
-      employeesArray = data.sampleEmployees;
-    } else if (Array.isArray(data)) {
-      employeesArray = data;
-    } else if (data && data.employees && Array.isArray(data.employees)) {
-      employeesArray = data.employees;
-    } else {
-      employeesArray = [];
-    }
-    
-    setAllEmployees(employeesArray);
-    const uniqueDepts = Array.from(new Set(employeesArray.map((emp: EmployeeData) => emp.department)));
-    setDepartments(["All Departments", ...uniqueDepts]);
-  } catch (error) {
-    console.error("Error fetching employees:", error);
-    toast.error("Failed to load employees data");
-    setAllEmployees([]);
-  }
-};
+  };
 
   // Fetch attendance records from API
   const fetchAttendanceRecords = async () => {
     try {
       setIsLoading(true);
-      
+
       const params = new URLSearchParams();
       if (dateFrom) params.append('startDate', dateFrom);
       if (dateTo) params.append('endDate', dateTo);
       if (selectedDepartment !== 'all') params.append('department', selectedDepartment);
-      
+
       const response = await fetch(`${API_URL}/attendance?${params.toString()}`);
-      
+
       if (!response.ok) {
         throw new Error('Failed to fetch attendance data');
       }
-      
+
       const data = await response.json();
-      
+
       if (data.success) {
         setAttendanceRecords(data.data || []);
         await fetchLeaveData();
@@ -1001,26 +1000,26 @@ const Reports = () => {
       { id: "EMP004", name: "Sarah Williams", department: "Sales" },
       { id: "EMP005", name: "Robert Brown", department: "Marketing" },
     ];
-    
+
     const startDate = new Date(dateFrom || '2024-01-01');
     const endDate = new Date(dateTo || '2024-01-31');
     const currentDate = new Date(startDate);
-    
+
     while (currentDate <= endDate) {
       const dayOfWeek = currentDate.getDay();
       if (dayOfWeek !== 0 && dayOfWeek !== 6) {
         const dateStr = currentDate.toISOString().split('T')[0];
-        
+
         employees.forEach(emp => {
           const statusOptions: Array<AttendanceRecord['status']> = ['present', 'present', 'present', 'late', 'half-day', 'absent'];
           const status = statusOptions[Math.floor(Math.random() * statusOptions.length)];
-          
+
           let checkIn = "09:00";
           let checkOut = "18:00";
           let hoursWorked = 8;
           let overtime = 0;
           let lateByMinutes = 0;
-          
+
           if (status === 'late') {
             checkIn = "09:30";
             lateByMinutes = 30;
@@ -1039,7 +1038,7 @@ const Reports = () => {
               hoursWorked = 9;
             }
           }
-          
+
           mockData.push({
             _id: `${emp.id}-${dateStr}`,
             employeeId: emp.id,
@@ -1056,337 +1055,337 @@ const Reports = () => {
           });
         });
       }
-      
+
       currentDate.setDate(currentDate.getDate() + 1);
     }
-    
+
     return mockData;
   };
 
   // Fetch leave data for attendance calculation
-const fetchLeaveData = async () => {
-  try {
-    const response = await fetch(`${API_URL}/leaves?status=approved`);
-    
-    if (!response.ok) {
-      throw new Error('Failed to fetch leave data');
+  const fetchLeaveData = async () => {
+    try {
+      const response = await fetch(`${API_URL}/leaves?status=approved`);
+
+      if (!response.ok) {
+        throw new Error('Failed to fetch leave data');
+      }
+
+      const data = await response.json();
+      console.log('Leave data response:', data); // Debug log
+
+      // Fix: Ensure leaveData is always an array
+      if (data && data.success && Array.isArray(data.data)) {
+        setLeaveData(data.data);
+      } else if (Array.isArray(data)) {
+        setLeaveData(data);
+      } else if (data && data.leaves && Array.isArray(data.leaves)) {
+        setLeaveData(data.leaves);
+      } else {
+        // If no valid array found, set empty array
+        console.warn('Unexpected leave data format:', data);
+        setLeaveData([]);
+      }
+    } catch (error) {
+      console.error("Error fetching leave data:", error);
+      setLeaveData([]); // Set empty array on error
     }
-    
-    const data = await response.json();
-    console.log('Leave data response:', data); // Debug log
-    
-    // Fix: Ensure leaveData is always an array
-    if (data && data.success && Array.isArray(data.data)) {
-      setLeaveData(data.data);
-    } else if (Array.isArray(data)) {
-      setLeaveData(data);
-    } else if (data && data.leaves && Array.isArray(data.leaves)) {
-      setLeaveData(data.leaves);
-    } else {
-      // If no valid array found, set empty array
-      console.warn('Unexpected leave data format:', data);
-      setLeaveData([]);
-    }
-  } catch (error) {
-    console.error("Error fetching leave data:", error);
-    setLeaveData([]); // Set empty array on error
-  }
-};
+  };
 
   // Fetch all tasks
-const fetchAllTasks = async () => {
-  try {
-    setIsLoading(true);
-    const tasksData = await taskService.getAllTasks();
-    const tasksArray = Array.isArray(tasksData) ? tasksData : [];
-    setTasks(tasksArray);
-    
-    const uniqueSites = Array.from(new Set(tasksArray
-      .filter(task => task.siteName && task.siteName !== "Unspecified Site")
-      .map(task => task.siteName)
-    ));
-    setSites(["All Sites", ...uniqueSites]);
-    
-  } catch (error: any) {
-    console.error("Error fetching tasks:", error);
-    toast.error(error.message || "Failed to load tasks");
-    setTasks([]);
-  } finally {
-    setIsLoading(false);
-  }
-};
+  const fetchAllTasks = async () => {
+    try {
+      setIsLoading(true);
+      const tasksData = await taskService.getAllTasks();
+      const tasksArray = Array.isArray(tasksData) ? tasksData : [];
+      setTasks(tasksArray);
+
+      const uniqueSites = Array.from(new Set(tasksArray
+        .filter(task => task.siteName && task.siteName !== "Unspecified Site")
+        .map(task => task.siteName)
+      ));
+      setSites(["All Sites", ...uniqueSites]);
+
+    } catch (error: any) {
+      console.error("Error fetching tasks:", error);
+      toast.error(error.message || "Failed to load tasks");
+      setTasks([]);
+    } finally {
+      setIsLoading(false);
+    }
+  };
 
   // Fetch all expenses from backend
- const fetchAllExpenses = async () => {
-  try {
-    setExpenseLoading(true);
-    const response = await fetch(`${API_URL}/expenses?limit=1000`);
-    
-    if (!response.ok) {
-      throw new Error('Failed to fetch expenses');
+  const fetchAllExpenses = async () => {
+    try {
+      setExpenseLoading(true);
+      const response = await fetch(`${API_URL}/expenses?limit=1000`);
+
+      if (!response.ok) {
+        throw new Error('Failed to fetch expenses');
+      }
+
+      const data = await response.json();
+      console.log('Expenses data response:', data); // Debug log
+
+      let expensesArray: ExpenseData[] = [];
+
+      if (data.success && Array.isArray(data.data)) {
+        expensesArray = data.data;
+      } else if (Array.isArray(data)) {
+        expensesArray = data;
+      } else if (data && data.expenses && Array.isArray(data.expenses)) {
+        expensesArray = data.expenses;
+      } else {
+        expensesArray = [];
+      }
+
+      setExpenses(expensesArray);
+      setFilteredExpenses(expensesArray);
+    } catch (error) {
+      console.error("Error fetching expenses:", error);
+      toast.error("Failed to load expenses data");
+      setExpenses([]);
+      setFilteredExpenses([]);
+    } finally {
+      setExpenseLoading(false);
     }
-    
-    const data = await response.json();
-    console.log('Expenses data response:', data); // Debug log
-    
-    let expensesArray: ExpenseData[] = [];
-    
-    if (data.success && Array.isArray(data.data)) {
-      expensesArray = data.data;
-    } else if (Array.isArray(data)) {
-      expensesArray = data;
-    } else if (data && data.expenses && Array.isArray(data.expenses)) {
-      expensesArray = data.expenses;
-    } else {
-      expensesArray = [];
-    }
-    
-    setExpenses(expensesArray);
-    setFilteredExpenses(expensesArray);
-  } catch (error) {
-    console.error("Error fetching expenses:", error);
-    toast.error("Failed to load expenses data");
-    setExpenses([]);
-    setFilteredExpenses([]);
-  } finally {
-    setExpenseLoading(false);
-  }
-};
+  };
 
   // Generate attendance report summary (same as before)
- const generateAttendanceReport = useMemo(() => {
-  // Ensure attendanceRecords is an array
-  const records = Array.isArray(attendanceRecords) ? attendanceRecords : [];
-  const employeesList = Array.isArray(allEmployees) ? allEmployees : [];
-  const leavesList = Array.isArray(leaveData) ? leaveData : [];
-  
-  if (records.length === 0 && employeesList.length === 0) {
-    return [];
-  }
+  const generateAttendanceReport = useMemo(() => {
+    // Ensure attendanceRecords is an array
+    const records = Array.isArray(attendanceRecords) ? attendanceRecords : [];
+    const employeesList = Array.isArray(allEmployees) ? allEmployees : [];
+    const leavesList = Array.isArray(leaveData) ? leaveData : [];
 
-  const report: AttendanceReportSummary[] = [];
-  
-  const startDate = dateFrom ? new Date(dateFrom) : new Date();
-  const endDate = dateTo ? new Date(dateTo) : new Date();
-  const totalWorkingDays = calculateWorkingDays(startDate, endDate);
-  
-  const employeeAttendance = new Map<string, {
-    employeeId: string;
-    employeeName: string;
-    department: string;
-    present: number;
-    absent: number;
-    late: number;
-    halfDay: number;
-    leave: number;
-    totalHours: number;
-    overtimeHours: number;
-    records: AttendanceRecord[];
-  }>();
-  
-  records.forEach(record => {
-    const key = record.employeeId;
-    if (!employeeAttendance.has(key)) {
-      employeeAttendance.set(key, {
-        employeeId: record.employeeId,
-        employeeName: record.employeeName,
-        department: record.department,
-        present: 0,
-        absent: 0,
-        late: 0,
-        halfDay: 0,
-        leave: 0,
-        totalHours: 0,
-        overtimeHours: 0,
-        records: []
-      });
+    if (records.length === 0 && employeesList.length === 0) {
+      return [];
     }
-    
-    const stats = employeeAttendance.get(key)!;
-    stats.records.push(record);
-    
-    switch (record.status) {
-      case 'present':
-        stats.present++;
-        break;
-      case 'absent':
-        stats.absent++;
-        break;
-      case 'late':
-        stats.late++;
-        stats.present++;
-        break;
-      case 'half-day':
-        stats.halfDay++;
-        stats.present++;
-        break;
-      case 'leave':
-        stats.leave++;
-        break;
-    }
-    
-    stats.totalHours += record.hoursWorked;
-    stats.overtimeHours += record.overtime || 0;
-  });
-  
-  const employeeLeaves = new Map<string, number>();
-  leavesList.forEach(leave => {
-    if (leave.status === 'approved') {
-      const key = leave.employeeId;
-      employeeLeaves.set(key, (employeeLeaves.get(key) || 0) + leave.totalDays);
-    }
-  });
-  
-  let id = 1;
-  employeeAttendance.forEach((stats, employeeId) => {
-    const leaveDays = employeeLeaves.get(employeeId) || 0;
-    const totalPresent = stats.present + stats.halfDay;
-    const totalAbsent = totalWorkingDays - totalPresent - leaveDays;
-    const attendancePercentage = totalWorkingDays > 0 
-      ? ((totalPresent / totalWorkingDays) * 100).toFixed(1) + '%'
-      : '0%';
-    const averageHours = stats.present > 0 
-      ? (stats.totalHours / stats.present).toFixed(1) + ' hrs'
-      : '0 hrs';
-    
-    report.push({
-      id: id++,
-      employee: stats.employeeName,
-      employeeId: stats.employeeId,
-      department: stats.department,
-      present: totalPresent,
-      absent: Math.max(0, totalAbsent),
-      leaves: leaveDays,
-      totalDays: totalWorkingDays,
-      percentage: attendancePercentage,
-      lateArrivals: stats.late,
-      earlyDepartures: 0,
-      averageHours,
-      overtimeHours: stats.overtimeHours
+
+    const report: AttendanceReportSummary[] = [];
+
+    const startDate = dateFrom ? new Date(dateFrom) : new Date();
+    const endDate = dateTo ? new Date(dateTo) : new Date();
+    const totalWorkingDays = calculateWorkingDays(startDate, endDate);
+
+    const employeeAttendance = new Map<string, {
+      employeeId: string;
+      employeeName: string;
+      department: string;
+      present: number;
+      absent: number;
+      late: number;
+      halfDay: number;
+      leave: number;
+      totalHours: number;
+      overtimeHours: number;
+      records: AttendanceRecord[];
+    }>();
+
+    records.forEach(record => {
+      const key = record.employeeId;
+      if (!employeeAttendance.has(key)) {
+        employeeAttendance.set(key, {
+          employeeId: record.employeeId,
+          employeeName: record.employeeName,
+          department: record.department,
+          present: 0,
+          absent: 0,
+          late: 0,
+          halfDay: 0,
+          leave: 0,
+          totalHours: 0,
+          overtimeHours: 0,
+          records: []
+        });
+      }
+
+      const stats = employeeAttendance.get(key)!;
+      stats.records.push(record);
+
+      switch (record.status) {
+        case 'present':
+          stats.present++;
+          break;
+        case 'absent':
+          stats.absent++;
+          break;
+        case 'late':
+          stats.late++;
+          stats.present++;
+          break;
+        case 'half-day':
+          stats.halfDay++;
+          stats.present++;
+          break;
+        case 'leave':
+          stats.leave++;
+          break;
+      }
+
+      stats.totalHours += record.hoursWorked;
+      stats.overtimeHours += record.overtime || 0;
     });
-  });
-  
-  employeesList.forEach(emp => {
-    if (!employeeAttendance.has(emp.employeeId)) {
-      const leaveDays = employeeLeaves.get(emp.employeeId) || 0;
-      const totalAbsent = totalWorkingDays - leaveDays;
-      
+
+    const employeeLeaves = new Map<string, number>();
+    leavesList.forEach(leave => {
+      if (leave.status === 'approved') {
+        const key = leave.employeeId;
+        employeeLeaves.set(key, (employeeLeaves.get(key) || 0) + leave.totalDays);
+      }
+    });
+
+    let id = 1;
+    employeeAttendance.forEach((stats, employeeId) => {
+      const leaveDays = employeeLeaves.get(employeeId) || 0;
+      const totalPresent = stats.present + stats.halfDay;
+      const totalAbsent = totalWorkingDays - totalPresent - leaveDays;
+      const attendancePercentage = totalWorkingDays > 0
+        ? ((totalPresent / totalWorkingDays) * 100).toFixed(1) + '%'
+        : '0%';
+      const averageHours = stats.present > 0
+        ? (stats.totalHours / stats.present).toFixed(1) + ' hrs'
+        : '0 hrs';
+
       report.push({
         id: id++,
-        employee: emp.name,
-        employeeId: emp.employeeId,
-        department: emp.department,
-        present: 0,
+        employee: stats.employeeName,
+        employeeId: stats.employeeId,
+        department: stats.department,
+        present: totalPresent,
         absent: Math.max(0, totalAbsent),
         leaves: leaveDays,
         totalDays: totalWorkingDays,
-        percentage: '0%',
-        lateArrivals: 0,
+        percentage: attendancePercentage,
+        lateArrivals: stats.late,
         earlyDepartures: 0,
-        averageHours: '0 hrs',
-        overtimeHours: 0
+        averageHours,
+        overtimeHours: stats.overtimeHours
       });
-    }
-  });
-  
-  return report;
-}, [attendanceRecords, leaveData, allEmployees, dateFrom, dateTo]);
+    });
+
+    employeesList.forEach(emp => {
+      if (!employeeAttendance.has(emp.employeeId)) {
+        const leaveDays = employeeLeaves.get(emp.employeeId) || 0;
+        const totalAbsent = totalWorkingDays - leaveDays;
+
+        report.push({
+          id: id++,
+          employee: emp.name,
+          employeeId: emp.employeeId,
+          department: emp.department,
+          present: 0,
+          absent: Math.max(0, totalAbsent),
+          leaves: leaveDays,
+          totalDays: totalWorkingDays,
+          percentage: '0%',
+          lateArrivals: 0,
+          earlyDepartures: 0,
+          averageHours: '0 hrs',
+          overtimeHours: 0
+        });
+      }
+    });
+
+    return report;
+  }, [attendanceRecords, leaveData, allEmployees, dateFrom, dateTo]);
 
   // Filter attendance report by department
-const getFilteredAttendanceReport = useMemo(() => {
-  const reportArray = Array.isArray(generateAttendanceReport) ? generateAttendanceReport : [];
-  if (selectedDepartment === "all") {
-    return reportArray;
-  }
-  return reportArray.filter(record => record.department === selectedDepartment);
-}, [generateAttendanceReport, selectedDepartment]);
+  const getFilteredAttendanceReport = useMemo(() => {
+    const reportArray = Array.isArray(generateAttendanceReport) ? generateAttendanceReport : [];
+    if (selectedDepartment === "all") {
+      return reportArray;
+    }
+    return reportArray.filter(record => record.department === selectedDepartment);
+  }, [generateAttendanceReport, selectedDepartment]);
 
   // Prepare attendance data for charts
-const getAttendanceChartData = useMemo(() => {
-  const reportArray = Array.isArray(generateAttendanceReport) ? generateAttendanceReport : [];
-  const departmentStats = new Map();
-  
-  reportArray.forEach(record => {
-    if (!departmentStats.has(record.department)) {
-      departmentStats.set(record.department, {
-        department: record.department,
-        totalEmployees: 0,
-        totalPresent: 0,
-        totalAbsent: 0,
-        totalLeaves: 0,
-        totalLate: 0
-      });
-    }
-    
-    const stats = departmentStats.get(record.department);
-    stats.totalEmployees++;
-    stats.totalPresent += record.present;
-    stats.totalAbsent += record.absent;
-    stats.totalLeaves += record.leaves;
-    stats.totalLate += record.lateArrivals;
-  });
-  
-  return Array.from(departmentStats.values()).map(stats => ({
-    department: stats.department,
-    present: Math.round(stats.totalPresent / stats.totalEmployees),
-    absent: Math.round(stats.totalAbsent / stats.totalEmployees),
-    leaves: Math.round(stats.totalLeaves / stats.totalEmployees),
-    late: Math.round(stats.totalLate / stats.totalEmployees)
-  }));
-}, [generateAttendanceReport]);
+  const getAttendanceChartData = useMemo(() => {
+    const reportArray = Array.isArray(generateAttendanceReport) ? generateAttendanceReport : [];
+    const departmentStats = new Map();
+
+    reportArray.forEach(record => {
+      if (!departmentStats.has(record.department)) {
+        departmentStats.set(record.department, {
+          department: record.department,
+          totalEmployees: 0,
+          totalPresent: 0,
+          totalAbsent: 0,
+          totalLeaves: 0,
+          totalLate: 0
+        });
+      }
+
+      const stats = departmentStats.get(record.department);
+      stats.totalEmployees++;
+      stats.totalPresent += record.present;
+      stats.totalAbsent += record.absent;
+      stats.totalLeaves += record.leaves;
+      stats.totalLate += record.lateArrivals;
+    });
+
+    return Array.from(departmentStats.values()).map(stats => ({
+      department: stats.department,
+      present: Math.round(stats.totalPresent / stats.totalEmployees),
+      absent: Math.round(stats.totalAbsent / stats.totalEmployees),
+      leaves: Math.round(stats.totalLeaves / stats.totalEmployees),
+      late: Math.round(stats.totalLate / stats.totalEmployees)
+    }));
+  }, [generateAttendanceReport]);
 
   // Prepare daily attendance trend data
-const getDailyAttendanceData = useMemo(() => {
-  const recordsArray = Array.isArray(attendanceRecords) ? attendanceRecords : [];
-  const dailyStats = new Map<string, { date: string; present: number; absent: number; late: number }>();
-  
-  recordsArray.forEach(record => {
-    const date = record.date.split('T')[0];
-    if (!dailyStats.has(date)) {
-      dailyStats.set(date, { date, present: 0, absent: 0, late: 0 });
-    }
-    
-    const stats = dailyStats.get(date)!;
-    if (record.status === 'present' || record.status === 'late' || record.status === 'half-day') {
-      stats.present++;
-      if (record.status === 'late') {
-        stats.late++;
+  const getDailyAttendanceData = useMemo(() => {
+    const recordsArray = Array.isArray(attendanceRecords) ? attendanceRecords : [];
+    const dailyStats = new Map<string, { date: string; present: number; absent: number; late: number }>();
+
+    recordsArray.forEach(record => {
+      const date = record.date.split('T')[0];
+      if (!dailyStats.has(date)) {
+        dailyStats.set(date, { date, present: 0, absent: 0, late: 0 });
       }
-    } else if (record.status === 'absent') {
-      stats.absent++;
-    }
-  });
-  
-  return Array.from(dailyStats.values())
-    .sort((a, b) => a.date.localeCompare(b.date))
-    .slice(-15);
-}, [attendanceRecords]);
+
+      const stats = dailyStats.get(date)!;
+      if (record.status === 'present' || record.status === 'late' || record.status === 'half-day') {
+        stats.present++;
+        if (record.status === 'late') {
+          stats.late++;
+        }
+      } else if (record.status === 'absent') {
+        stats.absent++;
+      }
+    });
+
+    return Array.from(dailyStats.values())
+      .sort((a, b) => a.date.localeCompare(b.date))
+      .slice(-15);
+  }, [attendanceRecords]);
 
   // Filter expenses based on filters
   useEffect(() => {
     let result = [...expenses];
-    
+
     if (expenseFilterStatus !== "all") {
       result = result.filter(expense => expense.status === expenseFilterStatus);
     }
-    
+
     if (expenseFilterType !== "all") {
       result = result.filter(expense => expense.expenseType === expenseFilterType);
     }
-    
+
     if (expenseDateFrom) {
       result = result.filter(expense => new Date(expense.date) >= new Date(expenseDateFrom));
     }
-    
+
     if (expenseDateTo) {
       const toDate = new Date(expenseDateTo);
       toDate.setHours(23, 59, 59, 999);
       result = result.filter(expense => new Date(expense.date) <= toDate);
     }
-    
+
     if (expenseSearchTerm) {
       const searchLower = expenseSearchTerm.toLowerCase();
-      result = result.filter(expense => 
+      result = result.filter(expense =>
         expense.expenseId.toLowerCase().includes(searchLower) ||
         expense.description.toLowerCase().includes(searchLower) ||
         expense.vendor.toLowerCase().includes(searchLower) ||
@@ -1394,7 +1393,7 @@ const getDailyAttendanceData = useMemo(() => {
         expense.site.toLowerCase().includes(searchLower)
       );
     }
-    
+
     setFilteredExpenses(result);
   }, [expenses, expenseFilterStatus, expenseFilterType, expenseDateFrom, expenseDateTo, expenseSearchTerm]);
 
@@ -1404,7 +1403,7 @@ const getDailyAttendanceData = useMemo(() => {
 
     if (taskSearchQuery.trim()) {
       const searchLower = taskSearchQuery.toLowerCase().trim();
-      filtered = filtered.filter(task => 
+      filtered = filtered.filter(task =>
         task.title.toLowerCase().includes(searchLower) ||
         task.description.toLowerCase().includes(searchLower) ||
         task.assignedToName.toLowerCase().includes(searchLower) ||
@@ -1429,96 +1428,96 @@ const getDailyAttendanceData = useMemo(() => {
   }, [tasks, taskSearchQuery, taskFilterStatus, taskFilterPriority, taskFilterSite]);
 
   // Prepare task report data
- const taskReportData: TaskReportData[] = useMemo(() => {
-  const filteredTasks = Array.isArray(getFilteredTasks) ? getFilteredTasks : [];
-  return filteredTasks.map(task => ({
-    id: task._id,
-    title: task.title,
-    description: task.description,
-    assignedToName: task.assignedToName,
-    siteName: task.siteName,
-    clientName: task.clientName,
-    priority: task.priority,
-    status: task.status,
-    deadline: new Date(task.deadline).toLocaleDateString(),
-    dueDateTime: task.dueDateTime ? new Date(task.dueDateTime).toLocaleString() : "N/A",
-    taskType: task.taskType || "routine",
-    hourlyUpdatesCount: task.hourlyUpdates?.length || 0,
-    attachmentsCount: task.attachments?.length || 0,
-    createdAt: new Date(task.createdAt).toLocaleString()
-  }));
-}, [getFilteredTasks]);
+  const taskReportData: TaskReportData[] = useMemo(() => {
+    const filteredTasks = Array.isArray(getFilteredTasks) ? getFilteredTasks : [];
+    return filteredTasks.map(task => ({
+      id: task._id,
+      title: task.title,
+      description: task.description,
+      assignedToName: task.assignedToName,
+      siteName: task.siteName,
+      clientName: task.clientName,
+      priority: task.priority,
+      status: task.status,
+      deadline: new Date(task.deadline).toLocaleDateString(),
+      dueDateTime: task.dueDateTime ? new Date(task.dueDateTime).toLocaleString() : "N/A",
+      taskType: task.taskType || "routine",
+      hourlyUpdatesCount: task.hourlyUpdates?.length || 0,
+      attachmentsCount: task.attachments?.length || 0,
+      createdAt: new Date(task.createdAt).toLocaleString()
+    }));
+  }, [getFilteredTasks]);
 
 
   // Task statistics for charts
- const taskStats = useMemo(() => {
-  const tasksArray = Array.isArray(tasks) ? tasks : [];
-  const stats = {
-    total: tasksArray.length,
-    completed: tasksArray.filter(t => t.status === 'completed').length,
-    inProgress: tasksArray.filter(t => t.status === 'in-progress').length,
-    pending: tasksArray.filter(t => t.status === 'pending').length,
-    cancelled: tasksArray.filter(t => t.status === 'cancelled').length,
-    highPriority: tasksArray.filter(t => t.priority === 'high').length,
-    mediumPriority: tasksArray.filter(t => t.priority === 'medium').length,
-    lowPriority: tasksArray.filter(t => t.priority === 'low').length
-  };
-  
-  return stats;
-}, [tasks]);
+  const taskStats = useMemo(() => {
+    const tasksArray = Array.isArray(tasks) ? tasks : [];
+    const stats = {
+      total: tasksArray.length,
+      completed: tasksArray.filter(t => t.status === 'completed').length,
+      inProgress: tasksArray.filter(t => t.status === 'in-progress').length,
+      pending: tasksArray.filter(t => t.status === 'pending').length,
+      cancelled: tasksArray.filter(t => t.status === 'cancelled').length,
+      highPriority: tasksArray.filter(t => t.priority === 'high').length,
+      mediumPriority: tasksArray.filter(t => t.priority === 'medium').length,
+      lowPriority: tasksArray.filter(t => t.priority === 'low').length
+    };
+
+    return stats;
+  }, [tasks]);
 
   // Expense statistics
-const expenseStats = useMemo(() => {
-  const expensesArray = Array.isArray(filteredExpenses) ? filteredExpenses : [];
-  const totalExpenses = expensesArray.reduce((sum, expense) => sum + expense.amount, 0);
-  const approvedExpenses = expensesArray.filter(e => e.status === 'approved');
-  const pendingExpenses = expensesArray.filter(e => e.status === 'pending');
-  const rejectedExpenses = expensesArray.filter(e => e.status === 'rejected');
-  
-  const operationalExpenses = expensesArray.filter(e => e.expenseType === 'operational')
-    .reduce((sum, expense) => sum + expense.amount, 0);
-  const officeExpenses = expensesArray.filter(e => e.expenseType === 'office')
-    .reduce((sum, expense) => sum + expense.amount, 0);
-  const otherExpenses = expensesArray.filter(e => e.expenseType === 'other')
-    .reduce((sum, expense) => sum + expense.amount, 0);
-  
-  const categoryStats = expensesArray.reduce((acc, expense) => {
-    acc[expense.category] = (acc[expense.category] || 0) + expense.amount;
-    return acc;
-  }, {} as Record<string, number>);
-  
-  const monthlyStats = expensesArray.reduce((acc, expense) => {
-    const date = new Date(expense.date);
-    const monthYear = `${date.getFullYear()}-${(date.getMonth() + 1).toString().padStart(2, '0')}`;
-    acc[monthYear] = (acc[monthYear] || 0) + expense.amount;
-    return acc;
-  }, {} as Record<string, number>);
-  
-  const monthlyData = Object.entries(monthlyStats)
-    .map(([month, amount]) => ({
-      month: month,
-      amount: amount
-    }))
-    .sort((a, b) => a.month.localeCompare(b.month));
-  
-  const topCategories = Object.entries(categoryStats)
-    .map(([category, amount]) => ({ category, amount }))
-    .sort((a, b) => b.amount - a.amount)
-    .slice(0, 10);
-  
-  return {
-    totalExpenses,
-    approvedExpenses: approvedExpenses.length,
-    pendingExpenses: pendingExpenses.length,
-    rejectedExpenses: rejectedExpenses.length,
-    operationalExpenses,
-    officeExpenses,
-    otherExpenses,
-    categoryData: topCategories,
-    monthlyData,
-    totalTransactions: expensesArray.length
-  };
-}, [filteredExpenses]);
+  const expenseStats = useMemo(() => {
+    const expensesArray = Array.isArray(filteredExpenses) ? filteredExpenses : [];
+    const totalExpenses = expensesArray.reduce((sum, expense) => sum + expense.amount, 0);
+    const approvedExpenses = expensesArray.filter(e => e.status === 'approved');
+    const pendingExpenses = expensesArray.filter(e => e.status === 'pending');
+    const rejectedExpenses = expensesArray.filter(e => e.status === 'rejected');
+
+    const operationalExpenses = expensesArray.filter(e => e.expenseType === 'operational')
+      .reduce((sum, expense) => sum + expense.amount, 0);
+    const officeExpenses = expensesArray.filter(e => e.expenseType === 'office')
+      .reduce((sum, expense) => sum + expense.amount, 0);
+    const otherExpenses = expensesArray.filter(e => e.expenseType === 'other')
+      .reduce((sum, expense) => sum + expense.amount, 0);
+
+    const categoryStats = expensesArray.reduce((acc, expense) => {
+      acc[expense.category] = (acc[expense.category] || 0) + expense.amount;
+      return acc;
+    }, {} as Record<string, number>);
+
+    const monthlyStats = expensesArray.reduce((acc, expense) => {
+      const date = new Date(expense.date);
+      const monthYear = `${date.getFullYear()}-${(date.getMonth() + 1).toString().padStart(2, '0')}`;
+      acc[monthYear] = (acc[monthYear] || 0) + expense.amount;
+      return acc;
+    }, {} as Record<string, number>);
+
+    const monthlyData = Object.entries(monthlyStats)
+      .map(([month, amount]) => ({
+        month: month,
+        amount: amount
+      }))
+      .sort((a, b) => a.month.localeCompare(b.month));
+
+    const topCategories = Object.entries(categoryStats)
+      .map(([category, amount]) => ({ category, amount }))
+      .sort((a, b) => b.amount - a.amount)
+      .slice(0, 10);
+
+    return {
+      totalExpenses,
+      approvedExpenses: approvedExpenses.length,
+      pendingExpenses: pendingExpenses.length,
+      rejectedExpenses: rejectedExpenses.length,
+      operationalExpenses,
+      officeExpenses,
+      otherExpenses,
+      categoryData: topCategories,
+      monthlyData,
+      totalTransactions: expensesArray.length
+    };
+  }, [filteredExpenses]);
 
   // Task completion data for pie chart
   const taskCompletionData: TaskCompletionData[] = useMemo(() => [
@@ -1555,16 +1554,16 @@ const expenseStats = useMemo(() => {
   const exportToCSV = (data: any[], filename: string) => {
     try {
       setIsExporting(true);
-      
+
       if (data.length === 0) {
         toast.error('No data to export');
         return;
       }
-      
+
       const headers = Object.keys(data[0] || {});
       const csvRows = [
         headers.join(','),
-        ...data.map(row => 
+        ...data.map(row =>
           headers.map(header => {
             const value = row[header];
             if (typeof value === 'string' && (value.includes(',') || value.includes('"'))) {
@@ -1574,19 +1573,19 @@ const expenseStats = useMemo(() => {
           }).join(',')
         )
       ];
-      
+
       const csvContent = csvRows.join('\n');
       const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
       const link = document.createElement('a');
       const url = URL.createObjectURL(blob);
-      
+
       link.setAttribute('href', url);
       link.setAttribute('download', filename);
       link.style.visibility = 'hidden';
       document.body.appendChild(link);
       link.click();
       document.body.removeChild(link);
-      
+
       toast.success(`Report exported as CSV: ${filename}`);
     } catch (error) {
       console.error('Error exporting CSV:', error);
@@ -1600,18 +1599,18 @@ const expenseStats = useMemo(() => {
   const exportToExcel = (data: any[], filename: string, sheetName = 'Sheet1') => {
     try {
       setIsExporting(true);
-      
+
       if (data.length === 0) {
         toast.error('No data to export');
         return;
       }
-      
+
       const worksheet = XLSX.utils.json_to_sheet(data);
       const workbook = XLSX.utils.book_new();
       XLSX.utils.book_append_sheet(workbook, worksheet, sheetName);
-      
+
       XLSX.writeFile(workbook, filename);
-      
+
       toast.success(`Report exported as Excel: ${filename}`);
     } catch (error) {
       console.error('Error exporting Excel:', error);
@@ -1644,7 +1643,7 @@ const expenseStats = useMemo(() => {
     }));
 
     const filename = `attendance-report-${selectedDepartment === "all" ? "all" : selectedDepartment}-${dateFrom}-to-${dateTo}`;
-    
+
     if (format === 'csv') {
       exportToCSV(data, `${filename}.csv`);
     } else {
@@ -1676,7 +1675,7 @@ const expenseStats = useMemo(() => {
     }));
 
     const filename = `task-report-${taskFilterStatus}-${taskFilterPriority}-${taskFilterSite}-${new Date().toISOString().split('T')[0]}`;
-    
+
     if (format === 'csv') {
       exportToCSV(data, `${filename}.csv`);
     } else {
@@ -1708,7 +1707,7 @@ const expenseStats = useMemo(() => {
     }));
 
     const filename = `expense-report-${expenseFilterStatus}-${expenseFilterType}-${expenseDateFrom || 'all'}-to-${expenseDateTo || 'all'}`;
-    
+
     if (format === 'csv') {
       exportToCSV(data, `${filename}.csv`);
     } else {
@@ -1739,7 +1738,7 @@ const expenseStats = useMemo(() => {
     }));
 
     const filename = `attendance-records-${dateFrom}-to-${dateTo}`;
-    
+
     if (format === 'csv') {
       exportToCSV(data, `${filename}.csv`);
     } else {
@@ -1791,7 +1790,7 @@ const expenseStats = useMemo(() => {
     });
 
     const filename = `expense-summary-${new Date().toISOString().split('T')[0]}`;
-    
+
     if (format === 'csv') {
       exportToCSV(summaryData, `${filename}.csv`);
     } else {
@@ -1840,7 +1839,7 @@ const expenseStats = useMemo(() => {
     ];
 
     const filename = `task-summary-${new Date().toISOString().split('T')[0]}`;
-    
+
     if (format === 'csv') {
       exportToCSV(summaryData, `${filename}.csv`);
     } else {
@@ -1881,7 +1880,7 @@ const expenseStats = useMemo(() => {
         fetchAllExpenses()
       ]);
     };
-    
+
     fetchData();
   }, []);
 
@@ -1894,12 +1893,12 @@ const expenseStats = useMemo(() => {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100 dark:from-gray-900 dark:to-gray-800">
-      <DashboardHeader 
-        title="Reports & Analytics" 
+      <DashboardHeader
+        title="Reports & Analytics"
         onMenuClick={onMenuClick}
       />
-      
-      <motion.div 
+
+      <motion.div
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.5 }}
@@ -1947,16 +1946,16 @@ const expenseStats = useMemo(() => {
                   <div className="flex items-center gap-2 bg-white dark:bg-gray-800 p-3 rounded-lg border shadow-sm">
                     <Calendar className="h-5 w-5 text-[#3b82f6]" />
                     <div className="flex gap-2">
-                      <Input 
-                        type="date" 
+                      <Input
+                        type="date"
                         value={dateFrom}
                         onChange={(e) => setDateFrom(e.target.value)}
                         className="w-40 border-blue-200 focus:border-[#3b82f6] focus:ring-[#3b82f6]"
                         placeholder="From Date"
                       />
                       <span className="text-muted-foreground self-center">to</span>
-                      <Input 
-                        type="date" 
+                      <Input
+                        type="date"
                         value={dateTo}
                         onChange={(e) => setDateTo(e.target.value)}
                         className="w-40 border-blue-200 focus:border-[#3b82f6] focus:ring-[#3b82f6]"
@@ -1964,7 +1963,7 @@ const expenseStats = useMemo(() => {
                       />
                     </div>
                   </div>
-                  
+
                   <Select value={selectedDepartment} onValueChange={setSelectedDepartment}>
                     <SelectTrigger className="w-48 border-blue-200 focus:border-[#3b82f6] focus:ring-[#3b82f6]">
                       <SelectValue placeholder="Select Department" />
@@ -1977,9 +1976,9 @@ const expenseStats = useMemo(() => {
                       ))}
                     </SelectContent>
                   </Select>
-                  
-                  <Button 
-                    onClick={handleApplyFilters} 
+
+                  <Button
+                    onClick={handleApplyFilters}
                     disabled={isLoading}
                     className="bg-gradient-to-r from-[#3b82f6] to-[#06b6d4] hover:from-[#2563eb] hover:to-[#0891b2] shadow-md hover:shadow-lg transition-all"
                   >
@@ -2026,8 +2025,8 @@ const expenseStats = useMemo(() => {
             <div className="space-y-4">
               <div>
                 <label className="text-sm font-medium mb-1 block">From Date</label>
-                <Input 
-                  type="date" 
+                <Input
+                  type="date"
                   value={dateFrom}
                   onChange={(e) => setDateFrom(e.target.value)}
                   className="w-full"
@@ -2035,8 +2034,8 @@ const expenseStats = useMemo(() => {
               </div>
               <div>
                 <label className="text-sm font-medium mb-1 block">To Date</label>
-                <Input 
-                  type="date" 
+                <Input
+                  type="date"
                   value={dateTo}
                   onChange={(e) => setDateTo(e.target.value)}
                   className="w-full"
@@ -2057,8 +2056,8 @@ const expenseStats = useMemo(() => {
                   </SelectContent>
                 </Select>
               </div>
-              <Button 
-                onClick={handleApplyFilters} 
+              <Button
+                onClick={handleApplyFilters}
                 disabled={isLoading}
                 className="w-full"
               >
@@ -2077,22 +2076,22 @@ const expenseStats = useMemo(() => {
         {!isMobileView && (
           <Tabs defaultValue="attendance" value={activeTab} onValueChange={setActiveTab} className="w-full">
             <TabsList className="grid w-full grid-cols-3 p-1 bg-gradient-to-r from-blue-50 to-cyan-50 dark:from-gray-800 dark:to-gray-900 rounded-xl">
-              <TabsTrigger 
-                value="attendance" 
+              <TabsTrigger
+                value="attendance"
                 className="flex items-center gap-2 data-[state=active]:bg-gradient-to-r data-[state=active]:from-[#3b82f6] data-[state=active]:to-[#06b6d4] data-[state=active]:text-white rounded-lg transition-all"
               >
                 <Users className="h-4 w-4" />
                 Attendance
               </TabsTrigger>
-              <TabsTrigger 
-                value="tasks" 
+              <TabsTrigger
+                value="tasks"
                 className="flex items-center gap-2 data-[state=active]:bg-gradient-to-r data-[state=active]:from-[#3b82f6] data-[state=active]:to-[#06b6d4] data-[state=active]:text-white rounded-lg transition-all"
               >
                 <CheckSquare className="h-4 w-4" />
                 Tasks
               </TabsTrigger>
-              <TabsTrigger 
-                value="financial" 
+              <TabsTrigger
+                value="financial"
                 className="flex items-center gap-2 data-[state=active]:bg-gradient-to-r data-[state=active]:from-[#3b82f6] data-[state=active]:to-[#06b6d4] data-[state=active]:text-white rounded-lg transition-all"
               >
                 <Receipt className="h-4 w-4" />
@@ -2125,7 +2124,7 @@ const expenseStats = useMemo(() => {
                       {!isMobileView && (
                         <div className="flex gap-2">
                           <div className="relative group">
-                            <Button 
+                            <Button
                               variant="outline"
                               disabled={isExporting || getFilteredAttendanceReport.length === 0}
                               className="border-[#3b82f6] text-[#3b82f6] hover:bg-[#3b82f6] hover:text-white"
@@ -2274,42 +2273,42 @@ const expenseStats = useMemo(() => {
                                   <ResponsiveContainer width="100%" height="100%">
                                     <BarChart data={getAttendanceChartData}>
                                       <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
-                                      <XAxis 
-                                        dataKey="department" 
+                                      <XAxis
+                                        dataKey="department"
                                         angle={-45}
                                         textAnchor="end"
                                         height={60}
                                       />
                                       <YAxis />
-                                      <Tooltip 
-                                        contentStyle={{ 
+                                      <Tooltip
+                                        contentStyle={{
                                           backgroundColor: 'white',
                                           border: '1px solid #e5e7eb',
                                           borderRadius: '8px',
                                           boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1)'
                                         }}
                                       />
-                                      <Bar 
-                                        dataKey="present" 
-                                        fill="#3b82f6" 
+                                      <Bar
+                                        dataKey="present"
+                                        fill="#3b82f6"
                                         name="Present Days"
                                         radius={[4, 4, 0, 0]}
                                       />
-                                      <Bar 
-                                        dataKey="late" 
-                                        fill="#f59e0b" 
+                                      <Bar
+                                        dataKey="late"
+                                        fill="#f59e0b"
                                         name="Late Days"
                                         radius={[4, 4, 0, 0]}
                                       />
-                                      <Bar 
-                                        dataKey="absent" 
-                                        fill="#ef4444" 
+                                      <Bar
+                                        dataKey="absent"
+                                        fill="#ef4444"
                                         name="Absent Days"
                                         radius={[4, 4, 0, 0]}
                                       />
-                                      <Bar 
-                                        dataKey="leaves" 
-                                        fill="#8b5cf6" 
+                                      <Bar
+                                        dataKey="leaves"
+                                        fill="#8b5cf6"
                                         name="Leave Days"
                                         radius={[4, 4, 0, 0]}
                                       />
@@ -2334,35 +2333,35 @@ const expenseStats = useMemo(() => {
                                       <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
                                       <XAxis dataKey="date" />
                                       <YAxis />
-                                      <Tooltip 
-                                        contentStyle={{ 
+                                      <Tooltip
+                                        contentStyle={{
                                           backgroundColor: 'white',
                                           border: '1px solid #e5e7eb',
                                           borderRadius: '8px',
                                           boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1)'
                                         }}
                                       />
-                                      <Area 
-                                        type="monotone" 
-                                        dataKey="present" 
-                                        stroke="#3b82f6" 
-                                        fill="#3b82f6" 
+                                      <Area
+                                        type="monotone"
+                                        dataKey="present"
+                                        stroke="#3b82f6"
+                                        fill="#3b82f6"
                                         fillOpacity={0.2}
                                         name="Present"
                                       />
-                                      <Area 
-                                        type="monotone" 
-                                        dataKey="late" 
-                                        stroke="#f59e0b" 
-                                        fill="#f59e0b" 
+                                      <Area
+                                        type="monotone"
+                                        dataKey="late"
+                                        stroke="#f59e0b"
+                                        fill="#f59e0b"
                                         fillOpacity={0.2}
                                         name="Late"
                                       />
-                                      <Area 
-                                        type="monotone" 
-                                        dataKey="absent" 
-                                        stroke="#ef4444" 
-                                        fill="#ef4444" 
+                                      <Area
+                                        type="monotone"
+                                        dataKey="absent"
+                                        stroke="#ef4444"
+                                        fill="#ef4444"
                                         fillOpacity={0.2}
                                         name="Absent"
                                       />
@@ -2474,11 +2473,10 @@ const expenseStats = useMemo(() => {
                                             </TableCell>
                                             <TableCell className="text-center">
                                               <div className="flex items-center gap-2">
-                                                <span className={`font-bold ${
-                                                  parseFloat(record.percentage) >= 90 ? "text-green-600" :
-                                                  parseFloat(record.percentage) >= 75 ? "text-yellow-600" :
-                                                  "text-red-600"
-                                                }`}>
+                                                <span className={`font-bold ${parseFloat(record.percentage) >= 90 ? "text-green-600" :
+                                                    parseFloat(record.percentage) >= 75 ? "text-yellow-600" :
+                                                      "text-red-600"
+                                                  }`}>
                                                   {record.percentage}
                                                 </span>
                                                 {parseFloat(record.percentage) >= 90 ? (
@@ -2494,7 +2492,7 @@ const expenseStats = useMemo(() => {
                                     </Table>
                                   </div>
                                   {getFilteredAttendanceReport.length > 10 && (
-                                    <motion.div 
+                                    <motion.div
                                       initial={{ opacity: 0 }}
                                       animate={{ opacity: 1 }}
                                       className="text-center py-4 text-sm text-muted-foreground"
@@ -2537,7 +2535,7 @@ const expenseStats = useMemo(() => {
                       {!isMobileView && (
                         <div className="flex gap-2">
                           <div className="relative group">
-                            <Button 
+                            <Button
                               disabled={isExporting || taskReportData.length === 0}
                               className="bg-gradient-to-r from-[#3b82f6] to-[#06b6d4] hover:from-[#2563eb] hover:to-[#0891b2] shadow-md"
                             >
@@ -2860,8 +2858,8 @@ const expenseStats = useMemo(() => {
                                       <XAxis dataKey="priority" />
                                       <YAxis />
                                       <Tooltip />
-                                      <Bar 
-                                        dataKey="count" 
+                                      <Bar
+                                        dataKey="count"
                                         fill="#06b6d4"
                                         radius={[4, 4, 0, 0]}
                                       />
@@ -2944,7 +2942,7 @@ const expenseStats = useMemo(() => {
                                             <TableCell className="whitespace-nowrap">
                                               <EnhancedBadge variant={
                                                 task.priority === 'high' ? 'danger' :
-                                                task.priority === 'medium' ? 'warning' : 'success'
+                                                  task.priority === 'medium' ? 'warning' : 'success'
                                               } withAnimation>
                                                 {task.priority}
                                               </EnhancedBadge>
@@ -2952,8 +2950,8 @@ const expenseStats = useMemo(() => {
                                             <TableCell className="whitespace-nowrap">
                                               <EnhancedBadge variant={
                                                 task.status === 'completed' ? 'success' :
-                                                task.status === 'in-progress' ? 'info' :
-                                                task.status === 'pending' ? 'warning' : 'danger'
+                                                  task.status === 'in-progress' ? 'info' :
+                                                    task.status === 'pending' ? 'warning' : 'danger'
                                               } withAnimation>
                                                 {task.status}
                                               </EnhancedBadge>
@@ -2982,7 +2980,7 @@ const expenseStats = useMemo(() => {
                                     </Table>
                                   </div>
                                   {taskReportData.length > 10 && (
-                                    <motion.div 
+                                    <motion.div
                                       initial={{ opacity: 0 }}
                                       animate={{ opacity: 1 }}
                                       className="text-center py-4 text-sm text-muted-foreground"
@@ -3025,7 +3023,7 @@ const expenseStats = useMemo(() => {
                       {!isMobileView && (
                         <div className="flex gap-2">
                           <div className="relative group">
-                            <Button 
+                            <Button
                               disabled={isExporting || filteredExpenses.length === 0}
                               className="bg-gradient-to-r from-[#3b82f6] to-[#06b6d4] hover:from-[#2563eb] hover:to-[#0891b2] shadow-md"
                             >
@@ -3119,15 +3117,15 @@ const expenseStats = useMemo(() => {
                           <div>
                             <label className="text-sm font-medium mb-1 block">Date Range</label>
                             <div className="grid grid-cols-2 gap-2">
-                              <Input 
-                                type="date" 
+                              <Input
+                                type="date"
                                 value={expenseDateFrom}
                                 onChange={(e) => setExpenseDateFrom(e.target.value)}
                                 className="w-full"
                                 placeholder="From"
                               />
-                              <Input 
-                                type="date" 
+                              <Input
+                                type="date"
                                 value={expenseDateTo}
                                 onChange={(e) => setExpenseDateTo(e.target.value)}
                                 className="w-full"
@@ -3150,9 +3148,9 @@ const expenseStats = useMemo(() => {
                                 <Filter className="h-5 w-5 text-[#3b82f6]" />
                                 Expense Filters
                               </h3>
-                              <Button 
-                                variant="ghost" 
-                                size="sm" 
+                              <Button
+                                variant="ghost"
+                                size="sm"
                                 onClick={clearExpenseFilters}
                                 disabled={!expenseFilterStatus && !expenseFilterType && !expenseDateFrom && !expenseDateTo && !expenseSearchTerm}
                                 className="text-[#3b82f6] hover:text-[#2563eb] hover:bg-blue-50"
@@ -3206,15 +3204,15 @@ const expenseStats = useMemo(() => {
                               <div className="space-y-2">
                                 <label className="text-sm font-medium">Date Range</label>
                                 <div className="flex gap-2">
-                                  <Input 
-                                    type="date" 
+                                  <Input
+                                    type="date"
                                     value={expenseDateFrom}
                                     onChange={(e) => setExpenseDateFrom(e.target.value)}
                                     className="border-blue-200 focus:border-[#3b82f6] focus:ring-[#3b82f6]"
                                     placeholder="From"
                                   />
-                                  <Input 
-                                    type="date" 
+                                  <Input
+                                    type="date"
                                     value={expenseDateTo}
                                     onChange={(e) => setExpenseDateTo(e.target.value)}
                                     className="border-blue-200 focus:border-[#3b82f6] focus:ring-[#3b82f6]"
@@ -3362,8 +3360,8 @@ const expenseStats = useMemo(() => {
                                       <XAxis dataKey="category" />
                                       <YAxis />
                                       <Tooltip formatter={(value) => [formatCurrency(value as number), 'Amount']} />
-                                      <Bar 
-                                        dataKey="value" 
+                                      <Bar
+                                        dataKey="value"
                                         fill="#06b6d4"
                                         radius={[4, 4, 0, 0]}
                                       />
@@ -3396,12 +3394,12 @@ const expenseStats = useMemo(() => {
                                       <YAxis />
                                       <Tooltip formatter={(value) => [formatCurrency(value as number), 'Amount']} />
                                       <Legend />
-                                      <Line 
-                                        type="monotone" 
-                                        dataKey="amount" 
-                                        stroke="#3b82f6" 
+                                      <Line
+                                        type="monotone"
+                                        dataKey="amount"
+                                        stroke="#3b82f6"
                                         strokeWidth={2}
-                                        activeDot={{ r: 8 }} 
+                                        activeDot={{ r: 8 }}
                                       />
                                     </LineChart>
                                   </ResponsiveContainer>
@@ -3485,7 +3483,7 @@ const expenseStats = useMemo(() => {
                                             <TableCell className="whitespace-nowrap">
                                               <EnhancedBadge variant={
                                                 expense.status === 'approved' ? 'success' :
-                                                expense.status === 'pending' ? 'warning' : 'danger'
+                                                  expense.status === 'pending' ? 'warning' : 'danger'
                                               } withAnimation>
                                                 {expense.status}
                                               </EnhancedBadge>
@@ -3493,7 +3491,7 @@ const expenseStats = useMemo(() => {
                                             <TableCell className="whitespace-nowrap">
                                               <EnhancedBadge variant={
                                                 expense.expenseType === 'operational' ? 'info' :
-                                                expense.expenseType === 'office' ? 'success' : 'default'
+                                                  expense.expenseType === 'office' ? 'success' : 'default'
                                               } withAnimation>
                                                 {expense.expenseType}
                                               </EnhancedBadge>
@@ -3504,7 +3502,7 @@ const expenseStats = useMemo(() => {
                                     </Table>
                                   </div>
                                   {filteredExpenses.length > 10 && (
-                                    <motion.div 
+                                    <motion.div
                                       initial={{ opacity: 0 }}
                                       animate={{ opacity: 1 }}
                                       className="text-center py-4 text-sm text-muted-foreground"

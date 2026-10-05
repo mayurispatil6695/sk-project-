@@ -37,17 +37,17 @@ const getErrorMessage = (error: unknown): string => {
 // Helper to safely extract service data from unknown response
 const parseServiceData = (data: unknown): Service[] => {
   if (!data || typeof data !== 'object') return [];
-  
+
   // Check if it's an array
   if (Array.isArray(data)) {
     return data.map(item => item as Service);
   }
-  
+
   // Check if it has a data property (common API pattern)
   if ('data' in data && Array.isArray(data.data)) {
     return data.data.map(item => item as Service);
   }
-  
+
   return [];
 };
 
@@ -58,19 +58,19 @@ const AdminServicesSection = () => {
   const [activeTab, setActiveTab] = useState("all");
   const [serviceDialogOpen, setServiceDialogOpen] = useState(false);
   const [viewServiceDialog, setViewServiceDialog] = useState<string | null>(null);
- const API_URL = import.meta.env.VITE_API_URL || 
-  (import.meta.env.DEV ? 'http://localhost:5001/api' : 'https://sk-backend-btbj.onrender.com/api');
+  const API_URL = import.meta.env.VITE_API_URL ||
+    (import.meta.env.DEV ? 'http://localhost:5001/api' : 'https://sk-backend-868y.onrender.com');
 
   // Fetch services for admin role
   const fetchServices = async () => {
     try {
       setLoading(true);
       const response = await fetch(`${API_URL}/services?role=admin`);
-      
+
       if (!response.ok) throw new Error('Failed to fetch services');
-      
+
       const result = await response.json();
-      
+
       // Handle both { success: true, data: [...] } and direct array
       let rawServices: unknown[] = [];
       if (result.success && Array.isArray(result.data)) {
@@ -80,7 +80,7 @@ const AdminServicesSection = () => {
       } else if (Array.isArray(result.data)) {
         rawServices = result.data;
       }
-      
+
       // Map and transform safely
       const transformedServices = rawServices
         .map((item: unknown) => {
@@ -90,26 +90,26 @@ const AdminServicesSection = () => {
             name: service.name as string || 'Unnamed Service',
             status: (service.status as 'operational' | 'maintenance' | 'down') || 'operational',
             assignedTeam: service.assignedTeam as string || 'Unassigned',
-            lastChecked: service.lastChecked 
+            lastChecked: service.lastChecked
               ? new Date(service.lastChecked as string).toLocaleDateString('en-IN')
               : new Date().toLocaleDateString('en-IN'),
             description: service.description as string || '',
             createdBy: service.createdBy as string || 'Unknown',
             createdByRole: service.createdByRole as string || 'admin',
             isVisibleToAll: service.isVisibleToAll as boolean ?? true,
-            sharedWithRoles: Array.isArray(service.sharedWithRoles) 
+            sharedWithRoles: Array.isArray(service.sharedWithRoles)
               ? service.sharedWithRoles.map((r: unknown) => String(r))
               : [],
             visibility: (service.visibility as 'all' | 'specific_roles') || 'all',
-            createdAt: service.createdAt 
+            createdAt: service.createdAt
               ? new Date(service.createdAt as string).toLocaleDateString('en-IN')
               : new Date().toLocaleDateString('en-IN')
           } as Service;
         })
         .filter(service => service._id !== ''); // Filter out invalid entries
-      
+
       setServices(transformedServices);
-      
+
       // Filter superadmin services
       const superadminServices = transformedServices.filter(
         (service: Service) => service.createdByRole === 'superadmin'
@@ -131,7 +131,7 @@ const AdminServicesSection = () => {
     e.preventDefault();
     try {
       const formData = new FormData(e.currentTarget);
-      
+
       const serviceData = {
         name: formData.get("name") as string,
         status: formData.get("status") as 'operational' | 'maintenance' | 'down',
@@ -143,7 +143,7 @@ const AdminServicesSection = () => {
         sharedWithRoles: ['superadmin'],
         visibility: 'all'
       };
-      
+
       const response = await fetch(`${API_URL}/services`, {
         method: 'POST',
         headers: {
@@ -151,12 +151,12 @@ const AdminServicesSection = () => {
         },
         body: JSON.stringify(serviceData)
       });
-      
+
       if (!response.ok) {
         const error = await response.json();
         throw new Error(error.message || 'Failed to create service');
       }
-      
+
       const data = await response.json();
       if (data.success) {
         toast.success("Service created successfully");
@@ -176,34 +176,34 @@ const AdminServicesSection = () => {
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({ 
+        body: JSON.stringify({
           status,
           updatedBy: "Admin User",
           updatedByRole: "admin"
         })
       });
-      
+
       if (!response.ok) throw new Error('Failed to update service status');
-      
+
       const data = await response.json();
       if (data.success) {
         // Update all service lists
-        setServices(prev => prev.map(service => 
-          service._id === serviceId ? { 
-            ...service, 
+        setServices(prev => prev.map(service =>
+          service._id === serviceId ? {
+            ...service,
             status,
             lastChecked: new Date().toLocaleDateString('en-IN'),
           } : service
         ));
-        
-        setSuperadminServices(prev => prev.map(service => 
-          service._id === serviceId ? { 
-            ...service, 
+
+        setSuperadminServices(prev => prev.map(service =>
+          service._id === serviceId ? {
+            ...service,
             status,
             lastChecked: new Date().toLocaleDateString('en-IN'),
           } : service
         ));
-        
+
         toast.success(`Service status updated to ${status}`);
       }
     } catch (error) {
@@ -218,25 +218,25 @@ const AdminServicesSection = () => {
       toast.error("You can only delete services you created");
       return;
     }
-    
+
     if (!confirm("Are you sure you want to delete this service? This action cannot be undone.")) return;
-    
+
     try {
       const response = await fetch(`${API_URL}/services/${serviceId}`, {
         method: 'DELETE',
       });
-      
+
       if (!response.ok) {
         const error = await response.json();
         throw new Error(error.message || 'Failed to delete service');
       }
-      
+
       const data = await response.json();
       if (data.success) {
         // Remove from all lists
         setServices(prev => prev.filter(service => service._id !== serviceId));
         setSuperadminServices(prev => prev.filter(service => service._id !== serviceId));
-        
+
         toast.success("Service deleted successfully");
       }
     } catch (error) {
@@ -246,14 +246,14 @@ const AdminServicesSection = () => {
   };
 
   // ✅ Fixed: Return type matches Badge variant prop
- const getStatusColor = (status: Service["status"]): "default" | "secondary" | "destructive" => {
-  const colors = {
-    operational: "default",
-    maintenance: "secondary",
-    down: "destructive"
-  } as const;  // ✅ This makes values literal types
-  return colors[status];
-};
+  const getStatusColor = (status: Service["status"]): "default" | "secondary" | "destructive" => {
+    const colors = {
+      operational: "default",
+      maintenance: "secondary",
+      down: "destructive"
+    } as const;  // ✅ This makes values literal types
+    return colors[status];
+  };
 
   const getStatusIcon = (status: Service["status"]) => {
     const icons = {
@@ -323,7 +323,7 @@ const AdminServicesSection = () => {
               <TabsTrigger value="all">All Services ({services.length})</TabsTrigger>
               <TabsTrigger value="superadmin">SuperAdmin Services ({superadminServices.length})</TabsTrigger>
             </TabsList>
-            
+
             <TabsContent value="all">
               {loading ? (
                 <div className="text-center py-8">
@@ -370,22 +370,22 @@ const AdminServicesSection = () => {
                           </p>
                         </div>
                         <div className="flex gap-2 pt-2">
-                          <Button 
-                            size="sm" 
+                          <Button
+                            size="sm"
                             variant={service.status === "operational" ? "default" : "outline"}
                             onClick={() => handleUpdateStatus(service._id, "operational")}
                           >
                             Operational
                           </Button>
-                          <Button 
-                            size="sm" 
+                          <Button
+                            size="sm"
                             variant={service.status === "maintenance" ? "secondary" : "outline"}
                             onClick={() => handleUpdateStatus(service._id, "maintenance")}
                           >
                             Maintenance
                           </Button>
-                          <Button 
-                            size="sm" 
+                          <Button
+                            size="sm"
                             variant={service.status === "down" ? "destructive" : "outline"}
                             onClick={() => handleUpdateStatus(service._id, "down")}
                           >
@@ -394,9 +394,9 @@ const AdminServicesSection = () => {
                         </div>
                         {service.createdByRole === 'admin' && (
                           <div className="pt-2">
-                            <Button 
-                              variant="destructive" 
-                              size="sm" 
+                            <Button
+                              variant="destructive"
+                              size="sm"
                               className="w-full"
                               onClick={() => handleDeleteService(service._id, service.createdByRole)}
                             >
@@ -411,7 +411,7 @@ const AdminServicesSection = () => {
                 </div>
               )}
             </TabsContent>
-            
+
             <TabsContent value="superadmin">
               {loading ? (
                 <div className="text-center py-8">
@@ -462,22 +462,22 @@ const AdminServicesSection = () => {
                           </p>
                         </div>
                         <div className="flex gap-2 pt-2">
-                          <Button 
-                            size="sm" 
+                          <Button
+                            size="sm"
                             variant={service.status === "operational" ? "default" : "outline"}
                             onClick={() => handleUpdateStatus(service._id, "operational")}
                           >
                             Operational
                           </Button>
-                          <Button 
-                            size="sm" 
+                          <Button
+                            size="sm"
                             variant={service.status === "maintenance" ? "secondary" : "outline"}
                             onClick={() => handleUpdateStatus(service._id, "maintenance")}
                           >
                             Maintenance
                           </Button>
-                          <Button 
-                            size="sm" 
+                          <Button
+                            size="sm"
                             variant={service.status === "down" ? "destructive" : "outline"}
                             onClick={() => handleUpdateStatus(service._id, "down")}
                           >
@@ -506,7 +506,7 @@ const AdminServicesSection = () => {
               <div className="space-y-4">
                 <div className="grid grid-cols-2 gap-4">
                   <div><strong>Name:</strong> {service.name}</div>
-                  <div><strong>Status:</strong> 
+                  <div><strong>Status:</strong>
                     <Badge variant={getStatusColor(service.status)} className="ml-2">
                       {service.status}
                     </Badge>
@@ -538,8 +538,8 @@ const AdminServicesSection = () => {
                 )}
                 {service.createdByRole === 'admin' && (
                   <div className="pt-4">
-                    <Button 
-                      variant="destructive" 
+                    <Button
+                      variant="destructive"
                       onClick={() => {
                         setViewServiceDialog(null);
                         handleDeleteService(service._id, service.createdByRole);

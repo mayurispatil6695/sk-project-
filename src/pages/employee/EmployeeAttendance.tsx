@@ -14,8 +14,8 @@ import { startLocationTracking, stopLocationTracking } from "@/utils/locationTra
 import axios from "axios";
 
 // API URL
-const API_URL = import.meta.env.VITE_API_URL || 
-  (import.meta.env.DEV ? 'http://localhost:5001/api' : 'https://sk-backend-btbj.onrender.com/api');
+const API_URL = import.meta.env.VITE_API_URL ||
+  (import.meta.env.DEV ? 'http://localhost:5001/api' : 'https://sk-backend-868y.onrender.com');
 
 // Types
 interface AttendanceRecord {
@@ -76,21 +76,21 @@ const EmployeeAttendance = () => {
 
   // Location tracking cleanup
   // Location tracking cleanup
-useEffect(() => {
-  // Stop on component unmount (navigation away)
-  return () => stopLocationTracking();
-}, []);
+  useEffect(() => {
+    // Stop on component unmount (navigation away)
+    return () => stopLocationTracking();
+  }, []);
 
-// ✅ Stop tracking when browser tab is closed
-useEffect(() => {
-  const handleBeforeUnload = () => {
-    stopLocationTracking();
-  };
-  window.addEventListener('beforeunload', handleBeforeUnload);
-  return () => {
-    window.removeEventListener('beforeunload', handleBeforeUnload);
-  };
-}, []);
+  // ✅ Stop tracking when browser tab is closed
+  useEffect(() => {
+    const handleBeforeUnload = () => {
+      stopLocationTracking();
+    };
+    window.addEventListener('beforeunload', handleBeforeUnload);
+    return () => {
+      window.removeEventListener('beforeunload', handleBeforeUnload);
+    };
+  }, []);
   // Load attendance status from API on mount
   useEffect(() => {
     if (user?._id) {

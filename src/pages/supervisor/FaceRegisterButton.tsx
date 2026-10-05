@@ -7,7 +7,7 @@ import { toast } from "sonner";
 import axios from "axios";
 
 const API_URL = import.meta.env.VITE_API_URL ||
-  (import.meta.env.DEV ? 'http://localhost:5001/api' : 'https://sk-backend-btbj.onrender.com/api');
+  (import.meta.env.DEV ? 'http://localhost:5001/api' : 'https://sk-backend-868y.onrender.com');
 
 interface FaceRegisterButtonProps {
   employeeId: string;

@@ -149,7 +149,7 @@ export const useWorkQuery = ({ supervisorId, autoFetch = true, initialFilters = 
         });
 
         const API_URL = import.meta.env.VITE_API_URL ||
-          (import.meta.env.DEV ? 'http://localhost:5001/api' : 'https://sk-backend-btbj.onrender.com/api');
+          (import.meta.env.DEV ? 'http://localhost:5001/api' : 'https://sk-backend-868y.onrender.com');
         const token = localStorage.getItem('access_token') || localStorage.getItem('token');
 
         const fetchResponse = await fetch(`${API_URL}/work-queries`, {
