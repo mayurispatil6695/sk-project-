@@ -40,7 +40,7 @@ const getApiUrl = () => {
 
   // For production (Vercel) - use your Render backend URL
   if (import.meta.env.PROD) {
-    return 'https://sk-backend-868y.onrender.com/auth';
+    return 'https://sk-backend-868y.onrender.com/api/auth';
   }
 
   // For development (localhost)
