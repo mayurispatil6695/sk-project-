@@ -84,7 +84,7 @@ import { format } from "date-fns";
 
 // API Base URL
 const API_URL = import.meta.env.VITE_API_URL ||
-  (import.meta.env.DEV ? 'http://localhost:5001/api' : 'https://sk-backend-868y.onrender.com');
+  (import.meta.env.DEV ? 'http://localhost:5001/api' : 'https://sk-backend-868y.onrender.com/api');
 
 // Interface for Leave Request (Employee & Supervisor)
 interface LeaveRequest {
@@ -691,9 +691,9 @@ const ViewLeaveDialog: React.FC<ViewLeaveDialogProps> = ({
           <div className="space-y-6">
             {/* Status Banner */}
             <div className={`p-4 rounded-lg border ${leave.status === 'approved' ? 'bg-green-50 border-green-200' :
-                leave.status === 'rejected' ? 'bg-red-50 border-red-200' :
-                  leave.status === 'pending' ? 'bg-yellow-50 border-yellow-200' :
-                    'bg-gray-50 border-gray-200'
+              leave.status === 'rejected' ? 'bg-red-50 border-red-200' :
+                leave.status === 'pending' ? 'bg-yellow-50 border-yellow-200' :
+                  'bg-gray-50 border-gray-200'
               }`}>
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-3">
@@ -1032,9 +1032,9 @@ const ViewManagerLeaveDialog: React.FC<ViewManagerLeaveDialogProps> = ({
         <div className="space-y-6">
           {/* Status Banner */}
           <div className={`p-4 rounded-lg border ${leave.status === 'approved' ? 'bg-green-50 border-green-200' :
-              leave.status === 'rejected' ? 'bg-red-50 border-red-200' :
-                leave.status === 'pending' ? 'bg-yellow-50 border-yellow-200' :
-                  'bg-gray-50 border-gray-200'
+            leave.status === 'rejected' ? 'bg-red-50 border-red-200' :
+              leave.status === 'pending' ? 'bg-yellow-50 border-yellow-200' :
+                'bg-gray-50 border-gray-200'
             }`}>
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-3">

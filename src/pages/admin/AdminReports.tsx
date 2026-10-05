@@ -65,7 +65,7 @@ import taskService, { type Task } from "@/services/TaskService";
 import * as XLSX from 'xlsx';
 
 const API_URL = import.meta.env.VITE_API_URL ||
-  (import.meta.env.DEV ? 'http://localhost:5001/api' : 'https://sk-backend-868y.onrender.com');
+  (import.meta.env.DEV ? 'http://localhost:5001/api' : 'https://sk-backend-868y.onrender.com/api');
 
 // Interfaces (same as before)
 interface LeaveData {
@@ -345,7 +345,7 @@ const MobileEmployeeAttendanceCard = ({ record }: { record: AttendanceReportSumm
             <span className="text-xs">{record.averageHours}</span>
           </div>
           <div className={`text-sm font-bold ${percentage >= 90 ? "text-green-600" :
-              percentage >= 75 ? "text-yellow-600" : "text-red-600"
+            percentage >= 75 ? "text-yellow-600" : "text-red-600"
             }`}>
             {record.percentage}
           </div>
@@ -2422,8 +2422,8 @@ const Reports = () => {
                                             <TableCell className="text-center">
                                               <div className="flex items-center gap-2">
                                                 <span className={`font-bold ${parseFloat(record.percentage) >= 90 ? "text-green-600" :
-                                                    parseFloat(record.percentage) >= 75 ? "text-yellow-600" :
-                                                      "text-red-600"
+                                                  parseFloat(record.percentage) >= 75 ? "text-yellow-600" :
+                                                    "text-red-600"
                                                   }`}>
                                                   {record.percentage}
                                                 </span>

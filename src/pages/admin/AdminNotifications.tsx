@@ -30,7 +30,7 @@ import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/comp
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 
 const API_URL = import.meta.env.VITE_API_URL ||
-  (import.meta.env.DEV ? 'http://localhost:5001/api' : 'https://sk-backend-868y.onrender.com');
+  (import.meta.env.DEV ? 'http://localhost:5001/api' : 'https://sk-backend-868y.onrender.com/api');
 
 // Interface for real API response
 interface ApiNotification {
@@ -3433,9 +3433,9 @@ const Notifications = () => {
                           <div className="w-full bg-gray-200 rounded-full h-1.5 md:h-2">
                             <div
                               className={`h-1.5 md:h-2 rounded-full ${viewNotification.currentQuantity === 0 ? 'bg-red-500' :
-                                  viewNotification.currentQuantity <= Math.floor(viewNotification.reorderLevel * 0.3) ? 'bg-orange-500' :
-                                    viewNotification.currentQuantity <= viewNotification.reorderLevel ? 'bg-yellow-500' :
-                                      'bg-green-500'
+                                viewNotification.currentQuantity <= Math.floor(viewNotification.reorderLevel * 0.3) ? 'bg-orange-500' :
+                                  viewNotification.currentQuantity <= viewNotification.reorderLevel ? 'bg-yellow-500' :
+                                    'bg-green-500'
                                 }`}
                               style={{
                                 width: `${Math.min(100, (viewNotification.currentQuantity / (viewNotification.reorderLevel * 2)) * 100)}%`

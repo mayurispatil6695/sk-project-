@@ -31,7 +31,7 @@ import { utils, writeFile } from "xlsx";
 
 // API base URL
 const API_URL = import.meta.env.VITE_API_URL ||
-  (import.meta.env.DEV ? 'http://localhost:5001/api' : 'https://sk-backend-868y.onrender.com');
+  (import.meta.env.DEV ? 'http://localhost:5001/api' : 'https://sk-backend-868y.onrender.com/api');
 
 // Interfaces
 interface ReportAttendanceRecord {
@@ -1585,30 +1585,30 @@ const SupervisorReport = () => {
                               variants={itemVariants}
                               whileHover={{ y: -5 }}
                               className={`border ${stat.color === "blue"
-                                  ? "border-[#3b82f6]/30 bg-gradient-to-br from-[#3b82f6]/10 to-white"
-                                  : `border-${stat.color}-200 bg-gradient-to-br from-${stat.color}-50 to-white`
+                                ? "border-[#3b82f6]/30 bg-gradient-to-br from-[#3b82f6]/10 to-white"
+                                : `border-${stat.color}-200 bg-gradient-to-br from-${stat.color}-50 to-white`
                                 } rounded-xl p-4 shadow-sm`}
                             >
                               <div className="flex items-center justify-between">
                                 <div>
                                   <p className={`${stat.color === "blue"
-                                      ? "text-[#3b82f6]"
-                                      : `text-${stat.color}-700`
+                                    ? "text-[#3b82f6]"
+                                    : `text-${stat.color}-700`
                                     } text-sm font-medium`}>{stat.label}</p>
                                   <p className={`${stat.color === "blue"
-                                      ? "text-[#3b82f6]"
-                                      : `text-${stat.color}-900`
+                                    ? "text-[#3b82f6]"
+                                    : `text-${stat.color}-900`
                                     } text-2xl font-bold`}>
                                     {stat.value}
                                   </p>
                                 </div>
                                 <div className={`h-10 w-10 rounded-full ${stat.color === "blue"
-                                    ? "bg-gradient-to-r from-[#3b82f6]/20 to-[#06b6d4]/20"
-                                    : `bg-gradient-to-r from-${stat.color}-100 to-${stat.color}-50`
+                                  ? "bg-gradient-to-r from-[#3b82f6]/20 to-[#06b6d4]/20"
+                                  : `bg-gradient-to-r from-${stat.color}-100 to-${stat.color}-50`
                                   } flex items-center justify-center`}>
                                   <stat.icon className={`h-5 w-5 ${stat.color === "blue"
-                                      ? "text-[#3b82f6]"
-                                      : `text-${stat.color}-600`
+                                    ? "text-[#3b82f6]"
+                                    : `text-${stat.color}-600`
                                     }`} />
                                 </div>
                               </div>
@@ -1756,8 +1756,8 @@ const SupervisorReport = () => {
                                   key={item.label}
                                   whileHover={{ scale: 1.05 }}
                                   className={`px-3 py-1.5 rounded-full ${item.color === "blue"
-                                      ? "bg-gradient-to-r from-[#3b82f6]/20 to-[#06b6d4]/20 border border-[#3b82f6]/30 text-[#3b82f6]"
-                                      : `bg-gradient-to-r from-${item.color}-100 to-${item.color}-50 border border-${item.color}-200 text-${item.color}-800`
+                                    ? "bg-gradient-to-r from-[#3b82f6]/20 to-[#06b6d4]/20 border border-[#3b82f6]/30 text-[#3b82f6]"
+                                    : `bg-gradient-to-r from-${item.color}-100 to-${item.color}-50 border border-${item.color}-200 text-${item.color}-800`
                                     }`}
                                 >
                                   <span className="text-sm font-medium">
@@ -1936,30 +1936,30 @@ const SupervisorReport = () => {
                                 key={stat.label}
                                 whileHover={{ y: -5 }}
                                 className={`border ${stat.color === "blue" || stat.color === "cyan"
-                                    ? "border-[#3b82f6]/30 bg-gradient-to-br from-[#3b82f6]/10 to-white"
-                                    : `border-${stat.color}-200 bg-gradient-to-br from-${stat.color}-50 to-white`
+                                  ? "border-[#3b82f6]/30 bg-gradient-to-br from-[#3b82f6]/10 to-white"
+                                  : `border-${stat.color}-200 bg-gradient-to-br from-${stat.color}-50 to-white`
                                   } rounded-xl p-4 shadow-sm`}
                               >
                                 <div className="flex items-center justify-between">
                                   <div>
                                     <p className={`${stat.color === "blue" || stat.color === "cyan"
-                                        ? "text-[#3b82f6]"
-                                        : `text-${stat.color}-700`
+                                      ? "text-[#3b82f6]"
+                                      : `text-${stat.color}-700`
                                       } text-sm font-medium`}>{stat.label}</p>
                                     <p className={`${stat.color === "blue" || stat.color === "cyan"
-                                        ? "text-[#3b82f6]"
-                                        : `text-${stat.color}-900`
+                                      ? "text-[#3b82f6]"
+                                      : `text-${stat.color}-900`
                                       } text-2xl font-bold`}>
                                       {stat.value}
                                     </p>
                                   </div>
                                   <div className={`h-10 w-10 rounded-full ${stat.color === "blue" || stat.color === "cyan"
-                                      ? "bg-gradient-to-r from-[#3b82f6]/20 to-[#06b6d4]/20"
-                                      : `bg-gradient-to-r from-${stat.color}-100 to-${stat.color}-50`
+                                    ? "bg-gradient-to-r from-[#3b82f6]/20 to-[#06b6d4]/20"
+                                    : `bg-gradient-to-r from-${stat.color}-100 to-${stat.color}-50`
                                     } flex items-center justify-center`}>
                                     <stat.icon className={`h-5 w-5 ${stat.color === "blue" || stat.color === "cyan"
-                                        ? "text-[#3b82f6]"
-                                        : `text-${stat.color}-600`
+                                      ? "text-[#3b82f6]"
+                                      : `text-${stat.color}-600`
                                       }`} />
                                   </div>
                                 </div>
@@ -1996,7 +1996,7 @@ const SupervisorReport = () => {
                                       animate={{ opacity: 1, x: 0 }}
                                       transition={{ delay: index * 0.05 }}
                                       className={`hover:bg-gray-50/50 ${isAssignedToMe ? 'bg-gradient-to-r from-green-50 to-white' :
-                                          isCreatedByMe ? 'bg-gradient-to-r from-[#3b82f6]/10 to-white' : ''
+                                        isCreatedByMe ? 'bg-gradient-to-r from-[#3b82f6]/10 to-white' : ''
                                         }`}
                                     >
                                       <TableCell className="font-medium">
@@ -2107,12 +2107,12 @@ const SupervisorReport = () => {
                               ].map((stat) => (
                                 <div key={stat.label} className="text-center">
                                   <p className={`text-sm ${stat.color === "blue" || stat.color === "cyan"
-                                      ? "text-[#3b82f6]/80"
-                                      : "text-green-700"
+                                    ? "text-[#3b82f6]/80"
+                                    : "text-green-700"
                                     } mb-2`}>{stat.label}</p>
                                   <p className={`text-3xl font-bold ${stat.color === "blue" || stat.color === "cyan"
-                                      ? "text-[#3b82f6]"
-                                      : "text-green-900"
+                                    ? "text-[#3b82f6]"
+                                    : "text-green-900"
                                     }`}>
                                     {stat.value}
                                   </p>
@@ -2132,8 +2132,8 @@ const SupervisorReport = () => {
                                     key={item.label}
                                     whileHover={{ scale: 1.05 }}
                                     className={`px-3 py-1.5 rounded-full ${item.color === "blue"
-                                        ? "bg-gradient-to-r from-[#3b82f6]/20 to-[#06b6d4]/20 border border-[#3b82f6]/30 text-[#3b82f6]"
-                                        : `bg-gradient-to-r from-${item.color}-100 to-${item.color}-50 border border-${item.color}-200 text-${item.color}-800`
+                                      ? "bg-gradient-to-r from-[#3b82f6]/20 to-[#06b6d4]/20 border border-[#3b82f6]/30 text-[#3b82f6]"
+                                      : `bg-gradient-to-r from-${item.color}-100 to-${item.color}-50 border border-${item.color}-200 text-${item.color}-800`
                                       }`}
                                   >
                                     <span className="text-sm font-medium">
@@ -2256,30 +2256,30 @@ const SupervisorReport = () => {
                               variants={itemVariants}
                               whileHover={{ y: -5 }}
                               className={`border ${stat.color === "blue"
-                                  ? "border-[#3b82f6]/30 bg-gradient-to-br from-[#3b82f6]/10 to-white"
-                                  : `border-${stat.color}-200 bg-gradient-to-br from-${stat.color}-50 to-white`
+                                ? "border-[#3b82f6]/30 bg-gradient-to-br from-[#3b82f6]/10 to-white"
+                                : `border-${stat.color}-200 bg-gradient-to-br from-${stat.color}-50 to-white`
                                 } rounded-xl p-4 shadow-sm`}
                             >
                               <div className="flex items-center justify-between">
                                 <div>
                                   <p className={`${stat.color === "blue"
-                                      ? "text-[#3b82f6]"
-                                      : `text-${stat.color}-700`
+                                    ? "text-[#3b82f6]"
+                                    : `text-${stat.color}-700`
                                     } text-sm font-medium`}>{stat.label}</p>
                                   <p className={`${stat.color === "blue"
-                                      ? "text-[#3b82f6]"
-                                      : `text-${stat.color}-900`
+                                    ? "text-[#3b82f6]"
+                                    : `text-${stat.color}-900`
                                     } text-2xl font-bold`}>
                                     {stat.value}
                                   </p>
                                 </div>
                                 <div className={`h-10 w-10 rounded-full ${stat.color === "blue"
-                                    ? "bg-gradient-to-r from-[#3b82f6]/20 to-[#06b6d4]/20"
-                                    : `bg-gradient-to-r from-${stat.color}-100 to-${stat.color}-50`
+                                  ? "bg-gradient-to-r from-[#3b82f6]/20 to-[#06b6d4]/20"
+                                  : `bg-gradient-to-r from-${stat.color}-100 to-${stat.color}-50`
                                   } flex items-center justify-center`}>
                                   <stat.icon className={`h-5 w-5 ${stat.color === "blue"
-                                      ? "text-[#3b82f6]"
-                                      : `text-${stat.color}-600`
+                                    ? "text-[#3b82f6]"
+                                    : `text-${stat.color}-600`
                                     }`} />
                                 </div>
                               </div>

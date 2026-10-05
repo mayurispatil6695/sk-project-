@@ -110,7 +110,7 @@ interface AssignTaskPageProps {
 }
 
 const API_URL = import.meta.env.VITE_API_URL ||
-  (import.meta.env.DEV ? 'http://localhost:5001/api' : 'https://sk-backend-868y.onrender.com');
+  (import.meta.env.DEV ? 'http://localhost:5001/api' : 'https://sk-backend-868y.onrender.com/api');
 
 const AssignTaskPage: React.FC<AssignTaskPageProps> = ({
   refreshTrigger = 0,
@@ -1149,8 +1149,8 @@ const AssignTaskPage: React.FC<AssignTaskPageProps> = ({
                                       key={manager.userId}
                                       variant="outline"
                                       className={`flex items-center gap-1 py-1 px-2 ${isInThisTask
-                                          ? 'bg-blue-100 border-blue-300 text-blue-700'
-                                          : 'bg-gray-50'
+                                        ? 'bg-blue-100 border-blue-300 text-blue-700'
+                                        : 'bg-gray-50'
                                         }`}
                                     >
                                       <User className={`h-3 w-3 ${isInThisTask ? 'text-blue-600' : 'text-gray-500'}`} />
@@ -1183,8 +1183,8 @@ const AssignTaskPage: React.FC<AssignTaskPageProps> = ({
                                       key={supervisor.userId}
                                       variant="outline"
                                       className={`flex items-center gap-1 py-1 px-2 ${isInThisTask
-                                          ? 'bg-emerald-100 border-emerald-300 text-emerald-700'
-                                          : 'bg-gray-50'
+                                        ? 'bg-emerald-100 border-emerald-300 text-emerald-700'
+                                        : 'bg-gray-50'
                                         }`}
                                     >
                                       <Briefcase className={`h-3 w-3 ${isInThisTask ? 'text-emerald-600' : 'text-gray-500'}`} />

@@ -253,8 +253,8 @@ const ViewLeaveDialog = ({
           <div className="space-y-6 py-4">
             {/* Status Banner */}
             <div className={`p-4 rounded-lg ${isOwnLeave ? 'bg-purple-50 border border-purple-200' :
-                leave.isSupervisorLeave ? 'bg-blue-50 border border-blue-200' :
-                  'bg-gray-50 border border-gray-200'
+              leave.isSupervisorLeave ? 'bg-blue-50 border border-blue-200' :
+                'bg-gray-50 border border-gray-200'
               }`}>
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-3">
@@ -557,7 +557,7 @@ const MobileLeaveCard = ({
 
   return (
     <Card className={`mb-3 overflow-hidden ${isOwnLeave ? 'border-purple-200 bg-purple-50/70' :
-        leave.isSupervisorLeave ? 'border-blue-200 bg-blue-50/50' : ''
+      leave.isSupervisorLeave ? 'border-blue-200 bg-blue-50/50' : ''
       }`}>
       <CardContent className="p-4">
         <div className="flex items-start justify-between mb-2">
@@ -777,7 +777,7 @@ const compareSiteIds = (id1: string | null, id2: string | null): boolean => {
 };
 
 const API_URL = import.meta.env.VITE_API_URL ||
-  (import.meta.env.DEV ? 'http://localhost:5001/api' : 'https://sk-backend-868y.onrender.com');
+  (import.meta.env.DEV ? 'http://localhost:5001/api' : 'https://sk-backend-868y.onrender.com/api');
 // Employee Leave Form Component - Moved outside to prevent recreation
 const EmployeeLeaveForm = ({
   formData,
@@ -3149,7 +3149,7 @@ const Leave = () => {
                         key={i}
                         variant="outline"
                         className={`text-xs ${leave.isOwn ? 'bg-purple-100 text-purple-800 border-purple-300' :
-                            leave.isSupervisor ? 'bg-blue-100 text-blue-800 border-blue-300' : ''
+                          leave.isSupervisor ? 'bg-blue-100 text-blue-800 border-blue-300' : ''
                           }`}
                       >
                         {leave.employee}: {leave.status}
@@ -3424,7 +3424,7 @@ const Leave = () => {
                             <TableRow
                               key={leave._id}
                               className={`${isOwnLeave ? 'bg-purple-50/70 hover:bg-purple-100/70' :
-                                  leave.isSupervisorLeave ? 'bg-blue-50/50 hover:bg-blue-100/50' : ''
+                                leave.isSupervisorLeave ? 'bg-blue-50/50 hover:bg-blue-100/50' : ''
                                 }`}
                             >
                               <TableCell>

@@ -201,7 +201,7 @@ const ManagerReports = () => {
 
   // API Base URL
   const API_URL = import.meta.env.VITE_API_URL ||
-    (import.meta.env.DEV ? 'http://localhost:5001/api' : 'https://sk-backend-868y.onrender.com');
+    (import.meta.env.DEV ? 'http://localhost:5001/api' : 'https://sk-backend-868y.onrender.com/api');
   // Manager ID and Name
   const [managerId, setManagerId] = useState<string>('');
   const [managerName, setManagerName] = useState<string>('');
@@ -2433,8 +2433,8 @@ const ManagerReports = () => {
                                     </TableCell>
                                     <TableCell className="px-2 sm:px-4 py-2 sm:py-3 whitespace-nowrap">
                                       <div className={`w-6 h-6 sm:w-8 sm:h-8 rounded-full flex items-center justify-center text-xs font-medium ${record.day === 'Sat' || record.day === 'Sun'
-                                          ? 'bg-blue-100 text-blue-600'
-                                          : 'bg-gray-100 text-gray-600'
+                                        ? 'bg-blue-100 text-blue-600'
+                                        : 'bg-gray-100 text-gray-600'
                                         }`}>
                                         {record.day}
                                       </div>
@@ -2473,8 +2473,8 @@ const ManagerReports = () => {
                                       <Badge
                                         variant="outline"
                                         className={`px-2 py-0.5 sm:px-3 sm:py-1 text-xs ${parseFloat(record.overtime) > 0
-                                            ? "bg-orange-100 text-orange-800 border-orange-200"
-                                            : "bg-gray-100 text-gray-800 border-gray-200"
+                                          ? "bg-orange-100 text-orange-800 border-orange-200"
+                                          : "bg-gray-100 text-gray-800 border-gray-200"
                                           }`}
                                       >
                                         {record.overtime}h

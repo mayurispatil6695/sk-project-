@@ -36,7 +36,7 @@ interface SiteStaff {
   supervisors: StaffWithTaskCount[];
 }
 const API_URL = import.meta.env.VITE_API_URL ||
-  (import.meta.env.DEV ? 'http://localhost:5001/api' : 'https://sk-backend-868y.onrender.com');
+  (import.meta.env.DEV ? 'http://localhost:5001/api' : 'https://sk-backend-868y.onrender.com/api');
 
 const ManagerAssignTaskPopup: React.FC<ManagerAssignTaskPopupProps> = ({
   open,
@@ -565,8 +565,8 @@ const ManagerAssignTaskPopup: React.FC<ManagerAssignTaskPopupProps> = ({
                           <div
                             key={supervisor.userId}
                             className={`flex items-center justify-between p-3 border rounded-lg cursor-pointer transition-colors ${selectedSupervisors.includes(supervisor.userId)
-                                ? 'bg-primary/10 border-primary'
-                                : 'hover:bg-primary/5'
+                              ? 'bg-primary/10 border-primary'
+                              : 'hover:bg-primary/5'
                               }`}
                             onClick={() => {
                               setSelectedSupervisors(prev => {

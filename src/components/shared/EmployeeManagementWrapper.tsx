@@ -29,7 +29,7 @@ import { Building, ArrowLeft, Users } from "lucide-react";
 import { toast } from "sonner";
 
 const API_URL = import.meta.env.VITE_API_URL ||
-  (import.meta.env.DEV ? "http://localhost:5001/api" : "https://sk-backend-868y.onrender.com");
+  (import.meta.env.DEV ? "http://localhost:5001/api" : "https://sk-backend-868y.onrender.com/api");
 
 interface FilterParams {
   siteName?: string | string[];

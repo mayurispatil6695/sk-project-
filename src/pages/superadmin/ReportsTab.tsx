@@ -157,7 +157,7 @@ interface APIAttendance {
   remarks?: string;
 }
 const API_URL = import.meta.env.VITE_API_URL ||
-  (import.meta.env.DEV ? 'http://localhost:5001/api' : 'https://sk-backend-868y.onrender.com');
+  (import.meta.env.DEV ? 'http://localhost:5001/api' : 'https://sk-backend-868y.onrender.com/api');
 
 const ReportsTab = ({ employees, attendance, selectedMonth = new Date().toISOString().slice(0, 7) }: ReportsTabProps) => {
   // State for payroll data
@@ -1169,9 +1169,9 @@ const ReportsTab = ({ employees, attendance, selectedMonth = new Date().toISOStr
                     <div key={record.id || index} className="flex items-center justify-between p-3 rounded-lg border">
                       <div className="flex items-center gap-3">
                         <div className={`h-3 w-3 rounded-full ${record.status === "present" ? "bg-green-500" :
-                            record.status === "absent" ? "bg-red-500" :
-                              record.status === "late" ? "bg-yellow-500" :
-                                "bg-blue-500"
+                          record.status === "absent" ? "bg-red-500" :
+                            record.status === "late" ? "bg-yellow-500" :
+                              "bg-blue-500"
                           }`}></div>
                         <div>
                           <p className="font-medium">{record.employeeName || record.employeeId}</p>

@@ -20,7 +20,7 @@ import taskService from "@/services/TaskService";
 import siteVisitService, { Site, SiteVisitReport, WorkQuery } from "@/services/SiteVisitService";
 import { motion } from "framer-motion";
 const API_URL = import.meta.env.VITE_API_URL ||
-  (import.meta.env.DEV ? 'http://localhost:5001/api' : 'https://sk-backend-868y.onrender.com');
+  (import.meta.env.DEV ? 'http://localhost:5001/api' : 'https://sk-backend-868y.onrender.com/api');
 // Camera Component
 interface CameraComponentProps {
   onCapture: (imageData: string) => void;

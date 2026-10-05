@@ -87,7 +87,7 @@ import { machineService } from '@/services/machineService';
 import { siteService } from "@/services/SiteService";
 import employeeService from "@/services/employeeService";
 const API_URL = import.meta.env.VITE_API_URL ||
-  (import.meta.env.DEV ? 'http://localhost:5001/api' : 'https://sk-backend-868y.onrender.com');
+  (import.meta.env.DEV ? 'http://localhost:5001/api' : 'https://sk-backend-868y.onrender.com/api');
 // API client with auth interceptor
 const apiClient = axios.create({
   baseURL: API_URL,

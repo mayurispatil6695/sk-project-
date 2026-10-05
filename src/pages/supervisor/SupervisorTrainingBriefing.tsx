@@ -37,7 +37,7 @@ import { useOutletContext } from 'react-router-dom';
 import CameraCapture from './CameraCapture';
 import { DashboardHeader } from "@/components/shared/DashboardHeader";
 const API_URL = import.meta.env.VITE_API_URL ||
-  (import.meta.env.DEV ? 'http://localhost:5001/api' : 'https://sk-backend-868y.onrender.com');
+  (import.meta.env.DEV ? 'http://localhost:5001/api' : 'https://sk-backend-868y.onrender.com/api');
 
 // Types (same as original, but Attachment extended with metadata)
 interface Attachment {
