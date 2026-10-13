@@ -70,18 +70,25 @@ app.use(cors({
     if (!origin) return callback(null, true);
     
     // List of allowed origins
-    const allowedOrigins = [
-       'https://app.skfacilitymanagement.com',
-      'http://localhost:8080',
-      'http://localhost:8081',  // ← Your React app port
-      'http://localhost:5001',
-      'http://localhost:5173',
-      'http://localhost:3000',
-      'https://sk-project-ecru.vercel.app',
-      'https://sk-backend-btbj.onrender.com',
-      /\.vercel\.app$/,
-      /\.onrender\.com$/
-    ];
+   const allowedOrigins = [
+  'https://app.skfacilitymanagement.com',
+  'https://sk-project-u0mk.onrender.com',
+  'http://localhost:8080',
+  'http://localhost:8081',
+  'http://localhost:5001',
+  'http://localhost:5173',
+  'http://localhost:3000',
+  'http://localhost',
+  'https://localhost',
+  'capacitor://localhost',
+  'ionic://localhost',
+  
+  'https://sk-backend-868y.onrender.com',
+ 
+  /\.vercel\.app$/,
+  /\.onrender\.com$/,
+  /^https?:\/\/localhost(:\d+)?$/,
+];
     
     // Check if origin is allowed
     const isAllowed = allowedOrigins.some(allowed => {
@@ -124,7 +131,21 @@ const authenticate = async (req: Request, res: Response, next: NextFunction) => 
     return res.status(401).json({ success: false, message: 'Invalid token' });
   }
 };
-
+app.get('/api/firebase-test', async (req, res) => {
+  const raw = process.env.FIREBASE_SERVICE_ACCOUNT;
+  if (!raw) return res.json({ ok: false, reason: 'env var not set' });
+  try {
+    const parsed = JSON.parse(raw);
+    res.json({
+      ok: true,
+      project_id: parsed.project_id,
+      client_email: parsed.client_email,
+      hasPrivateKey: typeof parsed.private_key === 'string' && parsed.private_key.includes('BEGIN PRIVATE KEY')
+    });
+  } catch (e: any) {
+    res.json({ ok: false, reason: 'invalid JSON', error: e.message });
+  }
+});
 // Then, when registering the route:
 app.use('/api/salary-slips', authenticate, salarySlipRoutes);
 app.use(express.urlencoded({ extended: true }));
