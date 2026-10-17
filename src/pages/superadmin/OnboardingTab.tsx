@@ -2283,10 +2283,13 @@ const OnboardingTab = ({
     .field-row .pin { display: flex; align-items: baseline; margin-left: 20px; flex-shrink: 0; }
     .field-row .pin .plabel { font-size: 15px; margin-right: 4px; }
     .field-row .pin .pvalue { font-size: 15px; min-width: 100px; border-bottom: 1px solid #000; }
+    /* Address rows need space for 2 lines */
+.form-rows > .field-row.tall { flex: 2; }
+.field-row.tall .value { font-size: 14px; line-height: 1.3; word-break: break-word; padding-right: 4px; }
     .uniform-row { font-size: 16px; }
     .uniform-row .issued { font-weight: bold; text-decoration: underline; }
 
-    .signature-section { display: flex; justify-content: space-between; margin-top: 16mm; }
+    .signature-section { display: flex; justify-content: space-between; margin-top: 10mm; }
     .signature-box { text-align: center; width: 45%; font-size: 15px; font-weight: bold; }
     .signature-box .line { border-top: 1px solid #000; margin-top: 4px; padding-top: 4px; }
     .footer { text-align: center; font-size: 10px; color: #666; margin-top: 6mm; }
@@ -2336,9 +2339,12 @@ const OnboardingTab = ({
       <div class="field-row"><span class="label">Date of Joining</span><span class="colon">:</span><span class="value">${employee.joinDate || employee.dateOfJoining || ''}</span></div>
       <div class="field-row"><span class="label">Contact No.</span><span class="colon">:</span><span class="value">${employee.phone || ''}</span></div>
       <div class="field-row"><span class="label">Blood Group</span><span class="colon">:</span><span class="value">${employee.bloodGroup || ''}</span></div>
+      <div class="field-row tall"><span class="label">Permanent Address</span><span class="colon">:</span><span class="value">${employee.permanentAddress || ''}</span></div>
+<div class="field-row tall"><span class="label">Local Address</span><span class="colon">:</span><span class="value">${employee.localAddress || ''}</span></div>
       <div class="field-row"><span class="label">Nominee Name</span><span class="colon">:</span><span class="value">${employee.nomineeName || ''}</span></div>
       <div class="field-row"><span class="label">Employee Relation</span><span class="colon">:</span><span class="value">${employee.nomineeRelation || ''}</span></div>
       <div class="field-row"><span class="label">Aadhaar Card No.</span><span class="colon">:</span><span class="value">${employee.aadharNumber || ''}</span></div>
+      <div class="field-row"><span class="label">PAN Card No.</span><span class="colon">:</span><span class="value">${employee.panNumber || ''}</span></div>
       <div class="field-row"><span class="label">ID No.</span><span class="colon">:</span><span class="value">${employee.employeeId || ''}</span></div>
       <div class="field-row"><span class="label">Emergency Cont. No.</span><span class="colon">:</span><span class="value">${employee.emergencyContactPhone || 'Not provided'}</span></div>
       <div class="field-row"><span class="label">Emergency Cont. No. 2</span><span class="colon">:</span><span class="value">${employee.emergencyPhone2 || 'Not provided'}</span></div>

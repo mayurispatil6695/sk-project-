@@ -2626,10 +2626,13 @@ const EmployeesTab = ({
     .field-row .pin { display: flex; align-items: baseline; margin-left: 20px; flex-shrink: 0; }
     .field-row .pin .plabel { font-size: 15px; margin-right: 4px; }
     .field-row .pin .pvalue { font-size: 15px; min-width: 100px; border-bottom: 1px solid #000; }
+    /* Address rows need space for 2 lines */
+.form-rows > .field-row.tall { flex: 2; }
+.field-row.tall .value { font-size: 14px; line-height: 1.3; word-break: break-word; padding-right: 4px; }
     .uniform-row { font-size: 16px; }
     .uniform-row .issued { font-weight: bold; text-decoration: underline; }
 
-    .signature-section { display: flex; justify-content: space-between; margin-top: 16mm; }
+    .signature-section { display: flex; justify-content: space-between; margin-top: 10mm; }
     .signature-box { text-align: center; width: 45%; font-size: 15px; font-weight: bold; }
     .signature-box .line { border-top: 1px solid #000; margin-top: 4px; padding-top: 4px; }
     .footer { text-align: center; font-size: 10px; color: #666; margin-top: 6mm; }
@@ -2679,9 +2682,12 @@ const EmployeesTab = ({
       <div class="field-row"><span class="label">Date of Joining</span><span class="colon">:</span><span class="value">${employee.joinDate || employee.dateOfJoining || ''}</span></div>
       <div class="field-row"><span class="label">Contact No.</span><span class="colon">:</span><span class="value">${employee.phone || ''}</span></div>
       <div class="field-row"><span class="label">Blood Group</span><span class="colon">:</span><span class="value">${employee.bloodGroup || ''}</span></div>
+      <div class="field-row tall"><span class="label">Permanent Address</span><span class="colon">:</span><span class="value">${employee.permanentAddress || ''}</span></div>
+<div class="field-row tall"><span class="label">Local Address</span><span class="colon">:</span><span class="value">${employee.localAddress || ''}</span></div>
       <div class="field-row"><span class="label">Nominee Name</span><span class="colon">:</span><span class="value">${employee.nomineeName || ''}</span></div>
       <div class="field-row"><span class="label">Employee Relation</span><span class="colon">:</span><span class="value">${employee.nomineeRelation || ''}</span></div>
       <div class="field-row"><span class="label">Aadhaar Card No.</span><span class="colon">:</span><span class="value">${employee.aadharNumber || ''}</span></div>
+      <div class="field-row"><span class="label">PAN Card No.</span><span class="colon">:</span><span class="value">${employee.panNumber || ''}</span></div>
       <div class="field-row"><span class="label">ID No.</span><span class="colon">:</span><span class="value">${employee.employeeId || ''}</span></div>
       <div class="field-row"><span class="label">Emergency Cont. No.</span><span class="colon">:</span><span class="value">${employee.emergencyContactPhone || 'Not provided'}</span></div>
       <div class="field-row"><span class="label">Emergency Cont. No. 2</span><span class="colon">:</span><span class="value">${employee.emergencyPhone2 || 'Not provided'}</span></div>
@@ -3442,7 +3448,13 @@ const EmployeesTab = ({
       return;
     }
 
-    const photoUrl = getPhotoUrl(employee);
+   // Request a high-res 600x600 image for printing
+let photoUrl = "";
+if (employee.photo && typeof employee.photo === 'string' && employee.photo.includes('cloudinary.com')) {
+  photoUrl = employee.photo.replace('/image/upload/', '/image/upload/w_600,h_600,c_fill,g_face,q_auto:best/');
+} else {
+  photoUrl = getPhotoUrl(employee);
+}
 
     // ✅ Site-based color: red for Elpro Mall, blue for everyone else
     const siteName = (employee.siteName || "").trim().toLowerCase();
@@ -3495,10 +3507,14 @@ const EmployeesTab = ({
             padding: 0;
             overflow: hidden;
           }
-          body {
-            font-family: Arial, sans-serif;
-            background: white;
-          }
+         body {
+  font-family: Arial, Helvetica, sans-serif;
+  background: white;
+  -webkit-print-color-adjust: exact;
+  print-color-adjust: exact;
+  text-rendering: geometricPrecision;
+  -webkit-font-smoothing: antialiased;
+}
           .id-card {
             width: 51mm;
             height: 85mm;
@@ -3522,18 +3538,16 @@ const EmployeesTab = ({
             border-bottom: 0.6mm solid ${themeColor};
           }
           .header h1 {
-            font-size: 11pt;
-            font-weight: bold;
-            color: ${themeColor};
-            letter-spacing: 0.3px;
-          }
-          .header .subtitle {
-            font-size: 5pt;
-            color: #555;
-            margin-top: 0.5mm;
-            text-transform: uppercase;
-            letter-spacing: 0.5px;
-          }
+  font-size: 13px;
+  font-weight: 900;
+  color: ${themeColor};
+}
+.header .subtitle {
+  font-size: 6px;
+  color: #000;
+  font-weight: 700;
+}
+         
           .photo-section {
             padding: 2mm 0 1.5mm 0;
           }
@@ -3562,32 +3576,33 @@ const EmployeesTab = ({
             min-height: 0;
             overflow: hidden;
           }
-          .detail-row {
-            display: flex;
-            justify-content: space-between;
-            gap: 0.5mm;
-            padding: 0.5mm 0;
-            border-bottom: 0.15mm solid #eee;
-            min-height: 4mm;
-          }
+         .detail-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 1mm;
+  padding: 0.5mm 0;
+  border-bottom: 0.3mm solid #666; /* Darker line */
+  min-height: 4mm;
+}
           .detail-row:last-child {
             border-bottom: none;
           }
-          .label {
-            font-weight: 700;
-            color: #333;
-            font-size: 5.5pt;
-            white-space: nowrap;
-            min-width: 16mm;
-          }
+         .label {
+  font-weight: 800;
+  color: #000;
+  font-size: 8px; /* Bigger text */
+  white-space: nowrap;
+  min-width: 18mm;
+}
           .value {
-            color: #111;
-            font-size: 5.5pt;
-            font-weight: 500;
-            text-align: right;
-            word-break: break-word;
-            flex: 1;
-          }
+  color: #000;
+  font-size: 8px; /* Bigger text */
+  font-weight: 700;
+  text-align: right;
+  word-break: break-word;
+  flex: 1;
+}
           .footer {
             width: 100%;
             padding: 1mm 2mm 1.5mm 2mm;
@@ -3617,11 +3632,10 @@ const EmployeesTab = ({
             border-top: 0.3mm solid #333;
           }
           .footer-text {
-            margin-top: 0.5mm;
-            font-size: 4.5pt;
-            color: #777;
-            text-align: center;
-          }
+  font-size: 6px;
+  color: #333;
+  text-align: center;
+}
           @media print {
             html, body {
               width: 51mm;
